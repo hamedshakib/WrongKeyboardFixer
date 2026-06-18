@@ -1,4 +1,7 @@
-﻿namespace WrongKeyboardFixer;
+﻿using System;
+using System.Windows.Forms;
+
+namespace WrongKeyboardFixer;
 
 internal static class Program
 {

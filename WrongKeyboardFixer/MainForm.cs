@@ -1,4 +1,8 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Drawing;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace WrongKeyboardFixer;
 
@@ -6,6 +10,7 @@ public class MainForm : Form
 {
     private HotkeyManager? _hotkeyManager;
     private ClipboardManager _clipboardManager;
+    private AppSettings _settings;
     private NotifyIcon? _trayIcon;
     private bool _isInitialized;
 
@@ -13,9 +18,13 @@ public class MainForm : Form
     {
         try
         {
+            _settings = SettingsManager.Load();
+
             InitializeForm();
             InitializeComponents();
             _isInitialized = true;
+
+            ApplyStartupSettings();
         }
         catch (Exception ex)
         {
@@ -33,13 +42,29 @@ public class MainForm : Form
         _clipboardManager = new ClipboardManager();
         _hotkeyManager = new HotkeyManager(this.Handle);
 
-        if (!_hotkeyManager.Register(HotkeyModifier.ControlAlt, Keys.Add))
+        // ثبت کلید ترکیبی از تنظیمات
+        RegisterHotkeyFromSettings();
+    }
+
+    private void RegisterHotkeyFromSettings()
+    {
+        if (_hotkeyManager == null)
+            return;
+
+        uint modifier = (uint)_settings.HotkeyModifier;
+        Keys key = _settings.HotkeyKey;
+
+        if (!_hotkeyManager.Register(modifier, key))
         {
-            MessageBox.Show(
-                "ثبت Hotkey ناموفق بود. ممکن است کلید ترکیبی توسط برنامه دیگری گرفته شده باشد.",
-                "اخطار",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning);
+            // اگر ثبت ناموفق بود، با کلید پیش‌فرض امتحان کن
+            if (!_hotkeyManager.Register(HotkeyModifier.ControlAlt, Keys.Add))
+            {
+                MessageBox.Show(
+                    "ثبت Hotkey ناموفق بود. ممکن است کلید ترکیبی توسط برنامه دیگری گرفته شده باشد.",
+                    "اخطار",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
         }
     }
 
@@ -64,16 +89,60 @@ public class MainForm : Form
         };
 
         var contextMenu = new ContextMenuStrip();
-        contextMenu.Items.Add("خروج", null, (_, _) =>
-        {
-            Application.Exit();
-        });
+
+        // آیتم تنظیمات
+        contextMenu.Items.Add("⚙️ تنظیمات", null, (_, _) => OpenSettings());
+        contextMenu.Items.Add("-"); // جداکننده
+        contextMenu.Items.Add("❌ خروج", null, (_, _) => Application.Exit());
+
         _trayIcon.ContextMenuStrip = contextMenu;
+
+        // دابل کلیک برای باز کردن تنظیمات
+        _trayIcon.DoubleClick += (_, _) => OpenSettings();
+    }
+
+    private void OpenSettings()
+    {
+        if (_hotkeyManager == null)
+            return;
+
+        using var settingsForm = new SettingsForm(_settings, _hotkeyManager);
+        if (settingsForm.ShowDialog() == DialogResult.OK)
+        {
+            // بارگذاری مجدد تنظیمات
+            _settings = SettingsManager.Load();
+
+            // ثبت مجدد کلید ترکیبی
+            RegisterHotkeyFromSettings();
+
+            if (_settings.ShowNotifications)
+            {
+                _trayIcon?.ShowBalloonTip(
+                    3000,
+                    "تنظیمات",
+                    "تنظیمات با موفقیت ذخیره شد.",
+                    ToolTipIcon.Info
+                );
+            }
+        }
+    }
+
+    private void ApplyStartupSettings()
+    {
+        // اجرای خودکار با ویندوز
+        SettingsManager.AddToStartup(_settings.RunOnStartup);
+
+        // شروع مینیمم
+        if (_settings.StartMinimized)
+        {
+            WindowState = FormWindowState.Minimized;
+            ShowInTaskbar = false;
+            Visible = false;
+        }
     }
 
     protected override void WndProc(ref Message message)
     {
-        // بررسی null بودن قبل از استفاده
         if (_hotkeyManager != null && _hotkeyManager.HandleHotkeyMessage(ref message))
         {
             Debug.WriteLine("🔥 Hotkey detected!");
@@ -85,7 +154,6 @@ public class MainForm : Form
 
     private async Task ProcessSelectedTextAsync()
     {
-        // اگر مقداردهی نشده، خارج شو
         if (_clipboardManager == null || !_isInitialized)
             return;
 
@@ -95,11 +163,9 @@ public class MainForm : Form
         {
             Debug.WriteLine("🔄 Starting text conversion...");
 
-            // Copy selected text
             KeyboardSimulator.SendCtrlC();
             await Task.Delay(300);
 
-            // Get clipboard content
             string originalText = await _clipboardManager.GetTextWithRetryAsync();
             if (string.IsNullOrWhiteSpace(originalText))
             {
@@ -107,17 +173,14 @@ public class MainForm : Form
                 return;
             }
 
-            // Convert text
             bool toPersian = KeyboardConverter.ShouldConvertToPersian(originalText);
             string convertedText = KeyboardConverter.Convert(originalText, toPersian);
 
-            // Paste converted text
             _clipboardManager.SetText(convertedText);
             await Task.Delay(200);
             KeyboardSimulator.SendCtrlV();
             await Task.Delay(200);
 
-            // Restore original clipboard
             _clipboardManager.RestoreText(previousClipboard);
             Debug.WriteLine("✅ Conversion completed successfully");
         }
