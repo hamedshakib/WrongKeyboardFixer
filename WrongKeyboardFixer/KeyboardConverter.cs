@@ -1,9 +1,10 @@
 ﻿using System.Text;
 
-namespace PersianKeyboardFix;
+namespace WrongKeyboardFixer;
 
 public static class KeyboardConverter
 {
+    private const double ComparisonCoefficientLanguages = 0.35;
     private static readonly Dictionary<char, char> EnToFa = new()
     {
         ['`'] = '‍',
@@ -51,18 +52,14 @@ public static class KeyboardConverter
         [','] = 'و',
         ['.'] = '.',
         ['/'] = '/',
-        // علائم Shift
+
         ['!'] = '!',
         ['@'] = '٬',
-        //['#'] = '٫',
-        //['$'] = '﷼',
         ['%'] = '٪',
         ['^'] = '×',
         ['?'] = '؟',
-        //['&'] = '*',
         [')'] = '(',
         ['('] = ')',
-        //['_'] = 'ـ',
     };
 
     private static readonly Dictionary<char, char> FaToEn = new();
@@ -109,6 +106,6 @@ public static class KeyboardConverter
             if (c >= 0x0600 && c <= 0x06FF) persianCount++;
         }
 
-        return persianCount < text.Length * 0.35; // بیشتر انگلیسی → تبدیل به فارسی
+        return persianCount < text.Length * ComparisonCoefficientLanguages; // بیشتر انگلیسی → تبدیل به فارسی
     }
 }
