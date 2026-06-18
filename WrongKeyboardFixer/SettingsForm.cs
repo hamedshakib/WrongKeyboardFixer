@@ -30,7 +30,7 @@ public partial class SettingsForm : Form
 
     private void InitializeControls()
     {
-        this.Text = "تنظیمات Persian Keyboard Fixer";
+        this.Text = "تنظیمات";
         this.Size = new System.Drawing.Size(450, 400);
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;

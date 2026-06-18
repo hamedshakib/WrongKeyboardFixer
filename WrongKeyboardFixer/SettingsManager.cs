@@ -9,7 +9,7 @@ public static class SettingsManager
 {
     private static readonly string SettingsPath = Path.Combine(
         Application.CommonAppDataPath,
-        "PersianKeyboardFix",
+        "WrongKeyboardFixer",
         "settings.json"
     );
 
@@ -75,12 +75,12 @@ public static class SettingsManager
             if (enable)
             {
                 string appPath = Application.ExecutablePath;
-                key.SetValue("PersianKeyboardFix", $"\"{appPath}\"");
+                key.SetValue("WrongKeyboardFixer", $"\"{appPath}\"");
             }
             else
             {
-                if (key.GetValue("PersianKeyboardFix") != null)
-                    key.DeleteValue("PersianKeyboardFix");
+                if (key.GetValue("WrongKeyboardFixer") != null)
+                    key.DeleteValue("WrongKeyboardFixer");
             }
         }
         catch (Exception ex)
