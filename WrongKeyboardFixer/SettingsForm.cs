@@ -24,6 +24,11 @@ public partial class SettingsForm : Form
     {
         _settings = settings ?? new AppSettings();
         _hotkeyManager = hotkeyManager;
+
+        // تنظیمات راست‌چین
+        this.RightToLeft = RightToLeft.Yes;
+        this.RightToLeftLayout = true;
+
         InitializeControls();
         LoadSettings();
     }
