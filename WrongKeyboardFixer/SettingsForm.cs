@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using System.Drawing;
 
 namespace WrongKeyboardFixer;
 
@@ -25,7 +26,7 @@ public partial class SettingsForm : Form
         _settings = settings ?? new AppSettings();
         _hotkeyManager = hotkeyManager;
 
-        // تنظیمات راست‌چین
+        // تنظیمات پایه راست‌چین ویندوز
         this.RightToLeft = RightToLeft.Yes;
         this.RightToLeftLayout = true;
 
@@ -36,189 +37,169 @@ public partial class SettingsForm : Form
     private void InitializeControls()
     {
         this.Text = "تنظیمات";
-        this.Size = new System.Drawing.Size(450, 400);
+        this.Size = new System.Drawing.Size(460, 440);
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
         this.MinimizeBox = false;
         this.StartPosition = FormStartPosition.CenterParent;
         this.Font = new System.Drawing.Font("Tahoma", 9);
 
-        // ایجاد پنل اصلی
-        var panel = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            Padding = new Padding(15),
-            ColumnCount = 2,
-            RowCount = 8,
-            AutoSize = true
-        };
+        int marginX = 25; // فاصله استاندارد از لبه‌های چپ و راست فرم
+        int currentY = 20; // موقعیت عمودی شروع
+        int formWidth = this.ClientSize.Width;
+        int controlWidth = formWidth - (2 * marginX); // عرض مفید برای کنترل‌های سرتاسری
 
-        // تنظیم ستون‌ها
-        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150));
-        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-
-        // تنظیم سطرها
-        for (int i = 0; i < 8; i++)
-            panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 35));
-
-        int row = 0;
-
-        // عنوان
+        // ۱. عنوان اصلی
         var titleLabel = new Label
         {
             Text = "تنظیمات برنامه",
-            Font = new System.Drawing.Font("Tahoma", 12, System.Drawing.FontStyle.Bold),
-            AutoSize = true,
-            Anchor = AnchorStyles.Left
+            Font = new System.Drawing.Font("Tahoma", 11, System.Drawing.FontStyle.Bold),
+            Location = new Point(marginX, currentY),
+            Size = new Size(controlWidth, 30),
+            TextAlign = ContentAlignment.MiddleLeft
         };
-        panel.Controls.Add(titleLabel, 0, row);
-        panel.SetColumnSpan(titleLabel, 2);
-        row++;
+        this.Controls.Add(titleLabel);
+        currentY += 40;
 
-        // اجرای خودکار
+        // ۲. اجرای خودکار با ویندوز
         chkRunOnStartup = new CheckBox
         {
             Text = "اجرای خودکار با ویندوز",
-            AutoSize = true,
-            Anchor = AnchorStyles.Left
+            CheckAlign = ContentAlignment.MiddleLeft,
+            TextAlign = ContentAlignment.MiddleLeft,
+            Location = new Point(marginX, currentY),
+            Size = new Size(controlWidth, 25)
         };
-        panel.Controls.Add(chkRunOnStartup, 0, row);
-        panel.SetColumnSpan(chkRunOnStartup, 2);
-        row++;
+        this.Controls.Add(chkRunOnStartup);
+        currentY += 32;
 
-        // شروع با مینیمم
+        // ۳. شروع با مینیمم
         chkStartMinimized = new CheckBox
         {
             Text = "شروع با حالت مینیمم (سینی سیستم)",
-            AutoSize = true,
-            Anchor = AnchorStyles.Left
+            CheckAlign = ContentAlignment.MiddleLeft,
+            TextAlign = ContentAlignment.MiddleLeft,
+            Location = new Point(marginX, currentY),
+            Size = new Size(controlWidth, 25)
         };
-        panel.Controls.Add(chkStartMinimized, 0, row);
-        panel.SetColumnSpan(chkStartMinimized, 2);
-        row++;
+        this.Controls.Add(chkStartMinimized);
+        currentY += 32;
 
-        // نمایش نوتیفیکیشن
+        // ۴. نمایش نوتیفیکیشن
         chkShowNotifications = new CheckBox
         {
             Text = "نمایش پیام‌های اطلاع‌رسانی",
-            AutoSize = true,
-            Anchor = AnchorStyles.Left
+            CheckAlign = ContentAlignment.MiddleLeft,
+            TextAlign = ContentAlignment.MiddleLeft,
+            Location = new Point(marginX, currentY),
+            Size = new Size(controlWidth, 25)
         };
-        panel.Controls.Add(chkShowNotifications, 0, row);
-        panel.SetColumnSpan(chkShowNotifications, 2);
-        row++;
+        this.Controls.Add(chkShowNotifications);
+        currentY += 45;
 
-        // کلید ترکیبی
+        // ۵. کادر میانبر (GroupBox)
+        var grpHotkey = new GroupBox
+        {
+            Text = "تنظیمات کلید میانبر",
+            Location = new Point(marginX, currentY),
+            Size = new Size(controlWidth, 130),
+            RightToLeft = RightToLeft.Yes
+        };
+
+        // المان‌های داخل کادر میانبر با موقعیت‌دهی محلی (نسبت به لبه‌های GroupBox)
         var lblHotkey = new Label
         {
             Text = "کلید ترکیبی:",
-            AutoSize = true,
-            Anchor = AnchorStyles.Right
+            Location = new Point(grpHotkey.Width - 95, 33),
+            Size = new Size(80, 20),
+            TextAlign = ContentAlignment.MiddleRight
         };
-        panel.Controls.Add(lblHotkey, 0, row);
+        grpHotkey.Controls.Add(lblHotkey);
 
-        var hotkeyPanel = new FlowLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.LeftToRight,
-            AutoSize = true
-        };
-
+        // انتخاب‌گر Modifier
         cmbHotkeyModifier = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Width = 100
+            Location = new Point(grpHotkey.Width - 215, 30),
+            Size = new Size(110, 25)
         };
-        cmbHotkeyModifier.Items.AddRange(new object[]
-        {
-            "Ctrl + Alt",
-            "Ctrl + Shift",
-            "Alt + Shift",
-            "Ctrl",
-            "Alt",
-            "Shift"
-        });
+        cmbHotkeyModifier.Items.AddRange(new object[] { "Ctrl + Alt", "Ctrl + Shift", "Alt + Shift", "Ctrl", "Alt", "Shift" });
         cmbHotkeyModifier.SelectedIndex = 0;
+        grpHotkey.Controls.Add(cmbHotkeyModifier);
 
+        // علامت مثبت بین دو کمبواباکس
+        var lblPlus = new Label
+        {
+            Text = "+",
+            Location = new Point(grpHotkey.Width - 235, 33),
+            Size = new Size(15, 20),
+            TextAlign = ContentAlignment.MiddleCenter
+        };
+        grpHotkey.Controls.Add(lblPlus);
+
+        // انتخاب‌گر کلید اصلی
         cmbHotkeyKey = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Width = 80
+            Location = new Point(grpHotkey.Width - 330, 30),
+            Size = new Size(90, 25)
         };
-        cmbHotkeyKey.Items.AddRange(new object[]
-        {
-            "Add (+)",
-            "F1", "F2", "F3", "F4", "F5", "F6",
-            "F7", "F8", "F9", "F10", "F11", "F12",
-            "Insert", "Home", "PageUp", "PageDown",
-            "End", "Delete", "Space"
-        });
+        cmbHotkeyKey.Items.AddRange(new object[] { "Add (+)", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "Insert", "Home", "PageUp", "PageDown", "End", "Delete", "Space" });
         cmbHotkeyKey.SelectedIndex = 0;
+        grpHotkey.Controls.Add(cmbHotkeyKey);
 
-        hotkeyPanel.Controls.Add(cmbHotkeyModifier);
-        hotkeyPanel.Controls.Add(new Label { Text = "+", AutoSize = true });
-        hotkeyPanel.Controls.Add(cmbHotkeyKey);
-
-        panel.Controls.Add(hotkeyPanel, 1, row);
-        row++;
-
-        // وضعیت ثبت کلید
-        lblStatus = new Label
-        {
-            Text = "وضعیت: بررسی...",
-            AutoSize = true,
-            ForeColor = System.Drawing.Color.Blue,
-            Anchor = AnchorStyles.Left
-        };
-        panel.Controls.Add(lblStatus, 0, row);
-        panel.SetColumnSpan(lblStatus, 2);
-        row++;
-
-        // دکمه ثبت کلید
+        // دکمه اعمال کلید ترکیبی
         btnRegisterHotkey = new Button
         {
-            Text = "ثبت کلید ترکیبی",
-            Size = new System.Drawing.Size(150, 30),
-            Anchor = AnchorStyles.Left,
+            Text = "اعمال کلید ترکیبی",
+            Location = new Point(grpHotkey.Width - 145, 80),
+            Size = new Size(130, 30),
             BackColor = System.Drawing.Color.LightGreen,
             FlatStyle = FlatStyle.Flat
         };
         btnRegisterHotkey.Click += BtnRegisterHotkey_Click;
-        panel.Controls.Add(btnRegisterHotkey, 0, row);
-        panel.SetColumnSpan(btnRegisterHotkey, 2);
-        row++;
+        grpHotkey.Controls.Add(btnRegisterHotkey);
 
-        // دکمه‌های ذخیره و انصراف
-        var buttonPanel = new FlowLayoutPanel
+        // برچسب وضعیت ثبت
+        lblStatus = new Label
         {
-            Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.RightToLeft,
-            AutoSize = true
+            Text = "وضعیت: بررسی...",
+            Location = new Point(15, 85),
+            Size = new Size(grpHotkey.Width - 170, 20),
+            ForeColor = System.Drawing.Color.Blue,
+            TextAlign = ContentAlignment.MiddleLeft // وضعیت در سمت چپ دکمه ثبت قرار بگیرد
         };
+        grpHotkey.Controls.Add(lblStatus);
 
+        this.Controls.Add(grpHotkey);
+        currentY += grpHotkey.Height + 25;
+
+        int buttonY = currentY;
+        int buttonWidth = 95;
+
+        // دکمه ذخیره (حالا این دکمه کاملاً به لبه چپ فرم می‌چسبد)
         btnSave = new Button
         {
             Text = "ذخیره",
-            Size = new System.Drawing.Size(100, 30),
+            Location = new Point(this.ClientSize.Width - marginX - buttonWidth, buttonY),
+            Size = new Size(buttonWidth, 32),
             BackColor = System.Drawing.Color.LightBlue,
             FlatStyle = FlatStyle.Flat
         };
         btnSave.Click += BtnSave_Click;
+        this.Controls.Add(btnSave);
 
+        // دکمه انصراف (۱۰ پیکسل فاصله گرفته و در سمت راستِ دکمه ذخیره قرار می‌گیرد)
         btnCancel = new Button
         {
             Text = "انصراف",
-            Size = new System.Drawing.Size(100, 30),
+            Location = new Point(this.ClientSize.Width - marginX - (buttonWidth * 2) - 10, buttonY),
+            Size = new Size(buttonWidth, 32),
             FlatStyle = FlatStyle.Flat
         };
         btnCancel.Click += (_, _) => DialogResult = DialogResult.Cancel;
+        this.Controls.Add(btnCancel);
 
-        buttonPanel.Controls.Add(btnSave);
-        buttonPanel.Controls.Add(btnCancel);
-        panel.Controls.Add(buttonPanel, 0, row);
-        panel.SetColumnSpan(buttonPanel, 2);
-
-        this.Controls.Add(panel);
     }
 
     private void LoadSettings()
@@ -227,15 +208,12 @@ public partial class SettingsForm : Form
         chkStartMinimized.Checked = _settings.StartMinimized;
         chkShowNotifications.Checked = _settings.ShowNotifications;
 
-        // بارگذاری کلید ترکیبی
         LoadHotkeyFromSettings();
-
         UpdateStatus();
     }
 
     private void LoadHotkeyFromSettings()
     {
-        // تنظیم modifier
         var modifier = (HotkeyModifiers)_settings.HotkeyModifier;
         if (modifier.HasFlag(HotkeyModifiers.Control) && modifier.HasFlag(HotkeyModifiers.Alt))
             cmbHotkeyModifier.SelectedIndex = 0;
@@ -250,11 +228,9 @@ public partial class SettingsForm : Form
         else if (modifier.HasFlag(HotkeyModifiers.Shift))
             cmbHotkeyModifier.SelectedIndex = 5;
 
-        // تنظیم کلید
         var key = _settings.HotkeyKey;
         string keyName = key.ToString();
 
-        // تبدیل نام کلید به فرمت نمایشی
         for (int i = 0; i < cmbHotkeyKey.Items.Count; i++)
         {
             string item = cmbHotkeyKey.Items[i].ToString()!;
@@ -272,10 +248,7 @@ public partial class SettingsForm : Form
         {
             var (modifier, key) = GetSelectedHotkey();
 
-            // لغو ثبت قبلی
             _hotkeyManager.Unregister();
-
-            // ثبت جدید
             bool success = _hotkeyManager.Register(modifier, key);
 
             if (success)
@@ -284,20 +257,14 @@ public partial class SettingsForm : Form
                 lblStatus.Text = "✅ کلید ترکیبی با موفقیت ثبت شد";
                 lblStatus.ForeColor = System.Drawing.Color.Green;
 
-                // به‌روزرسانی تنظیمات
                 _settings.HotkeyModifier = (int)modifier;
                 _settings.HotkeyKey = key;
 
-                MessageBox.Show(
-                    "کلید ترکیبی جدید با موفقیت ثبت شد.",
-                    "موفقیت",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information
-                );
+                MessageBox.Show("کلید ترکیبی جدید با موفقیت ثبت شد.", "موفقیت", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
-                lblStatus.Text = "❌ ثبت کلید ترکیبی ناموفق بود. کلید قبلاً ثبت شده است.";
+                lblStatus.Text = "❌ ثبت ناموفق بود. کلید قبلاً ثبت شده است.";
                 lblStatus.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -364,12 +331,10 @@ public partial class SettingsForm : Form
     {
         try
         {
-            // ذخیره تنظیمات
             _settings.RunOnStartup = chkRunOnStartup.Checked;
             _settings.StartMinimized = chkStartMinimized.Checked;
             _settings.ShowNotifications = chkShowNotifications.Checked;
 
-            // ذخیره کلید ترکیبی
             if (!_isHotkeyRegistered)
             {
                 var (modifier, key) = GetSelectedHotkey();
@@ -377,30 +342,17 @@ public partial class SettingsForm : Form
                 _settings.HotkeyKey = key;
             }
 
-            // اعمال اجرای خودکار
             SettingsManager.AddToStartup(_settings.RunOnStartup);
-
-            // ذخیره در فایل
             SettingsManager.Save(_settings);
 
             DialogResult = DialogResult.OK;
             Close();
 
-            MessageBox.Show(
-                "تنظیمات با موفقیت ذخیره شد.",
-                "موفقیت",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information
-            );
+            MessageBox.Show("تنظیمات با موفقیت ذخیره شد.", "موفقیت", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
-                $"خطا در ذخیره تنظیمات: {ex.Message}",
-                "خطا",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error
-            );
+            MessageBox.Show($"خطا در ذخیره تنظیمات: {ex.Message}", "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }
