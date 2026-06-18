@@ -85,52 +85,81 @@ namespace PersianKeyboardFix
 
         private async Task ProcessSelectedTextAsync()
         {
-            Debug.WriteLine("Run ProcessSelectedTextAsync Started");
+            string previousClipboard = "";
+
             try
             {
-                // ۱. کپی متن انتخاب شده
-                SendCtrlC();
-                //SendKeys.SendWait("^c");
-                await Task.Delay(300); // افزایش زمان به 300 میلی‌ثانیه
+                Debug.WriteLine("🔄 شروع فرآیند...");
 
-                // Retry mechanism برای خواندن کلیپ‌بورد
-                string original = "";
-                for (int i = 0; i < 3; i++) // 3 بار تلاش
+                // ۱. ذخیره متن قبلی
+                try
                 {
-                    await Task.Delay(100);
-                    original = Clipboard.GetText(TextDataFormat.UnicodeText) ?? "";
-                    if (!string.IsNullOrWhiteSpace(original))
-                        break;
+                    previousClipboard = Clipboard.GetText(TextDataFormat.UnicodeText) ?? "";
+                }
+                catch { }
+
+                // ۲. کپی
+                SendCtrlC();
+                await Task.Delay(250);
+
+                // ۳. دریافت متن
+                string original = "";
+                for (int i = 0; i < 8; i++)
+                {
+                    await Task.Delay(150);
+                    try
+                    {
+                        original = Clipboard.GetText(TextDataFormat.UnicodeText) ?? "";
+                        if (!string.IsNullOrWhiteSpace(original)) break;
+                    }
+                    catch { }
                 }
 
                 if (string.IsNullOrWhiteSpace(original))
                 {
-                    Debug.WriteLine("❌ متنی در کلیپ‌بورد پیدا نشد");
+                    // بازیابی
+                    if (!string.IsNullOrWhiteSpace(previousClipboard))
+                        Clipboard.SetText(previousClipboard);
                     return;
                 }
 
-                Debug.WriteLine($"✅ متن دریافت شد: {original}");
-
-                // ۲. تشخیص جهت تبدیل
+                // ۴. تبدیل
                 bool toPersian = KeyboardConverter.ShouldConvertToPersian(original);
                 string converted = KeyboardConverter.Convert(original, toPersian);
 
-                // ۳. قرار دادن متن جدید در کلیپ‌بورد
+                // ۵. قرار دادن در کلیپ‌بورد
                 Clipboard.SetText(converted);
+                await Task.Delay(200);
 
-                // ۴. Paste کردن
-                await Task.Delay(100);
+                // ۶. Paste
                 SendCtrlV();
-                //SendKeys.SendWait("^v");
+                await Task.Delay(200);
 
-                // ۵. پاک کردن امن کلیپ‌بورد
-                ClearClipboardSecurely();
-
-                Debug.WriteLine("✅ تبدیل با موفقیت انجام شد");
+                // ۷. بازیابی متن قبلی
+                if (!string.IsNullOrWhiteSpace(previousClipboard))
+                {
+                    Clipboard.SetText(previousClipboard);
+                    Debug.WriteLine("✅ متن قبلی بازیابی شد");
+                }
+                else
+                {
+                    // پاک کردن بدون PowerShell
+                    Clipboard.Clear();
+                    var empty = new DataObject();
+                    empty.SetData(DataFormats.Text, "");
+                    Clipboard.SetDataObject(empty, true);
+                    Debug.WriteLine("🧹 کلیپ‌بورد پاک شد");
+                }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("❌ Error: " + ex.Message);
+                Debug.WriteLine($"❌ Error: {ex.Message}");
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(previousClipboard))
+                        Clipboard.SetText(previousClipboard);
+                }
+                catch { }
             }
         }
 
