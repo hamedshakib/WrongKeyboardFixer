@@ -91,9 +91,9 @@ public class MainForm : Form
         var contextMenu = new ContextMenuStrip();
 
         // آیتم تنظیمات
-        contextMenu.Items.Add("⚙️ تنظیمات", null, (_, _) => OpenSettings());
+        contextMenu.Items.Add("تنظیمات ⚙️", null, (_, _) => OpenSettings());
         contextMenu.Items.Add("-"); // جداکننده
-        contextMenu.Items.Add("❌ خروج", null, (_, _) => Application.Exit());
+        contextMenu.Items.Add("خروج ❌", null, (_, _) => Application.Exit());
 
         _trayIcon.ContextMenuStrip = contextMenu;
 
