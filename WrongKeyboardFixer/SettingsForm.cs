@@ -6,14 +6,16 @@ namespace WrongKeyboardFixer;
 
 public partial class SettingsForm : Form
 {
+    private uint lastHotkeyModifier;
+    private Keys lastHotkeyKey;
+
     private readonly AppSettings _settings;
     private readonly HotkeyManager _hotkeyManager;
     private bool _isHotkeyRegistered;
 
     // کنترل‌های فرم
     private CheckBox chkRunOnStartup;
-    private CheckBox chkStartMinimized;
-    private CheckBox chkShowNotifications;
+    //private CheckBox chkShowNotifications;
     private ComboBox cmbHotkeyModifier;
     private ComboBox cmbHotkeyKey;
     private Button btnSave;
@@ -37,7 +39,7 @@ public partial class SettingsForm : Form
     private void InitializeControls()
     {
         this.Text = "تنظیمات";
-        this.Size = new System.Drawing.Size(460, 440);
+        this.Size = new System.Drawing.Size(460, 330);
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
         this.MinimizeBox = false;
@@ -74,30 +76,6 @@ public partial class SettingsForm : Form
         this.Controls.Add(chkRunOnStartup);
         currentY += 32;
 
-        // ۳. شروع با مینیمم
-        chkStartMinimized = new CheckBox
-        {
-            Text = "شروع با حالت مینیمم (سینی سیستم)",
-            CheckAlign = ContentAlignment.MiddleLeft,
-            TextAlign = ContentAlignment.MiddleLeft,
-            Location = new Point(marginX, currentY),
-            Size = new Size(controlWidth, 25)
-        };
-        this.Controls.Add(chkStartMinimized);
-        currentY += 32;
-
-        // ۴. نمایش نوتیفیکیشن
-        chkShowNotifications = new CheckBox
-        {
-            Text = "نمایش پیام‌های اطلاع‌رسانی",
-            CheckAlign = ContentAlignment.MiddleLeft,
-            TextAlign = ContentAlignment.MiddleLeft,
-            Location = new Point(marginX, currentY),
-            Size = new Size(controlWidth, 25)
-        };
-        this.Controls.Add(chkShowNotifications);
-        currentY += 45;
-
         // ۵. کادر میانبر (GroupBox)
         var grpHotkey = new GroupBox
         {
@@ -126,6 +104,7 @@ public partial class SettingsForm : Form
         };
         cmbHotkeyModifier.Items.AddRange(new object[] { "Ctrl + Alt", "Ctrl + Shift", "Alt + Shift", "Ctrl", "Alt", "Shift" });
         cmbHotkeyModifier.SelectedIndex = 0;
+        cmbHotkeyModifier.SelectedIndexChanged += CmbHotkeyModifier_SelectedIndexChanged;
         grpHotkey.Controls.Add(cmbHotkeyModifier);
 
         // علامت مثبت بین دو کمبواباکس
@@ -147,6 +126,7 @@ public partial class SettingsForm : Form
         };
         cmbHotkeyKey.Items.AddRange(new object[] { "Add (+)", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "Insert", "Home", "PageUp", "PageDown", "End", "Delete", "Space" });
         cmbHotkeyKey.SelectedIndex = 0;
+        cmbHotkeyKey.SelectedIndexChanged += CmbHotkeyKey_SelectedIndexChanged;
         grpHotkey.Controls.Add(cmbHotkeyKey);
 
         // دکمه اعمال کلید ترکیبی
@@ -159,6 +139,7 @@ public partial class SettingsForm : Form
             FlatStyle = FlatStyle.Flat
         };
         btnRegisterHotkey.Click += BtnRegisterHotkey_Click;
+        btnRegisterHotkey.Enabled = false;
         grpHotkey.Controls.Add(btnRegisterHotkey);
 
         // برچسب وضعیت ثبت
@@ -203,11 +184,27 @@ public partial class SettingsForm : Form
 
     }
 
+    private void CmbHotkeyModifier_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        var hotkey = GetSelectedHotkey();
+        if (lastHotkeyKey != hotkey.key || lastHotkeyModifier != hotkey.modifier)
+            btnRegisterHotkey.Enabled = true;
+        else
+            btnRegisterHotkey.Enabled = false;
+    }
+
+    private void CmbHotkeyKey_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        var hotkey = GetSelectedHotkey();
+        if (lastHotkeyKey != hotkey.key || lastHotkeyModifier != hotkey.modifier)
+            btnRegisterHotkey.Enabled = true;
+        else
+            btnRegisterHotkey.Enabled = false;
+    }
+
     private void LoadSettings()
     {
         chkRunOnStartup.Checked = _settings.RunOnStartup;
-        chkStartMinimized.Checked = _settings.StartMinimized;
-        chkShowNotifications.Checked = _settings.ShowNotifications;
 
         LoadHotkeyFromSettings();
         UpdateStatus();
@@ -229,8 +226,10 @@ public partial class SettingsForm : Form
         else if (modifier.HasFlag(HotkeyModifiers.Shift))
             cmbHotkeyModifier.SelectedIndex = 5;
 
+
         var key = _settings.HotkeyKey;
         string keyName = key.ToString();
+
 
         for (int i = 0; i < cmbHotkeyKey.Items.Count; i++)
         {
@@ -241,7 +240,11 @@ public partial class SettingsForm : Form
                 break;
             }
         }
+
+        lastHotkeyModifier = (uint)_settings.HotkeyModifier;
+        lastHotkeyKey = key;
     }
+
 
     private void BtnRegisterHotkey_Click(object? sender, EventArgs e)
     {
@@ -260,7 +263,7 @@ public partial class SettingsForm : Form
 
                 _settings.HotkeyModifier = (int)modifier;
                 _settings.HotkeyKey = key;
-
+                btnRegisterHotkey.Enabled = false;
                 MessageBox.Show("کلید ترکیبی جدید با موفقیت ثبت شد.", "موفقیت", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
@@ -333,8 +336,6 @@ public partial class SettingsForm : Form
         try
         {
             _settings.RunOnStartup = chkRunOnStartup.Checked;
-            _settings.StartMinimized = chkStartMinimized.Checked;
-            _settings.ShowNotifications = chkShowNotifications.Checked;
 
             if (!_isHotkeyRegistered)
             {

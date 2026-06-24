@@ -115,16 +115,6 @@ public class MainForm : Form
 
             // ثبت مجدد کلید ترکیبی
             RegisterHotkeyFromSettings();
-
-            if (_settings.ShowNotifications)
-            {
-                _trayIcon?.ShowBalloonTip(
-                    3000,
-                    "تنظیمات",
-                    "تنظیمات با موفقیت ذخیره شد.",
-                    ToolTipIcon.Info
-                );
-            }
         }
     }
 
@@ -132,14 +122,6 @@ public class MainForm : Form
     {
         // اجرای خودکار با ویندوز
         SettingsManager.AddToStartup(_settings.RunOnStartup);
-
-        // شروع مینیمم
-        if (_settings.StartMinimized)
-        {
-            WindowState = FormWindowState.Minimized;
-            ShowInTaskbar = false;
-            Visible = false;
-        }
     }
 
     protected override void WndProc(ref Message message)

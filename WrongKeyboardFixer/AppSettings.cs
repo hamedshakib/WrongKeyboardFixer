@@ -8,8 +8,6 @@ public class AppSettings
     public bool RunOnStartup { get; set; } = false;
     public int HotkeyModifier { get; set; } = (int)(HotkeyModifiers.Control | HotkeyModifiers.Alt);
     public Keys HotkeyKey { get; set; } = Keys.Add;
-    public bool StartMinimized { get; set; } = true;
-    public bool ShowNotifications { get; set; } = true;
 
     // تنظیمات پیشرفته
     public int ClipboardRetryDelay { get; set; } = 150;
