@@ -186,20 +186,12 @@ public partial class SettingsForm : Form
 
     private void CmbHotkeyModifier_SelectedIndexChanged(object? sender, EventArgs e)
     {
-        var hotkey = GetSelectedHotkey();
-        if (lastHotkeyKey != hotkey.key || lastHotkeyModifier != hotkey.modifier)
-            btnRegisterHotkey.Enabled = true;
-        else
-            btnRegisterHotkey.Enabled = false;
+        UpdateStatus();
     }
 
     private void CmbHotkeyKey_SelectedIndexChanged(object? sender, EventArgs e)
     {
-        var hotkey = GetSelectedHotkey();
-        if (lastHotkeyKey != hotkey.key || lastHotkeyModifier != hotkey.modifier)
-            btnRegisterHotkey.Enabled = true;
-        else
-            btnRegisterHotkey.Enabled = false;
+        UpdateStatus();
     }
 
     private void LoadSettings()
@@ -258,11 +250,13 @@ public partial class SettingsForm : Form
             if (success)
             {
                 _isHotkeyRegistered = true;
-                lblStatus.Text = "✅ کلید ترکیبی با موفقیت ثبت شد";
+                lblStatus.Text = "✅ کلید ترکیبی با موفقیت ثبت شده است";
                 lblStatus.ForeColor = System.Drawing.Color.Green;
 
                 _settings.HotkeyModifier = (int)modifier;
                 _settings.HotkeyKey = key;
+                lastHotkeyKey = key;
+                lastHotkeyModifier = modifier;
                 btnRegisterHotkey.Enabled = false;
                 MessageBox.Show("کلید ترکیبی جدید با موفقیت ثبت شد.", "موفقیت", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -319,15 +313,22 @@ public partial class SettingsForm : Form
 
     private void UpdateStatus()
     {
+        var hotkey = GetSelectedHotkey();
+        var hasChanged = (lastHotkeyKey != hotkey.key || lastHotkeyModifier != hotkey.modifier);
+
+        _isHotkeyRegistered = !hasChanged;
+
         if (_isHotkeyRegistered)
         {
-            lblStatus.Text = "✅ کلید ترکیبی ثبت شده است";
+            lblStatus.Text = "✅ کلید ترکیبی اعمال شده است";
             lblStatus.ForeColor = System.Drawing.Color.Green;
+            btnRegisterHotkey.Enabled = false;
         }
         else
         {
-            lblStatus.Text = "⚠️ کلید ترکیبی ثبت نشده است";
+            lblStatus.Text = "⚠️ کلید ترکیبی اعمال نشده است";
             lblStatus.ForeColor = System.Drawing.Color.Orange;
+            btnRegisterHotkey.Enabled = true;
         }
     }
 
