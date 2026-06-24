@@ -124,7 +124,7 @@ public partial class SettingsForm : Form
             Location = new Point(grpHotkey.Width - 330, 30),
             Size = new Size(90, 25)
         };
-        cmbHotkeyKey.Items.AddRange(new object[] { "Add (+)", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "Insert", "Home", "PageUp", "PageDown", "End", "Delete", "Space" });
+        cmbHotkeyKey.Items.AddRange(new object[] { "Add (+)", "Subtract (-)", "Multiply (*)", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "Insert", "Home", "PageUp", "PageDown", "End", "Delete", "Space" });
         cmbHotkeyKey.SelectedIndex = 0;
         cmbHotkeyKey.SelectedIndexChanged += CmbHotkeyKey_SelectedIndexChanged;
         grpHotkey.Controls.Add(cmbHotkeyKey);
@@ -298,6 +298,8 @@ public partial class SettingsForm : Form
         return keyText switch
         {
             "Add (+)" => Keys.Add,
+            "Subtract (-)" => Keys.Subtract,
+            "Multiply (*)" => Keys.Multiply,
             "Insert" => Keys.Insert,
             "Home" => Keys.Home,
             "PageUp" => Keys.PageUp,
