@@ -1,33 +1,42 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text.Json;
 using System.Windows.Forms;
 
-namespace WrongKeyboardFixer;
+namespace WrongKeyboardFixer.Repositories;
 
-public static class SettingsManager
+/// <summary>
+/// File-based implementation of ISettingsRepository
+/// </summary>
+public class SettingsFileRepository : ISettingsRepository
 {
-    private static readonly string SettingsPath = Path.Combine(
-        Application.CommonAppDataPath,
-        "WrongKeyboardFixer",
-        "settings.json"
-    );
+    private readonly string _settingsPath;
+    private readonly JsonSerializerOptions _jsonOptions;
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    public SettingsFileRepository()
     {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+        _settingsPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "WrongKeyboardFixer",
+            "settings.json"
+        );
 
-    public static AppSettings Load()
+        _jsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+    }
+
+    public AppSettings Load()
     {
         try
         {
-            if (!File.Exists(SettingsPath))
+            if (!File.Exists(_settingsPath))
                 return new AppSettings();
 
-            string json = File.ReadAllText(SettingsPath);
-            var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions);
+            string json = File.ReadAllText(_settingsPath);
+            var settings = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions);
             return settings ?? new AppSettings();
         }
         catch
@@ -37,17 +46,17 @@ public static class SettingsManager
         }
     }
 
-    public static void Save(AppSettings settings)
+    public void Save(AppSettings settings)
     {
         try
         {
             // ایجاد پوشه اگر وجود نداشته باشد
-            string directory = Path.GetDirectoryName(SettingsPath)!;
+            string directory = Path.GetDirectoryName(_settingsPath)!;
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
-            string json = JsonSerializer.Serialize(settings, JsonOptions);
-            File.WriteAllText(SettingsPath, json);
+            string json = JsonSerializer.Serialize(settings, _jsonOptions);
+            File.WriteAllText(_settingsPath, json);
         }
         catch (Exception ex)
         {
@@ -60,7 +69,7 @@ public static class SettingsManager
         }
     }
 
-    public static void AddToStartup(bool enable)
+    public void AddToStartup(bool enable)
     {
         try
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using System.Drawing;
+using WrongKeyboardFixer.Repositories;
 
 namespace WrongKeyboardFixer;
 
@@ -11,6 +12,7 @@ public partial class SettingsForm : Form
 
     private readonly AppSettings _settings;
     private readonly HotkeyManager _hotkeyManager;
+    private readonly ISettingsRepository _settingsRepository;
     private bool _isHotkeyRegistered;
 
     // کنترل‌های فرم
@@ -23,10 +25,11 @@ public partial class SettingsForm : Form
     private Button btnRegisterHotkey;
     private Label lblStatus;
 
-    public SettingsForm(AppSettings settings, HotkeyManager hotkeyManager)
+    public SettingsForm(AppSettings settings, HotkeyManager hotkeyManager, ISettingsRepository? settingsRepository = null)
     {
         _settings = settings ?? new AppSettings();
         _hotkeyManager = hotkeyManager;
+        _settingsRepository = settingsRepository ?? new SettingsFileRepository();
 
         // تنظیمات پایه راست‌چین ویندوز
         this.RightToLeft = RightToLeft.Yes;
@@ -350,8 +353,8 @@ public partial class SettingsForm : Form
                 _settings.HotkeyKey = key;
             }
 
-            SettingsManager.AddToStartup(_settings.RunOnStartup);
-            SettingsManager.Save(_settings);
+            _settingsRepository.AddToStartup(_settings.RunOnStartup);
+            _settingsRepository.Save(_settings);
 
             DialogResult = DialogResult.OK;
             Close();

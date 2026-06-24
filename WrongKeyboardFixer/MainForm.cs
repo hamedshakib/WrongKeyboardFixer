@@ -3,22 +3,26 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Repositories;
 
 namespace WrongKeyboardFixer;
 
 public class MainForm : Form
 {
+    private readonly ISettingsRepository _settingsRepository;
     private HotkeyManager? _hotkeyManager;
     private ClipboardManager _clipboardManager;
     private AppSettings _settings;
     private NotifyIcon? _trayIcon;
     private bool _isInitialized;
 
-    public MainForm()
+    public MainForm(ISettingsRepository settingsRepository)
     {
+        _settingsRepository = settingsRepository ?? throw new ArgumentNullException(nameof(settingsRepository));
+
         try
         {
-            _settings = SettingsManager.Load();
+            _settings = _settingsRepository.Load();
 
             InitializeForm();
             InitializeComponents();
@@ -107,11 +111,11 @@ public class MainForm : Form
         if (_hotkeyManager == null)
             return;
 
-        using var settingsForm = new SettingsForm(_settings, _hotkeyManager);
+        using var settingsForm = new SettingsForm(_settings, _hotkeyManager, _settingsRepository);
         if (settingsForm.ShowDialog() == DialogResult.OK)
         {
             // بارگذاری مجدد تنظیمات
-            _settings = SettingsManager.Load();
+            _settings = _settingsRepository.Load();
 
             // ثبت مجدد کلید ترکیبی
             RegisterHotkeyFromSettings();
@@ -121,7 +125,7 @@ public class MainForm : Form
     private void ApplyStartupSettings()
     {
         // اجرای خودکار با ویندوز
-        SettingsManager.AddToStartup(_settings.RunOnStartup);
+        _settingsRepository.AddToStartup(_settings.RunOnStartup);
     }
 
     protected override void WndProc(ref Message message)
