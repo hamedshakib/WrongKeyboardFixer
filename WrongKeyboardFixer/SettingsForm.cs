@@ -43,6 +43,7 @@ public partial class SettingsForm : Form
         this.MinimizeBox = false;
         this.StartPosition = FormStartPosition.CenterParent;
         this.Font = new System.Drawing.Font("Tahoma", 9);
+        this.Icon = Properties.Resources.WrongKeyboardFixerIcon;
 
         int marginX = 25; // فاصله استاندارد از لبه‌های چپ و راست فرم
         int currentY = 20; // موقعیت عمودی شروع

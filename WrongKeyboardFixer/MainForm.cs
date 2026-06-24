@@ -76,6 +76,7 @@ public class MainForm : Form
         Visible = false;
         FormBorderStyle = FormBorderStyle.None;
         Size = new System.Drawing.Size(1, 1);
+        Icon = Properties.Resources.WrongKeyboardFixerIcon;
         CreateTrayIcon();
     }
 
@@ -96,7 +97,7 @@ public class MainForm : Form
         contextMenu.Items.Add("خروج ❌", null, (_, _) => Application.Exit());
 
         _trayIcon.ContextMenuStrip = contextMenu;
-
+        _trayIcon.Icon = Properties.Resources.WrongKeyboardFixerIcon;
         // دابل کلیک برای باز کردن تنظیمات
         _trayIcon.DoubleClick += (_, _) => OpenSettings();
     }
