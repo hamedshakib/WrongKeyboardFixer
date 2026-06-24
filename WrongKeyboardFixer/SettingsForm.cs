@@ -43,7 +43,10 @@ public partial class SettingsForm : Form
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
         this.MinimizeBox = false;
-        this.StartPosition = FormStartPosition.CenterParent;
+        // When opened from the tray the main form is hidden/minimized, so
+        // CenterParent can position the dialog incorrectly. Use CenterScreen
+        // to ensure the settings window appears visible to the user.
+        this.StartPosition = FormStartPosition.CenterScreen;
         this.Font = new System.Drawing.Font("Tahoma", 9);
         this.Icon = Properties.Resources.WrongKeyboardFixerIcon;
 
