@@ -13,17 +13,19 @@ public static class HotkeyModifier
     public const uint ControlAlt = Control | Alt;
 }
 
-public class HotkeyManager : IDisposable
+public partial class HotkeyManager : IDisposable
 {
     private readonly IntPtr _windowHandle;
     private readonly int _hotkeyId;
     private bool _isRegistered;
 
-    [DllImport("user32.dll")]
-    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
 
-    [DllImport("user32.dll")]
-    private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool UnregisterHotKey(IntPtr hWnd, int id);
 
     private const int WM_HOTKEY = 0x0312;
 

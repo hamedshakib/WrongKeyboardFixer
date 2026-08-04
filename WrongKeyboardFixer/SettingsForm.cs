@@ -14,14 +14,14 @@ public partial class SettingsForm : Form
     private bool _isHotkeyRegistered;
 
     // کنترل‌های فرم
-    private CheckBox chkRunOnStartup;
+    private CheckBox chkRunOnStartup = null!;
     //private CheckBox chkShowNotifications;
-    private ComboBox cmbHotkeyModifier;
-    private ComboBox cmbHotkeyKey;
-    private Button btnSave;
-    private Button btnCancel;
-    private Button btnRegisterHotkey;
-    private Label lblStatus;
+    private ComboBox cmbHotkeyModifier = null!;
+    private ComboBox cmbHotkeyKey = null!;
+    private Button btnSave = null!;
+    private Button btnCancel = null!;
+    private Button btnRegisterHotkey = null!;
+    private Label lblStatus = null!;
 
     public SettingsForm(AppSettings settings, HotkeyManager hotkeyManager)
     {
@@ -48,7 +48,7 @@ public partial class SettingsForm : Form
         // to ensure the settings window appears visible to the user.
         this.StartPosition = FormStartPosition.CenterScreen;
         this.Font = new System.Drawing.Font("Tahoma", 9);
-        this.Icon = Properties.Resources.WrongKeyboardFixerIcon;
+        this.Icon = IconLoader.GetIcon();
 
         int marginX = 25; // فاصله استاندارد از لبه‌های چپ و راست فرم
         int currentY = 20; // موقعیت عمودی شروع
@@ -228,8 +228,8 @@ public partial class SettingsForm : Form
 
         for (int i = 0; i < cmbHotkeyKey.Items.Count; i++)
         {
-            string item = cmbHotkeyKey.Items[i].ToString()!;
-            if (item.StartsWith(keyName) || item.Contains(keyName))
+            string? item = cmbHotkeyKey.Items[i]?.ToString();
+            if (item is not null && (item.StartsWith(keyName) || item.Contains(keyName)))
             {
                 cmbHotkeyKey.SelectedIndex = i;
                 break;

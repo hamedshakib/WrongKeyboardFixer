@@ -13,12 +13,6 @@ public static class SettingsManager
         "settings.json"
     );
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     public static AppSettings Load()
     {
         try
@@ -27,7 +21,7 @@ public static class SettingsManager
                 return new AppSettings();
 
             string json = File.ReadAllText(SettingsPath);
-            var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions);
+            var settings = JsonSerializer.Deserialize(json, AppSettingsJsonContext.Default.AppSettings);
             return settings ?? new AppSettings();
         }
         catch
@@ -46,7 +40,7 @@ public static class SettingsManager
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
-            string json = JsonSerializer.Serialize(settings, JsonOptions);
+            string json = JsonSerializer.Serialize(settings, AppSettingsJsonContext.Default.AppSettings);
             File.WriteAllText(SettingsPath, json);
         }
         catch (Exception ex)

@@ -19,7 +19,7 @@
 - ✅ **تنظیمات قابل ذخیره** در فایل JSON
 - ✅ **جلوگیری از اجرای چند نمونه** از برنامه
 - ✅ **راست‌چین بودن** رابط کاربری (مناسب فارسی‌زبانان)
-- ✅ **پشتیبانی از دات‌نت 6.0 و بالاتر**
+- ✅ **پشتیبانی از دات‌نت 10.0 و Native AOT**
 
 ---
 
@@ -58,8 +58,8 @@
 ## 🔧 پیش‌نیازها
 
 - **ویندوز 10** یا **ویندوز 11**
-- **.NET 10.0 Runtime** یا بالاتر
-  > [دانلود .NET 10.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
+
+> 💡 نسخه‌های منتشر‌شده با **Native AOT** کامپایل می‌شوند و نیازی به نصب .NET Runtime ندارند.
 
 ---
 
@@ -93,3 +93,18 @@ dotnet build -c Release
 
 # اجرا
 dotnet run
+```
+
+### ساخت با Native AOT (توصیه‌شده)
+
+برای ساخت یک فایل اجرایی مستقل با Native AOT (بدون نیاز به .NET Runtime):
+
+```bash
+# انتشار با Native AOT
+dotnet publish -c Release
+
+# فایل اجرایی در مسیر زیر تولید می‌شود:
+# bin/Release/net10.0-windows/publish/WrongKeyboardFixer.exe
+```
+
+> ⚠️ برای ساخت AOT به **C++ Build Tools** یا **Visual Studio با workload Desktop development** نیاز است.

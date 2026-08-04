@@ -9,8 +9,8 @@ namespace WrongKeyboardFixer;
 public class MainForm : Form
 {
     private HotkeyManager? _hotkeyManager;
-    private ClipboardManager _clipboardManager;
-    private AppSettings _settings;
+    private ClipboardManager _clipboardManager = null!;
+    private AppSettings _settings = null!;
     private NotifyIcon? _trayIcon;
     private bool _isInitialized;
 
@@ -44,6 +44,8 @@ public class MainForm : Form
 
         // ثبت کلید ترکیبی از تنظیمات
         RegisterHotkeyFromSettings();
+
+        CheckForUpdatesAsync();
     }
 
     private void RegisterHotkeyFromSettings()
@@ -76,7 +78,7 @@ public class MainForm : Form
         Visible = false;
         FormBorderStyle = FormBorderStyle.None;
         Size = new System.Drawing.Size(1, 1);
-        Icon = Properties.Resources.WrongKeyboardFixerIcon;
+        Icon = IconLoader.GetIcon();
         CreateTrayIcon();
     }
 
@@ -97,7 +99,7 @@ public class MainForm : Form
         contextMenu.Items.Add("خروج ❌", null, (_, _) => Application.Exit());
 
         _trayIcon.ContextMenuStrip = contextMenu;
-        _trayIcon.Icon = Properties.Resources.WrongKeyboardFixerIcon;
+        _trayIcon.Icon = IconLoader.GetIcon();
         // دابل کلیک برای باز کردن تنظیمات
         _trayIcon.DoubleClick += (_, _) => OpenSettings();
     }
@@ -180,5 +182,17 @@ public class MainForm : Form
         _hotkeyManager?.Dispose();
         _trayIcon?.Dispose();
         base.OnFormClosing(e);
+    }
+
+    private async void CheckForUpdatesAsync()
+    {
+        try
+        {
+            await AutoUpdater.CheckForUpdatesAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"❌ Update check error: {ex.Message}");
+        }
     }
 }
