@@ -324,7 +324,7 @@ public partial class SettingsForm : Form
         if (Localization.CurrentLanguage != lang)
         {
             Localization.SetLanguage(lang);
-            ApplyLanguage();
+            //ApplyLanguage();
         }
     }
 
