@@ -175,9 +175,7 @@ public static class AutoUpdater
     {
         try
         {
-            string tempDir = Path.Combine(Path.GetTempPath(), $"WrongKeyboardFixer_Update_{release.TagName}");
-            if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, true);
+            string tempDir = Path.Combine(Path.GetTempPath(), $"WrongKeyboardFixer_Update_{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
 
             string downloadUrl = release.DownloadUrl;
@@ -195,23 +193,26 @@ public static class AutoUpdater
 
             var totalBytes = response.Content.Headers.ContentLength ?? -1;
             using var contentStream = await response.Content.ReadAsStreamAsync();
-            using var fileStream = new FileStream(downloadedFile, FileMode.Create, FileAccess.Write, FileShare.None);
 
-            var buffer = new byte[8192];
-            int bytesRead;
-            long totalRead = 0;
-
-            while ((bytesRead = await contentStream.ReadAsync(buffer)) > 0)
+            // Use a using block (not using var) so the file is closed before extraction
+            using (var fileStream = new FileStream(downloadedFile, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                await fileStream.WriteAsync(buffer, 0, bytesRead);
-                totalRead += bytesRead;
+                var buffer = new byte[8192];
+                int bytesRead;
+                long totalRead = 0;
 
-                if (totalBytes > 0)
+                while ((bytesRead = await contentStream.ReadAsync(buffer)) > 0)
                 {
-                    int percent = (int)(20 + (totalRead * 70.0 / totalBytes));
-                    progress?.Report((Math.Min(percent, 90), $"دانلود: {percent}%"));
+                    await fileStream.WriteAsync(buffer, 0, bytesRead);
+                    totalRead += bytesRead;
+
+                    if (totalBytes > 0)
+                    {
+                        int percent = (int)(20 + (totalRead * 70.0 / totalBytes));
+                        progress?.Report((Math.Min(percent, 90), $"دانلود: {percent}%"));
+                    }
                 }
-            }
+            } // fileStream is disposed here — file is no longer locked
 
             progress?.Report((90, "در حال آماده‌سازی نصب..."));
 
@@ -271,6 +272,19 @@ public static class AutoUpdater
                 newExePath = downloadedFile;
             }
 
+            // Verify the new exe version is actually newer than the current one
+            var newExeVersion = GetFileVersion(newExePath);
+            if (newExeVersion != null && newExeVersion <= GetCurrentVersion())
+            {
+                MessageBox.Show(
+                    $"نسخه فایل دانلودشده ({newExeVersion}) از نسخه فعلی ({GetCurrentVersion()}) جدیدتر نیست.\n" +
+                    "لطفاً مطمئن شوید که فایل ZIP حاوی نسخه جدیدتر است.",
+                    "خطا",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return UpdateStatus.Error;
+            }
+
             // Create batch script to replace the running exe
             string batchPath = Path.Combine(tempDir, "update.bat");
             string batchContent = GenerateBatchScript(
@@ -311,7 +325,7 @@ public static class AutoUpdater
 
     /// <summary>
     /// Generates a batch script that waits for the current process to exit,
-    /// replaces the executable, and restarts the application.
+    /// replaces the executable with retry logic, and restarts the application.
     /// </summary>
     private static string GenerateBatchScript(
         int processId,
@@ -319,22 +333,58 @@ public static class AutoUpdater
         string currentExePath,
         string tempDir)
     {
+        string logFile = Path.Combine(tempDir, "update.log");
         return $@"@echo off
 chcp 65001 >nul
-setlocal
+setlocal EnableDelayedExpansion
 
-:: Wait for the current application to exit
+set ""LOG={logFile}""
+echo [%date% %time%] Update script started > ""!LOG!""
+
+:: Wait for the current application to exit (max 30 seconds)
+set /a waitCount=0
 :waitloop
 tasklist /fi ""PID eq {processId}"" 2>nul | find ""{processId}"" >nul
-if %errorlevel% equ 0 (
+if !errorlevel! equ 0 (
+    set /a waitCount+=1
+    if !waitCount! geq 30 (
+        echo [%date% %time%] ERROR: Timed out waiting for process {processId} to exit >> ""!LOG!""
+        goto :error
+    )
     ping 127.0.0.1 -n 2 >nul
     goto waitloop
 )
+echo [%date% %time%] Process {processId} exited. Proceeding with update... >> ""!LOG!""
 
-:: Copy the new executable over the old one
+:: Copy the new executable over the old one with retry (max 10 attempts)
+set /a copyAttempt=0
+:copyloop
+set /a copyAttempt+=1
 copy /y ""{newExePath}"" ""{currentExePath}"" >nul 2>&1
+if !errorlevel! equ 0 (
+    echo [%date% %time%] Copy succeeded on attempt !copyAttempt! >> ""!LOG!""
+    goto :copyok
+)
+if !copyAttempt! geq 10 (
+    echo [%date% %time%] ERROR: Copy failed after 10 attempts >> ""!LOG!""
+    goto :error
+)
+echo [%date% %time%] Copy attempt !copyAttempt! failed, retrying... >> ""!LOG!""
+ping 127.0.0.1 -n 2 >nul
+goto copyloop
+
+:copyok
+:: Verify the copy actually worked by checking file size
+for %%A in (""{newExePath}"") do set ""newSize=%%~zA""
+for %%A in (""{currentExePath}"") do set ""curSize=%%~zA""
+if not ""!newSize!""==""!curSize!"" (
+    echo [%date% %time%] ERROR: File size mismatch after copy (new=!newSize!, cur=!curSize!) >> ""!LOG!""
+    goto :error
+)
+echo [%date% %time%] File size verified: !curSize! bytes >> ""!LOG!""
 
 :: Start the updated application
+echo [%date% %time%] Starting updated application... >> ""!LOG!""
 start """" ""{currentExePath}""
 
 :: Wait a moment for the app to start
@@ -345,6 +395,17 @@ rd /s /q ""{tempDir}"" 2>nul
 
 :: Delete this batch file
 (goto) 2>nul & del ""%~f0""
+exit /b 0
+
+:error
+echo [%date% %time%] Update failed. See log for details. >> ""!LOG!""
+:: Show error message to user
+msg * ""Update failed. Please check the log file: {logFile}"" >nul 2>&1
+:: Clean up temp directory
+rd /s /q ""{tempDir}"" 2>nul
+:: Delete this batch file
+(goto) 2>nul & del ""%~f0""
+exit /b 1
 ";
     }
 
@@ -356,6 +417,26 @@ rd /s /q ""{tempDir}"" 2>nul
         foreach (var file in Directory.EnumerateFiles(directory, "*.exe", SearchOption.AllDirectories))
         {
             return file;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Reads the file version of an executable file.
+    /// </summary>
+    private static Version? GetFileVersion(string filePath)
+    {
+        try
+        {
+            var versionInfo = FileVersionInfo.GetVersionInfo(filePath);
+            if (versionInfo.FileVersion != null && Version.TryParse(versionInfo.FileVersion, out var version))
+                return version;
+            if (versionInfo.ProductVersion != null && Version.TryParse(versionInfo.ProductVersion, out var productVersion))
+                return productVersion;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"❌ Failed to read file version: {ex.Message}");
         }
         return null;
     }
