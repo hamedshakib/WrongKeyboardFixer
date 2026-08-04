@@ -22,6 +22,7 @@ public partial class SettingsForm : Form
     private GroupBox grpHotkey = null!;
     private Label lblHotkey = null!;
     private ComboBox cmbHotkeyModifier = null!;
+    private Label lblPlus = null!;
     private ComboBox cmbHotkeyKey = null!;
     private Button btnRegisterHotkey = null!;
     private Label lblStatus = null!;
@@ -132,7 +133,6 @@ public partial class SettingsForm : Form
         lblHotkey = new Label
         {
             Text = Localization.Get("HotkeyLabel"),
-            Location = new Point(grpHotkey.Width - 95, 33),
             Size = new Size(80, 20),
             TextAlign = ContentAlignment.MiddleRight
         };
@@ -142,7 +142,6 @@ public partial class SettingsForm : Form
         cmbHotkeyModifier = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Location = new Point(grpHotkey.Width - 215, 30),
             Size = new Size(110, 25)
         };
         cmbHotkeyModifier.Items.AddRange(new object[] { "Ctrl + Alt", "Ctrl + Shift", "Alt + Shift", "Ctrl", "Alt", "Shift" });
@@ -151,10 +150,9 @@ public partial class SettingsForm : Form
         grpHotkey.Controls.Add(cmbHotkeyModifier);
 
         // علامت مثبت بین دو کمبواباکس
-        var lblPlus = new Label
+        lblPlus = new Label
         {
             Text = "+",
-            Location = new Point(grpHotkey.Width - 235, 33),
             Size = new Size(15, 20),
             TextAlign = ContentAlignment.MiddleCenter
         };
@@ -164,7 +162,6 @@ public partial class SettingsForm : Form
         cmbHotkeyKey = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Location = new Point(grpHotkey.Width - 330, 30),
             Size = new Size(90, 25)
         };
         cmbHotkeyKey.Items.AddRange(new object[] { "Add (+)", "Subtract (-)", "Multiply (*)", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "Insert", "Home", "PageUp", "PageDown", "End", "Delete", "Space" });
@@ -176,7 +173,6 @@ public partial class SettingsForm : Form
         btnRegisterHotkey = new Button
         {
             Text = Localization.Get("ApplyHotkey"),
-            Location = new Point(grpHotkey.Width - 175, 80),
             Size = new Size(160, 30),
             BackColor = System.Drawing.Color.LightGreen,
             FlatStyle = FlatStyle.Flat
@@ -189,12 +185,14 @@ public partial class SettingsForm : Form
         lblStatus = new Label
         {
             Text = Localization.Get("StatusChecking"),
-            Location = new Point(15, 85),
             Size = new Size(grpHotkey.Width - 190, 20),
             ForeColor = System.Drawing.Color.Blue,
             TextAlign = ContentAlignment.MiddleLeft // وضعیت در سمت چپ دکمه ثبت قرار بگیرد
         };
         grpHotkey.Controls.Add(lblStatus);
+
+        PositionHotkeyControls();
+        PositionStatusControl();
 
         this.Controls.Add(grpHotkey);
         currentY += grpHotkey.Height + 25;
@@ -261,6 +259,64 @@ public partial class SettingsForm : Form
         this.Controls.Add(btnCancel);
     }
 
+    /// <summary>
+    /// موقعیت‌دهی کنترل‌های کادر میانبر بر اساس جهت زبان (چپ‌چین/راست‌چین).
+    /// </summary>
+    private void PositionHotkeyControls()
+    {
+        if (grpHotkey == null || lblHotkey == null || cmbHotkeyModifier == null || cmbHotkeyKey == null)
+            return;
+
+        int width = grpHotkey.Width;
+
+        if (Localization.IsRtl)
+        {
+            // فارسی: راست‌چین — برچسب سمت راست، دکمه زیر برچسب در سمت راست
+            lblHotkey.Location = new Point(width - 95, 33);
+            cmbHotkeyModifier.Location = new Point(width - 215, 30);
+            lblPlus.Location = new Point(width - 235, 33);
+            cmbHotkeyKey.Location = new Point(width - 330, 30);
+            lblHotkey.TextAlign = ContentAlignment.MiddleRight;
+
+            btnRegisterHotkey.Location = new Point(width - 175, 80);
+        }
+        else
+        {
+            // انگلیسی: چپ‌چین — برچسب سمت چپ، دکمه زیر برچسب در سمت چپ
+            lblHotkey.Location = new Point(15, 33);
+            cmbHotkeyModifier.Location = new Point(100, 30);
+            lblPlus.Location = new Point(215, 33);
+            cmbHotkeyKey.Location = new Point(235, 30);
+            lblHotkey.TextAlign = ContentAlignment.MiddleLeft;
+
+            btnRegisterHotkey.Location = new Point(15, 80);
+        }
+    }
+
+    /// <summary>
+    /// موقعیت‌دهی برچسب وضعیت — در فارسی سمت چپ (زیر دراپ‌داون‌ها) و در انگلیسی سمت راست.
+    /// </summary>
+    private void PositionStatusControl()
+    {
+        if (grpHotkey == null || lblStatus == null)
+            return;
+
+        int width = grpHotkey.Width;
+
+        if (Localization.IsRtl)
+        {
+            // فارسی: وضعیت در سمت چپ کادر، مقابل دکمه که سمت راست است
+            lblStatus.Location = new Point(15, 85);
+            lblStatus.Size = new Size(width - 200, 20);
+        }
+        else
+        {
+            // انگلیسی: وضعیت در سمت راست کادر، مقابل دکمه که سمت چپ است
+            lblStatus.Location = new Point(180, 85);
+            lblStatus.Size = new Size(width - 195, 20);
+        }
+    }
+
     private void CmbLanguage_SelectedIndexChanged(object? sender, EventArgs e)
     {
         string lang = GetSelectedLanguage();
@@ -303,6 +359,9 @@ public partial class SettingsForm : Form
         btnCheckUpdate.Text = Localization.Get("CheckUpdate");
         btnSave.Text = Localization.Get("Save");
         btnCancel.Text = Localization.Get("Cancel");
+
+        PositionHotkeyControls();
+        PositionStatusControl();
 
         UpdateStatusLabel();
     }
