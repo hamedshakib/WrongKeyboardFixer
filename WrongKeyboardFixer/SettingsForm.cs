@@ -53,7 +53,7 @@ public partial class SettingsForm : Form
     private void InitializeControls()
     {
         this.Text = Localization.Get("Settings");
-        this.Size = new System.Drawing.Size(520, 440);
+        this.Size = new System.Drawing.Size(520, 410);
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
         this.MinimizeBox = false;
