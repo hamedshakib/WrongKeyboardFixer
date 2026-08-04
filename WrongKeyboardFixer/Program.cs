@@ -20,9 +20,12 @@ internal static class Program
 
         if (!createdNew)
         {
+            // زبان ذخیره‌شده را بارگذاری کن تا پیام به زبان درست نمایش داده شود
+            Localization.SetLanguage(SettingsManager.Load().Language);
+
             MessageBox.Show(
-                "برنامه از قبل در حال اجراست!",
-                "توجه",
+                Localization.Get("AlreadyRunning"),
+                Localization.Get("Attention"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning
             );

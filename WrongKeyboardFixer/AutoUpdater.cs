@@ -35,18 +35,18 @@ public static class AutoUpdater
     {
         try
         {
-            progress?.Report((0, "بررسی نسخه فعلی..."));
+            progress?.Report((0, Localization.Get("UpdCheckingCurrent")));
             var currentVersion = GetCurrentVersion();
 
-            progress?.Report((10, "دریافت اطلاعات آخرین نسخه از GitHub..."));
+            progress?.Report((10, Localization.Get("UpdFetchingRelease")));
             var latestRelease = await GetLatestReleaseInfoAsync();
             if (latestRelease == null)
             {
                 if (!silent)
                 {
                     MessageBox.Show(
-                        "خطا در دریافت اطلاعات بروزرسانی از سرور.\nلطفاً اتصال اینترنت خود را بررسی کنید.",
-                        "خطا",
+                        Localization.Get("UpdFetchError"),
+                        Localization.Get("Error"),
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
                 }
@@ -60,22 +60,20 @@ public static class AutoUpdater
                 if (!silent)
                 {
                     MessageBox.Show(
-                        $"شما از آخرین نسخه استفاده می‌کنید.\n\nنسخه فعلی: {currentVersion}",
-                        "بروزرسانی",
+                        Localization.Format("UpdNoUpdate", currentVersion),
+                        Localization.Get("Update"),
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
                 }
-                progress?.Report((100, "شما از آخرین نسخه استفاده می‌کنید"));
+                progress?.Report((100, Localization.Get("UpdNoUpdateShort")));
                 return UpdateStatus.NoUpdate;
             }
 
             // Show update available dialog
-            progress?.Report((15, $"نسخه جدید {latestVersion} یافت شد"));
+            progress?.Report((15, Localization.Format("UpdFound", latestVersion)));
             var result = MessageBox.Show(
-                $"نسخه جدید {latestVersion} منتشر شده است.\n" +
-                $"نسخه فعلی: {currentVersion}\n\n" +
-                $"آیا می‌خواهید آن را دانلود و نصب کنید؟",
-                "بروزرسانی موجود است",
+                Localization.Format("UpdAvailablePrompt", latestVersion, currentVersion),
+                Localization.Get("UpdAvailableTitle"),
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
 
@@ -87,12 +85,12 @@ public static class AutoUpdater
         catch (Exception ex)
         {
             Debug.WriteLine($"❌ Update check failed: {ex.Message}");
-            progress?.Report((100, $"خطا: {ex.Message}"));
+            progress?.Report((100, Localization.Format("UpdCheckError", ex.Message)));
             if (!silent)
             {
                 MessageBox.Show(
-                    $"خطا در بررسی بروزرسانی:\n{ex.Message}",
-                    "خطا",
+                    Localization.Format("UpdCheckError", ex.Message),
+                    Localization.Get("Error"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
@@ -186,7 +184,7 @@ public static class AutoUpdater
             using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("WrongKeyboardFixer-AutoUpdater");
 
-            progress?.Report((20, "در حال دانلود بروزرسانی..."));
+            progress?.Report((20, Localization.Get("UpdDownloading")));
 
             using var response = await httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();
@@ -209,12 +207,12 @@ public static class AutoUpdater
                     if (totalBytes > 0)
                     {
                         int percent = (int)(20 + (totalRead * 70.0 / totalBytes));
-                        progress?.Report((Math.Min(percent, 90), $"دانلود: {percent}%"));
+                        progress?.Report((Math.Min(percent, 90), Localization.Format("UpdDownloadPercent", percent)));
                     }
                 }
             } // fileStream is disposed here — file is no longer locked
 
-            progress?.Report((90, "در حال آماده‌سازی نصب..."));
+            progress?.Report((90, Localization.Get("UpdPreparing")));
 
             string currentExePath = Application.ExecutablePath;
             string? newExePath = null;
@@ -260,8 +258,8 @@ public static class AutoUpdater
                 if (newExePath == null)
                 {
                     MessageBox.Show(
-                        "فایل اجرایی در فایل فشرده پیدا نشد.",
-                        "خطا",
+                        Localization.Get("UpdExeNotFound"),
+                        Localization.Get("Error"),
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
                     return UpdateStatus.Error;
@@ -277,9 +275,8 @@ public static class AutoUpdater
             if (newExeVersion != null && newExeVersion <= GetCurrentVersion())
             {
                 MessageBox.Show(
-                    $"نسخه فایل دانلودشده ({newExeVersion}) از نسخه فعلی ({GetCurrentVersion()}) جدیدتر نیست.\n" +
-                    "لطفاً مطمئن شوید که فایل ZIP حاوی نسخه جدیدتر است.",
-                    "خطا",
+                    Localization.Format("UpdNotNewer", newExeVersion, GetCurrentVersion()),
+                    Localization.Get("Error"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
                 return UpdateStatus.Error;
@@ -294,7 +291,7 @@ public static class AutoUpdater
                 tempDir: tempDir);
             File.WriteAllText(batchPath, batchContent);
 
-            progress?.Report((95, "در حال نصب... برنامه مجدداً اجرا می‌شود"));
+            progress?.Report((95, Localization.Get("UpdInstalling")));
 
             // Start the batch script (hidden window)
             Process.Start(new ProcessStartInfo
@@ -304,7 +301,7 @@ public static class AutoUpdater
                 UseShellExecute = true
             });
 
-            progress?.Report((100, "نصب کامل شد. برنامه مجدداً اجرا می‌شود."));
+            progress?.Report((100, Localization.Get("UpdInstallComplete")));
 
             // Exit current application so the batch script can replace the exe
             Application.Exit();
@@ -313,10 +310,10 @@ public static class AutoUpdater
         catch (Exception ex)
         {
             Debug.WriteLine($"❌ Download/install failed: {ex.Message}");
-            progress?.Report((100, $"خطا: {ex.Message}"));
+            progress?.Report((100, Localization.Format("UpdDownloadInstallError", ex.Message)));
             MessageBox.Show(
-                $"خطا در دانلود یا نصب بروزرسانی:\n{ex.Message}",
-                "خطا",
+                Localization.Format("UpdDownloadInstallError", ex.Message),
+                Localization.Get("Error"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
             return UpdateStatus.Error;

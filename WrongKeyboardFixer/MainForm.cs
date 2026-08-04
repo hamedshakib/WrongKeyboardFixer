@@ -12,6 +12,7 @@ public class MainForm : Form
     private ClipboardManager _clipboardManager = null!;
     private AppSettings _settings = null!;
     private NotifyIcon? _trayIcon;
+    private ContextMenuStrip? _trayMenu;
     private bool _isInitialized;
 
     public MainForm()
@@ -19,6 +20,9 @@ public class MainForm : Form
         try
         {
             _settings = SettingsManager.Load();
+
+            // اعمال زبان ذخیره‌شده قبل از ایجاد هر کنترل
+            Localization.SetLanguage(_settings.Language);
 
             InitializeForm();
             InitializeComponents();
@@ -29,8 +33,8 @@ public class MainForm : Form
         catch (Exception ex)
         {
             MessageBox.Show(
-                $"خطا در راه‌اندازی برنامه: {ex.Message}",
-                "خطا",
+                Localization.Format("StartupError", ex.Message),
+                Localization.Get("Error"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
             Environment.Exit(1);
@@ -62,8 +66,8 @@ public class MainForm : Form
             if (!_hotkeyManager.Register(HotkeyModifier.ControlAlt, Keys.Add))
             {
                 MessageBox.Show(
-                    "ثبت Hotkey ناموفق بود. ممکن است کلید ترکیبی توسط برنامه دیگری گرفته شده باشد.",
-                    "اخطار",
+                    Localization.Get("HotkeyRegisterFailed"),
+                    Localization.Get("Warning"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
             }
@@ -84,24 +88,20 @@ public class MainForm : Form
 
     private void CreateTrayIcon()
     {
+        _trayMenu = new ContextMenuStrip();
+        _trayMenu.Items.Add(Localization.Get("TraySettings"), null, (_, _) => OpenSettings());
+        _trayMenu.Items.Add(Localization.Get("TrayCheckUpdate"), null, (_, _) => _ = CheckForUpdatesManualAsync());
+        _trayMenu.Items.Add("-"); // جداکننده
+        _trayMenu.Items.Add(Localization.Get("TrayExit"), null, (_, _) => Application.Exit());
+
         _trayIcon = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            Icon = IconLoader.GetIcon(),
             Visible = true,
-            Text = "Wrong Keyboard Fixer"
+            ContextMenuStrip = _trayMenu,
+            Text = Localization.Get("TrayText")
         };
 
-        var contextMenu = new ContextMenuStrip();
-
-        // آیتم تنظیمات
-        contextMenu.Items.Add("تنظیمات ⚙️", null, (_, _) => OpenSettings());
-        // آیتم بررسی بروزرسانی
-        contextMenu.Items.Add("بررسی بروزرسانی 🔄", null, (_, _) => _ = CheckForUpdatesManualAsync());
-        contextMenu.Items.Add("-"); // جداکننده
-        contextMenu.Items.Add("خروج ❌", null, (_, _) => Application.Exit());
-
-        _trayIcon.ContextMenuStrip = contextMenu;
-        _trayIcon.Icon = IconLoader.GetIcon();
         // دابل کلیک برای باز کردن تنظیمات
         _trayIcon.DoubleClick += (_, _) => OpenSettings();
     }
@@ -117,9 +117,26 @@ public class MainForm : Form
             // بارگذاری مجدد تنظیمات
             _settings = SettingsManager.Load();
 
+            // اعمال زبان جدید و بازسازی منوی tray
+            Localization.SetLanguage(_settings.Language);
+            RefreshTrayMenu();
+
             // ثبت مجدد کلید ترکیبی
             RegisterHotkeyFromSettings();
         }
+    }
+
+    private void RefreshTrayMenu()
+    {
+        if (_trayMenu == null || _trayIcon == null)
+            return;
+
+        _trayMenu.Items.Clear();
+        _trayMenu.Items.Add(Localization.Get("TraySettings"), null, (_, _) => OpenSettings());
+        _trayMenu.Items.Add(Localization.Get("TrayCheckUpdate"), null, (_, _) => _ = CheckForUpdatesManualAsync());
+        _trayMenu.Items.Add("-"); // جداکننده
+        _trayMenu.Items.Add(Localization.Get("TrayExit"), null, (_, _) => Application.Exit());
+        _trayIcon.Text = Localization.Get("TrayText");
     }
 
     private void ApplyStartupSettings()
@@ -209,20 +226,20 @@ public class MainForm : Form
         // ایجاد فرم Progress
         var progressForm = new Form
         {
-            Text = "بررسی بروزرسانی",
+            Text = Localization.Get("CheckingUpdate"),
             Size = new Size(400, 120),
             FormBorderStyle = FormBorderStyle.FixedDialog,
             StartPosition = FormStartPosition.CenterScreen,
             MaximizeBox = false,
             MinimizeBox = false,
-            RightToLeft = RightToLeft.Yes,
+            RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No,
             RightToLeftLayout = true,
             ControlBox = false
         };
 
         var lblMessage = new Label
         {
-            Text = "در حال بررسی...",
+            Text = Localization.Get("CheckingProgress"),
             Dock = DockStyle.Top,
             Height = 30,
             TextAlign = ContentAlignment.MiddleCenter,
@@ -257,16 +274,16 @@ public class MainForm : Form
             if (status == AutoUpdater.UpdateStatus.NoUpdate)
             {
                 MessageBox.Show(
-                    $"شما از آخرین نسخه استفاده می‌کنید.\n\nنسخه فعلی: {AutoUpdater.GetCurrentVersionString()}",
-                    "بروزرسانی",
+                    Localization.Format("UpdNoUpdate", AutoUpdater.GetCurrentVersionString()),
+                    Localization.Get("Update"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
             }
             else if (status == AutoUpdater.UpdateStatus.Error)
             {
                 MessageBox.Show(
-                    "خطا در بررسی بروزرسانی. لطفاً اتصال اینترنت خود را بررسی کنید.",
-                    "خطا",
+                    Localization.Get("UpdCheckErrorInternet"),
+                    Localization.Get("Error"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
@@ -277,8 +294,8 @@ public class MainForm : Form
             progressForm.Close();
             Debug.WriteLine($"❌ Update check error: {ex.Message}");
             MessageBox.Show(
-                $"خطا در بررسی بروزرسانی:\n{ex.Message}",
-                "خطا",
+                Localization.Format("UpdCheckError", ex.Message),
+                Localization.Get("Error"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
         }

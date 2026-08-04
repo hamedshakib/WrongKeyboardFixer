@@ -16,21 +16,33 @@ public partial class SettingsForm : Form
 
     // کنترل‌های فرم
     private CheckBox chkRunOnStartup = null!;
-    //private CheckBox chkShowNotifications;
+    private ComboBox cmbLanguage = null!;
+    private Label lblLanguage = null!;
+    private Label titleLabel = null!;
+    private GroupBox grpHotkey = null!;
+    private Label lblHotkey = null!;
     private ComboBox cmbHotkeyModifier = null!;
     private ComboBox cmbHotkeyKey = null!;
-    private Button btnSave = null!;
-    private Button btnCancel = null!;
     private Button btnRegisterHotkey = null!;
     private Label lblStatus = null!;
+    private Label lblVersionTitle = null!;
+    private Button btnCheckUpdate = null!;
+    private Button btnSave = null!;
+    private Button btnCancel = null!;
+
+    private enum StatusState { Checking, Registered, NotRegistered, RegisterSuccess, RegisterFailed }
+    private StatusState _statusState = StatusState.Checking;
 
     public SettingsForm(AppSettings settings, HotkeyManager hotkeyManager)
     {
         _settings = settings ?? new AppSettings();
         _hotkeyManager = hotkeyManager;
 
-        // تنظیمات پایه راست‌چین ویندوز
-        this.RightToLeft = RightToLeft.Yes;
+        // زبان ذخیره‌شده را فعال کن قبل از ساخت کنترل‌ها
+        Localization.SetLanguage(_settings.Language);
+
+        // RightToLeftLayout را ثابت نگه می‌داریم تا در زمان اجرا تغییر نکند
+        // (تغییر آن بعد از Show فرم پشتیبانی نمی‌شود)
         this.RightToLeftLayout = true;
 
         InitializeControls();
@@ -39,8 +51,8 @@ public partial class SettingsForm : Form
 
     private void InitializeControls()
     {
-        this.Text = "تنظیمات";
-        this.Size = new System.Drawing.Size(460, 380);
+        this.Text = Localization.Get("Settings");
+        this.Size = new System.Drawing.Size(520, 440);
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
         this.MinimizeBox = false;
@@ -50,6 +62,7 @@ public partial class SettingsForm : Form
         this.StartPosition = FormStartPosition.CenterScreen;
         this.Font = new System.Drawing.Font("Tahoma", 9);
         this.Icon = IconLoader.GetIcon();
+        this.RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No;
 
         int marginX = 25; // فاصله استاندارد از لبه‌های چپ و راست فرم
         int currentY = 20; // موقعیت عمودی شروع
@@ -57,9 +70,9 @@ public partial class SettingsForm : Form
         int controlWidth = formWidth - (2 * marginX); // عرض مفید برای کنترل‌های سرتاسری
 
         // ۱. عنوان اصلی
-        var titleLabel = new Label
+        titleLabel = new Label
         {
-            Text = "تنظیمات برنامه",
+            Text = Localization.Get("SettingsTitle"),
             Font = new System.Drawing.Font("Tahoma", 11, System.Drawing.FontStyle.Bold),
             Location = new Point(marginX, currentY),
             Size = new Size(controlWidth, 30),
@@ -68,10 +81,36 @@ public partial class SettingsForm : Form
         this.Controls.Add(titleLabel);
         currentY += 40;
 
-        // ۲. اجرای خودکار با ویندوز
+        // ۲. انتخاب زبان
+        lblLanguage = new Label
+        {
+            Text = Localization.Get("Language"),
+            Location = new Point(marginX, currentY),
+            Size = new Size(100, 25),
+            TextAlign = ContentAlignment.MiddleLeft
+        };
+        this.Controls.Add(lblLanguage);
+
+        cmbLanguage = new ComboBox
+        {
+            DropDownStyle = ComboBoxStyle.DropDownList,
+            Location = new Point(marginX + 110, currentY),
+            Size = new Size(120, 25)
+        };
+        // نام زبان‌ها به زبان خودشان نمایش داده می‌شود (endonym)
+        cmbLanguage.Items.AddRange(new object[]
+        {
+            Localization.Get("LanguageEnglish"),
+            Localization.Get("LanguagePersian"),
+        });
+        cmbLanguage.SelectedIndexChanged += CmbLanguage_SelectedIndexChanged;
+        this.Controls.Add(cmbLanguage);
+        currentY += 35;
+
+        // ۳. اجرای خودکار با ویندوز
         chkRunOnStartup = new CheckBox
         {
-            Text = "اجرای خودکار با ویندوز",
+            Text = Localization.Get("RunOnStartup"),
             CheckAlign = ContentAlignment.MiddleLeft,
             TextAlign = ContentAlignment.MiddleLeft,
             Location = new Point(marginX, currentY),
@@ -80,19 +119,19 @@ public partial class SettingsForm : Form
         this.Controls.Add(chkRunOnStartup);
         currentY += 32;
 
-        // ۵. کادر میانبر (GroupBox)
-        var grpHotkey = new GroupBox
+        // ۴. کادر میانبر (GroupBox)
+        grpHotkey = new GroupBox
         {
-            Text = "تنظیمات کلید میانبر",
+            Text = Localization.Get("HotkeyGroup"),
             Location = new Point(marginX, currentY),
             Size = new Size(controlWidth, 130),
-            RightToLeft = RightToLeft.Yes
+            RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No
         };
 
         // المان‌های داخل کادر میانبر با موقعیت‌دهی محلی (نسبت به لبه‌های GroupBox)
-        var lblHotkey = new Label
+        lblHotkey = new Label
         {
-            Text = "کلید ترکیبی:",
+            Text = Localization.Get("HotkeyLabel"),
             Location = new Point(grpHotkey.Width - 95, 33),
             Size = new Size(80, 20),
             TextAlign = ContentAlignment.MiddleRight
@@ -136,9 +175,9 @@ public partial class SettingsForm : Form
         // دکمه اعمال کلید ترکیبی
         btnRegisterHotkey = new Button
         {
-            Text = "اعمال کلید ترکیبی",
-            Location = new Point(grpHotkey.Width - 145, 80),
-            Size = new Size(130, 30),
+            Text = Localization.Get("ApplyHotkey"),
+            Location = new Point(grpHotkey.Width - 175, 80),
+            Size = new Size(160, 30),
             BackColor = System.Drawing.Color.LightGreen,
             FlatStyle = FlatStyle.Flat
         };
@@ -149,9 +188,9 @@ public partial class SettingsForm : Form
         // برچسب وضعیت ثبت
         lblStatus = new Label
         {
-            Text = "وضعیت: بررسی...",
+            Text = Localization.Get("StatusChecking"),
             Location = new Point(15, 85),
-            Size = new Size(grpHotkey.Width - 170, 20),
+            Size = new Size(grpHotkey.Width - 190, 20),
             ForeColor = System.Drawing.Color.Blue,
             TextAlign = ContentAlignment.MiddleLeft // وضعیت در سمت چپ دکمه ثبت قرار بگیرد
         };
@@ -160,13 +199,13 @@ public partial class SettingsForm : Form
         this.Controls.Add(grpHotkey);
         currentY += grpHotkey.Height + 25;
 
-        // ۶. بخش نسخه و بروزرسانی
-        var lblVersionTitle = new Label
+        // ۵. بخش نسخه و بروزرسانی
+        lblVersionTitle = new Label
         {
-            Text = "نسخه فعلی:",
+            Text = Localization.Get("CurrentVersion"),
             Font = new System.Drawing.Font("Tahoma", 9, System.Drawing.FontStyle.Bold),
             Location = new Point(marginX, currentY),
-            Size = new Size(100, 25),
+            Size = new Size(130, 25),
             TextAlign = ContentAlignment.MiddleLeft
         };
         this.Controls.Add(lblVersionTitle);
@@ -175,7 +214,7 @@ public partial class SettingsForm : Form
         {
             Text = AutoUpdater.GetCurrentVersionString(),
             Font = new System.Drawing.Font("Tahoma", 9),
-            Location = new Point(marginX + 100, currentY),
+            Location = new Point(marginX + 130, currentY),
             Size = new Size(100, 25),
             ForeColor = System.Drawing.Color.Blue,
             TextAlign = ContentAlignment.MiddleLeft
@@ -183,11 +222,11 @@ public partial class SettingsForm : Form
         this.Controls.Add(lblVersionValue);
 
         // دکمه بررسی بروزرسانی
-        var btnCheckUpdate = new Button
+        btnCheckUpdate = new Button
         {
-            Text = "بررسی بروزرسانی 🔄",
-            Location = new Point(this.ClientSize.Width - marginX - 150, currentY - 3),
-            Size = new Size(150, 32),
+            Text = Localization.Get("CheckUpdate"),
+            Location = new Point(this.ClientSize.Width - marginX - 185, currentY - 3),
+            Size = new Size(185, 32),
             FlatStyle = FlatStyle.Flat
         };
         btnCheckUpdate.Click += async (_, _) => await BtnCheckUpdate_Click();
@@ -201,7 +240,7 @@ public partial class SettingsForm : Form
         // دکمه ذخیره (حالا این دکمه کاملاً به لبه چپ فرم می‌چسبد)
         btnSave = new Button
         {
-            Text = "ذخیره",
+            Text = Localization.Get("Save"),
             Location = new Point(this.ClientSize.Width - marginX - buttonWidth, buttonY),
             Size = new Size(buttonWidth, 32),
             BackColor = System.Drawing.Color.LightBlue,
@@ -213,14 +252,59 @@ public partial class SettingsForm : Form
         // دکمه انصراف (۱۰ پیکسل فاصله گرفته و در سمت راستِ دکمه ذخیره قرار می‌گیرد)
         btnCancel = new Button
         {
-            Text = "انصراف",
+            Text = Localization.Get("Cancel"),
             Location = new Point(this.ClientSize.Width - marginX - (buttonWidth * 2) - 10, buttonY),
             Size = new Size(buttonWidth, 32),
             FlatStyle = FlatStyle.Flat
         };
-        btnCancel.Click += (_, _) => DialogResult = DialogResult.Cancel;
+        btnCancel.Click += BtnCancel_Click;
         this.Controls.Add(btnCancel);
+    }
 
+    private void CmbLanguage_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        string lang = GetSelectedLanguage();
+
+        if (Localization.CurrentLanguage != lang)
+        {
+            Localization.SetLanguage(lang);
+            ApplyLanguage();
+        }
+    }
+
+    private string GetSelectedLanguage()
+    {
+        return cmbLanguage.SelectedIndex switch
+        {
+            0 => Localization.Languages.English,
+            1 => Localization.Languages.Persian
+        };
+    }
+
+    /// <summary>
+    /// تمام متن‌های فرم و جهت چیدمان را بر اساس زبان فعال به‌روزرسانی می‌کند.
+    /// </summary>
+    private void ApplyLanguage()
+    {
+        bool isRtl = Localization.IsRtl;
+
+        // تغییر جهت چیدمان (فارسی: راست‌چین، انگلیسی/فرانسوی: چپ‌چین)
+        this.RightToLeft = isRtl ? RightToLeft.Yes : RightToLeft.No;
+        grpHotkey.RightToLeft = isRtl ? RightToLeft.Yes : RightToLeft.No;
+
+        this.Text = Localization.Get("Settings");
+        titleLabel.Text = Localization.Get("SettingsTitle");
+        lblLanguage.Text = Localization.Get("Language");
+        chkRunOnStartup.Text = Localization.Get("RunOnStartup");
+        grpHotkey.Text = Localization.Get("HotkeyGroup");
+        lblHotkey.Text = Localization.Get("HotkeyLabel");
+        btnRegisterHotkey.Text = Localization.Get("ApplyHotkey");
+        lblVersionTitle.Text = Localization.Get("CurrentVersion");
+        btnCheckUpdate.Text = Localization.Get("CheckUpdate");
+        btnSave.Text = Localization.Get("Save");
+        btnCancel.Text = Localization.Get("Cancel");
+
+        UpdateStatusLabel();
     }
 
     private void CmbHotkeyModifier_SelectedIndexChanged(object? sender, EventArgs e)
@@ -237,8 +321,18 @@ public partial class SettingsForm : Form
     {
         chkRunOnStartup.Checked = _settings.RunOnStartup;
 
+        // انتخاب زبان ذخیره‌شده (بدون فعال کردن رویداد تغییر زبان)
+        cmbLanguage.SelectedIndex = _settings.Language switch
+        {
+            Localization.Languages.English => 0,
+            _ => 1
+        };
+
         LoadHotkeyFromSettings();
         UpdateStatus();
+
+        // اعمال زبان فعلی روی تمام کنترل‌ها
+        ApplyLanguage();
     }
 
     private void LoadHotkeyFromSettings()
@@ -289,25 +383,25 @@ public partial class SettingsForm : Form
             if (success)
             {
                 _isHotkeyRegistered = true;
-                lblStatus.Text = "✅ کلید ترکیبی با موفقیت ثبت شده است";
-                lblStatus.ForeColor = System.Drawing.Color.Green;
+                _statusState = StatusState.RegisterSuccess;
+                UpdateStatusLabel();
 
                 _settings.HotkeyModifier = (int)modifier;
                 _settings.HotkeyKey = key;
                 lastHotkeyKey = key;
                 lastHotkeyModifier = modifier;
                 btnRegisterHotkey.Enabled = false;
-                MessageBox.Show("کلید ترکیبی جدید با موفقیت ثبت شد.", "موفقیت", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(Localization.Get("HotkeyRegisterSuccess"), Localization.Get("Success"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
-                lblStatus.Text = "❌ ثبت ناموفق بود. کلید قبلاً ثبت شده است.";
-                lblStatus.ForeColor = System.Drawing.Color.Red;
+                _statusState = StatusState.RegisterFailed;
+                UpdateStatusLabel();
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطا: {ex.Message}", "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(Localization.Format("StartupError", ex.Message), Localization.Get("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 
@@ -358,19 +452,37 @@ public partial class SettingsForm : Form
         var hasChanged = (lastHotkeyKey != hotkey.key || lastHotkeyModifier != hotkey.modifier);
 
         _isHotkeyRegistered = !hasChanged;
+        _statusState = _isHotkeyRegistered ? StatusState.Registered : StatusState.NotRegistered;
 
-        if (_isHotkeyRegistered)
+        UpdateStatusLabel();
+        btnRegisterHotkey.Enabled = !_isHotkeyRegistered;
+    }
+
+    private void UpdateStatusLabel()
+    {
+        lblStatus.Text = _statusState switch
         {
-            lblStatus.Text = "✅ کلید ترکیبی اعمال شده است";
-            lblStatus.ForeColor = System.Drawing.Color.Green;
-            btnRegisterHotkey.Enabled = false;
-        }
-        else
+            StatusState.Registered => Localization.Get("StatusRegistered"),
+            StatusState.NotRegistered => Localization.Get("StatusNotRegistered"),
+            StatusState.RegisterSuccess => Localization.Get("StatusRegisterSuccess"),
+            StatusState.RegisterFailed => Localization.Get("StatusRegisterFailed"),
+            _ => Localization.Get("StatusChecking")
+        };
+
+        lblStatus.ForeColor = _statusState switch
         {
-            lblStatus.Text = "⚠️ کلید ترکیبی اعمال نشده است";
-            lblStatus.ForeColor = System.Drawing.Color.Orange;
-            btnRegisterHotkey.Enabled = true;
-        }
+            StatusState.Registered or StatusState.RegisterSuccess => System.Drawing.Color.Green,
+            StatusState.NotRegistered => System.Drawing.Color.Orange,
+            StatusState.RegisterFailed => System.Drawing.Color.Red,
+            _ => System.Drawing.Color.Blue
+        };
+    }
+
+    private void BtnCancel_Click(object? sender, EventArgs e)
+    {
+        // اگر کاربر زبان را تغییر داده و انصراف بدهد، زبان ذخیره‌شده قبلی برگردانده می‌شود
+        Localization.SetLanguage(_settings.Language);
+        DialogResult = DialogResult.Cancel;
     }
 
     /// <summary>
@@ -381,20 +493,20 @@ public partial class SettingsForm : Form
         // ایجاد فرم Progress
         var progressForm = new Form
         {
-            Text = "بررسی بروزرسانی",
+            Text = Localization.Get("CheckingUpdate"),
             Size = new Size(400, 120),
             FormBorderStyle = FormBorderStyle.FixedDialog,
             StartPosition = FormStartPosition.CenterScreen,
             MaximizeBox = false,
             MinimizeBox = false,
-            RightToLeft = RightToLeft.Yes,
+            RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No,
             RightToLeftLayout = true,
             ControlBox = false
         };
 
         var lblMessage = new Label
         {
-            Text = "در حال بررسی...",
+            Text = Localization.Get("CheckingProgress"),
             Dock = DockStyle.Top,
             Height = 30,
             TextAlign = ContentAlignment.MiddleCenter,
@@ -429,16 +541,16 @@ public partial class SettingsForm : Form
             if (status == AutoUpdater.UpdateStatus.NoUpdate)
             {
                 MessageBox.Show(
-                    $"شما از آخرین نسخه استفاده می‌کنید.\n\nنسخه فعلی: {AutoUpdater.GetCurrentVersionString()}",
-                    "بروزرسانی",
+                    Localization.Format("UpdNoUpdate", AutoUpdater.GetCurrentVersionString()),
+                    Localization.Get("Update"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
             }
             else if (status == AutoUpdater.UpdateStatus.Error)
             {
                 MessageBox.Show(
-                    "خطا در بررسی بروزرسانی. لطفاً اتصال اینترنت خود را بررسی کنید.",
-                    "خطا",
+                    Localization.Get("UpdCheckErrorInternet"),
+                    Localization.Get("Error"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
@@ -448,8 +560,8 @@ public partial class SettingsForm : Form
         {
             progressForm.Close();
             MessageBox.Show(
-                $"خطا در بررسی بروزرسانی:\n{ex.Message}",
-                "خطا",
+                Localization.Format("UpdCheckError", ex.Message),
+                Localization.Get("Error"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
         }
@@ -460,6 +572,7 @@ public partial class SettingsForm : Form
         try
         {
             _settings.RunOnStartup = chkRunOnStartup.Checked;
+            _settings.Language = GetSelectedLanguage();
 
             if (!_isHotkeyRegistered)
             {
@@ -474,11 +587,11 @@ public partial class SettingsForm : Form
             DialogResult = DialogResult.OK;
             Close();
 
-            MessageBox.Show("تنظیمات با موفقیت ذخیره شد.", "موفقیت", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(Localization.Get("SettingsSaved"), Localization.Get("Success"), MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطا در ذخیره تنظیمات: {ex.Message}", "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(Localization.Format("SaveSettingsError", ex.Message), Localization.Get("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }

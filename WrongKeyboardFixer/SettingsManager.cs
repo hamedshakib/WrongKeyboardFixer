@@ -46,8 +46,8 @@ public static class SettingsManager
         catch (Exception ex)
         {
             MessageBox.Show(
-                $"خطا در ذخیره تنظیمات: {ex.Message}",
-                "خطا",
+                Localization.Format("SaveSettingsError", ex.Message),
+                Localization.Get("Error"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error
             );
@@ -80,8 +80,8 @@ public static class SettingsManager
         catch (Exception ex)
         {
             MessageBox.Show(
-                $"خطا در تنظیم اجرای خودکار: {ex.Message}",
-                "خطا",
+                Localization.Format("StartupSettingsError", ex.Message),
+                Localization.Get("Error"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error
             );

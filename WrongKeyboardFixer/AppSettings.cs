@@ -6,6 +6,7 @@ namespace WrongKeyboardFixer;
 public class AppSettings
 {
     public bool RunOnStartup { get; set; } = false;
+    public string Language { get; set; } = Localization.Languages.English;
     public int HotkeyModifier { get; set; } = (int)(HotkeyModifiers.Control | HotkeyModifiers.Alt);
     public Keys HotkeyKey { get; set; } = Keys.Add;
 
