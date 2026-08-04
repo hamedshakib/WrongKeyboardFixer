@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
 
@@ -39,7 +40,7 @@ public partial class SettingsForm : Form
     private void InitializeControls()
     {
         this.Text = "تنظیمات";
-        this.Size = new System.Drawing.Size(460, 330);
+        this.Size = new System.Drawing.Size(460, 380);
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
         this.MinimizeBox = false;
@@ -158,6 +159,41 @@ public partial class SettingsForm : Form
 
         this.Controls.Add(grpHotkey);
         currentY += grpHotkey.Height + 25;
+
+        // ۶. بخش نسخه و بروزرسانی
+        var lblVersionTitle = new Label
+        {
+            Text = "نسخه فعلی:",
+            Font = new System.Drawing.Font("Tahoma", 9, System.Drawing.FontStyle.Bold),
+            Location = new Point(marginX, currentY),
+            Size = new Size(100, 25),
+            TextAlign = ContentAlignment.MiddleLeft
+        };
+        this.Controls.Add(lblVersionTitle);
+
+        var lblVersionValue = new Label
+        {
+            Text = AutoUpdater.GetCurrentVersionString(),
+            Font = new System.Drawing.Font("Tahoma", 9),
+            Location = new Point(marginX + 100, currentY),
+            Size = new Size(100, 25),
+            ForeColor = System.Drawing.Color.Blue,
+            TextAlign = ContentAlignment.MiddleLeft
+        };
+        this.Controls.Add(lblVersionValue);
+
+        // دکمه بررسی بروزرسانی
+        var btnCheckUpdate = new Button
+        {
+            Text = "بررسی بروزرسانی 🔄",
+            Location = new Point(this.ClientSize.Width - marginX - 150, currentY - 3),
+            Size = new Size(150, 32),
+            FlatStyle = FlatStyle.Flat
+        };
+        btnCheckUpdate.Click += async (_, _) => await BtnCheckUpdate_Click();
+        this.Controls.Add(btnCheckUpdate);
+
+        currentY += 40;
 
         int buttonY = currentY;
         int buttonWidth = 95;
@@ -334,6 +370,88 @@ public partial class SettingsForm : Form
             lblStatus.Text = "⚠️ کلید ترکیبی اعمال نشده است";
             lblStatus.ForeColor = System.Drawing.Color.Orange;
             btnRegisterHotkey.Enabled = true;
+        }
+    }
+
+    /// <summary>
+    /// بررسی دستی بروزرسانی با نمایش Progress Dialog
+    /// </summary>
+    private async Task BtnCheckUpdate_Click()
+    {
+        // ایجاد فرم Progress
+        var progressForm = new Form
+        {
+            Text = "بررسی بروزرسانی",
+            Size = new Size(400, 120),
+            FormBorderStyle = FormBorderStyle.FixedDialog,
+            StartPosition = FormStartPosition.CenterScreen,
+            MaximizeBox = false,
+            MinimizeBox = false,
+            RightToLeft = RightToLeft.Yes,
+            RightToLeftLayout = true,
+            ControlBox = false
+        };
+
+        var lblMessage = new Label
+        {
+            Text = "در حال بررسی...",
+            Dock = DockStyle.Top,
+            Height = 30,
+            TextAlign = ContentAlignment.MiddleCenter,
+            Font = new Font("Tahoma", 9)
+        };
+
+        var progressBar = new ProgressBar
+        {
+            Dock = DockStyle.Bottom,
+            Height = 25,
+            Minimum = 0,
+            Maximum = 100,
+            Value = 0
+        };
+
+        progressForm.Controls.Add(lblMessage);
+        progressForm.Controls.Add(progressBar);
+        progressForm.Show(this);
+
+        var progress = new Progress<(int percent, string message)>(update =>
+        {
+            progressBar.Value = Math.Min(update.percent, 100);
+            lblMessage.Text = update.message;
+        });
+
+        try
+        {
+            var status = await AutoUpdater.CheckForUpdatesAsync(progress, silent: true);
+            progressForm.Close();
+
+            // اگر آپدیتی نبود، پیام بده
+            if (status == AutoUpdater.UpdateStatus.NoUpdate)
+            {
+                MessageBox.Show(
+                    $"شما از آخرین نسخه استفاده می‌کنید.\n\nنسخه فعلی: {AutoUpdater.GetCurrentVersionString()}",
+                    "بروزرسانی",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            else if (status == AutoUpdater.UpdateStatus.Error)
+            {
+                MessageBox.Show(
+                    "خطا در بررسی بروزرسانی. لطفاً اتصال اینترنت خود را بررسی کنید.",
+                    "خطا",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            // UpdateAvailable, DownloadedAndInstalling, UserDeclined - پیام‌های مربوطه در AutoUpdater نمایش داده می‌شوند
+        }
+        catch (Exception ex)
+        {
+            progressForm.Close();
+            MessageBox.Show(
+                $"خطا در بررسی بروزرسانی:\n{ex.Message}",
+                "خطا",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
         }
     }
 

@@ -95,6 +95,8 @@ public class MainForm : Form
 
         // آیتم تنظیمات
         contextMenu.Items.Add("تنظیمات ⚙️", null, (_, _) => OpenSettings());
+        // آیتم بررسی بروزرسانی
+        contextMenu.Items.Add("بررسی بروزرسانی 🔄", null, (_, _) => _ = CheckForUpdatesManualAsync());
         contextMenu.Items.Add("-"); // جداکننده
         contextMenu.Items.Add("خروج ❌", null, (_, _) => Application.Exit());
 
@@ -184,15 +186,101 @@ public class MainForm : Form
         base.OnFormClosing(e);
     }
 
+    /// <summary>
+    /// بررسی خودکار بروزرسانی در استارتاپ (silent - بدون نمایش پیام "بروزرسانی موجود نیست")
+    /// </summary>
     private async void CheckForUpdatesAsync()
     {
         try
         {
-            await AutoUpdater.CheckForUpdatesAsync();
+            await AutoUpdater.CheckForUpdatesAsync(silent: true);
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"❌ Update check error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// بررسی دستی بروزرسانی با نمایش Progress Dialog
+    /// </summary>
+    private async Task CheckForUpdatesManualAsync()
+    {
+        // ایجاد فرم Progress
+        var progressForm = new Form
+        {
+            Text = "بررسی بروزرسانی",
+            Size = new Size(400, 120),
+            FormBorderStyle = FormBorderStyle.FixedDialog,
+            StartPosition = FormStartPosition.CenterScreen,
+            MaximizeBox = false,
+            MinimizeBox = false,
+            RightToLeft = RightToLeft.Yes,
+            RightToLeftLayout = true,
+            ControlBox = false
+        };
+
+        var lblMessage = new Label
+        {
+            Text = "در حال بررسی...",
+            Dock = DockStyle.Top,
+            Height = 30,
+            TextAlign = ContentAlignment.MiddleCenter,
+            Font = new Font("Tahoma", 9)
+        };
+
+        var progressBar = new ProgressBar
+        {
+            Dock = DockStyle.Bottom,
+            Height = 25,
+            Minimum = 0,
+            Maximum = 100,
+            Value = 0
+        };
+
+        progressForm.Controls.Add(lblMessage);
+        progressForm.Controls.Add(progressBar);
+        progressForm.Show();
+
+        var progress = new Progress<(int percent, string message)>(update =>
+        {
+            progressBar.Value = Math.Min(update.percent, 100);
+            lblMessage.Text = update.message;
+        });
+
+        try
+        {
+            var status = await AutoUpdater.CheckForUpdatesAsync(progress, silent: true);
+            progressForm.Close();
+
+            // اگر آپدیتی نبود، پیام بده
+            if (status == AutoUpdater.UpdateStatus.NoUpdate)
+            {
+                MessageBox.Show(
+                    $"شما از آخرین نسخه استفاده می‌کنید.\n\nنسخه فعلی: {AutoUpdater.GetCurrentVersionString()}",
+                    "بروزرسانی",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            else if (status == AutoUpdater.UpdateStatus.Error)
+            {
+                MessageBox.Show(
+                    "خطا در بررسی بروزرسانی. لطفاً اتصال اینترنت خود را بررسی کنید.",
+                    "خطا",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            // UpdateAvailable, DownloadedAndInstalling, UserDeclined - پیام‌های مربوطه در AutoUpdater نمایش داده می‌شوند
+        }
+        catch (Exception ex)
+        {
+            progressForm.Close();
+            Debug.WriteLine($"❌ Update check error: {ex.Message}");
+            MessageBox.Show(
+                $"خطا در بررسی بروزرسانی:\n{ex.Message}",
+                "خطا",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
         }
     }
 }
