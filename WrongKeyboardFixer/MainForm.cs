@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -88,11 +90,7 @@ public class MainForm : Form
 
     private void CreateTrayIcon()
     {
-        _trayMenu = new ContextMenuStrip();
-        _trayMenu.Items.Add(Localization.Get("TraySettings"), null, (_, _) => OpenSettings());
-        _trayMenu.Items.Add(Localization.Get("TrayCheckUpdate"), null, (_, _) => _ = CheckForUpdatesManualAsync());
-        _trayMenu.Items.Add("-"); // جداکننده
-        _trayMenu.Items.Add(Localization.Get("TrayExit"), null, (_, _) => Application.Exit());
+        _trayMenu = BuildTrayMenu();
 
         _trayIcon = new NotifyIcon
         {
@@ -104,6 +102,52 @@ public class MainForm : Form
 
         // دابل کلیک برای باز کردن تنظیمات
         _trayIcon.DoubleClick += (_, _) => OpenSettings();
+    }
+
+    private ContextMenuStrip BuildTrayMenu()
+    {
+        var menu = new ContextMenuStrip();
+
+        var settingsItem = new ToolStripMenuItem(Localization.Get("TraySettings"));
+        settingsItem.Image = CreateEmojiIcon("⚙️");
+        settingsItem.Click += (_, _) => OpenSettings();
+        menu.Items.Add(settingsItem);
+
+        //menu.Items.Add(Localization.Get("TrayCheckUpdate"), null, (_, _) => _ = CheckForUpdatesManualAsync());
+
+        menu.Items.Add("-"); // جداکننده
+
+        var exitItem = new ToolStripMenuItem(Localization.Get("TrayExit"));
+        exitItem.Image = CreateEmojiIcon("⏻");
+        exitItem.Click += (_, _) => Application.Exit();
+        menu.Items.Add(exitItem);
+
+        return menu;
+    }
+
+    /// <summary>
+    /// تبدیل یک ایموجی به تصویر برای استفاده به عنوان آیکون آیتم منو
+    /// </summary>
+    private static Bitmap CreateEmojiIcon(string emoji)
+    {
+        var bitmap = new Bitmap(16, 16);
+        using var graphics = Graphics.FromImage(bitmap);
+        graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
+
+        using var font = new Font("Segoe UI Emoji", 11f, FontStyle.Regular, GraphicsUnit.Pixel);
+        using var brush = new SolidBrush(Color.Black);
+
+        var format = new StringFormat
+        {
+            Alignment = StringAlignment.Center,
+            LineAlignment = StringAlignment.Center
+        };
+
+        var rect = new RectangleF(0, 0, 16, 16);
+        graphics.DrawString(emoji, font, brush, rect, format);
+
+        return bitmap;
     }
 
     private void OpenSettings()
@@ -132,10 +176,7 @@ public class MainForm : Form
             return;
 
         _trayMenu.Items.Clear();
-        _trayMenu.Items.Add(Localization.Get("TraySettings"), null, (_, _) => OpenSettings());
-        _trayMenu.Items.Add(Localization.Get("TrayCheckUpdate"), null, (_, _) => _ = CheckForUpdatesManualAsync());
-        _trayMenu.Items.Add("-"); // جداکننده
-        _trayMenu.Items.Add(Localization.Get("TrayExit"), null, (_, _) => Application.Exit());
+        _trayMenu.Items.AddRange(BuildTrayMenu().Items);
         _trayIcon.Text = Localization.Get("TrayText");
     }
 

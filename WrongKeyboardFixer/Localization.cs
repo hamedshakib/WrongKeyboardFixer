@@ -44,7 +44,7 @@ public static class Localization
         ["StatusRegisterFailed"] = "❌ ثبت ناموفق بود. کلید قبلاً ثبت شده است.",
         ["HotkeyRegisterSuccess"] = "کلید ترکیبی جدید با موفقیت ثبت شد.",
         ["CurrentVersion"] = "نسخه فعلی:",
-        ["CheckUpdate"] = "بررسی بروزرسانی 🔄",
+        ["CheckUpdate"] = "بررسی بروزرسانی",
         ["Save"] = "ذخیره",
         ["Cancel"] = "انصراف",
         ["SettingsSaved"] = "تنظیمات با موفقیت ذخیره شد.",
@@ -54,9 +54,9 @@ public static class Localization
         ["CheckingProgress"] = "در حال بررسی...",
 
         // Tray menu
-        ["TraySettings"] = "تنظیمات ⚙️",
-        ["TrayCheckUpdate"] = "بررسی بروزرسانی 🔄",
-        ["TrayExit"] = "خروج ❌",
+        ["TraySettings"] = "تنظیمات",
+        ["TrayCheckUpdate"] = "بررسی بروزرسانی",
+        ["TrayExit"] = "خروج",
         ["TrayText"] = "Wrong Keyboard Fixer",
 
         // Main form errors
@@ -118,7 +118,7 @@ public static class Localization
         ["StatusRegisterFailed"] = "❌ Registration failed. The hotkey is already taken.",
         ["HotkeyRegisterSuccess"] = "New hotkey registered successfully.",
         ["CurrentVersion"] = "Current version:",
-        ["CheckUpdate"] = "Check for Updates 🔄",
+        ["CheckUpdate"] = "Check for Updates",
         ["Save"] = "Save",
         ["Cancel"] = "Cancel",
         ["SettingsSaved"] = "Settings saved successfully.",
@@ -128,9 +128,9 @@ public static class Localization
         ["CheckingProgress"] = "Checking...",
 
         // Tray menu
-        ["TraySettings"] = "Settings ⚙️",
-        ["TrayCheckUpdate"] = "Check for Updates 🔄",
-        ["TrayExit"] = "Exit ❌",
+        ["TraySettings"] = "Settings",
+        ["TrayCheckUpdate"] = "Check for Updates",
+        ["TrayExit"] = "Exit",
         ["TrayText"] = "Wrong Keyboard Fixer",
 
         // Main form errors
