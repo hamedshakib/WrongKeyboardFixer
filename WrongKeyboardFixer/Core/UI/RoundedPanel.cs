@@ -1,0 +1,76 @@
+﻿using System;
+using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Windows.Forms;
+
+namespace WrongKeyboardFixer.Core.UI;
+
+/// <summary>
+/// پنل تخت با گوشه‌های گرد. بدون Region:
+/// ریجن‌ها کندند، فرزندان را clip می‌کنند و هندل GDI نشت می‌دهند.
+/// </summary>
+public class RoundedPanel : Panel
+{
+    private int _cornerRadius = 10;
+    private Color _borderColor = Theme.Border;
+    private int _borderWidth = 1;
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public int CornerRadius
+    {
+        get => _cornerRadius;
+        set { _cornerRadius = Math.Max(0, value); Invalidate(); }
+    }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public Color BorderColor
+    {
+        get => _borderColor;
+        set { _borderColor = value; Invalidate(); }
+    }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public int BorderWidth
+    {
+        get => _borderWidth;
+        set { _borderWidth = Math.Max(0, value); Invalidate(); }
+    }
+
+    public RoundedPanel()
+    {
+        // به‌جای فقط DoubleBuffered، همهٔ پرچم‌های ضدفلیکر:
+        SetStyle(ControlStyles.AllPaintingInWmPaint |
+                 ControlStyles.OptimizedDoubleBuffer |
+                 ControlStyles.ResizeRedraw |
+                 ControlStyles.UserPaint, true);
+        BackColor = Theme.Surface;
+        Padding = new Padding(16);
+    }
+
+    // رنگ‌آمیزی پیش‌فرض پس‌زمینه حذف می‌شود تا فلیکر دو مرحله‌ای نداشته باشیم.
+    protected override void OnPaintBackground(PaintEventArgs e) { }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        var g = e.Graphics;
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+
+        // گوشه‌ها رنگ والد را نشان می‌دهند (بدون نیاز به Region)
+        g.Clear(Parent?.BackColor ?? Theme.Background);
+
+        if (Width <= 1 || Height <= 1) return;
+
+        var bounds = new Rectangle(0, 0, Width - 1, Height - 1);
+        using var path = Theme.RoundRect(bounds, Theme.DpiScale(_cornerRadius, DeviceDpi));
+
+        using (var brush = new SolidBrush(BackColor))
+            g.FillPath(brush, path);
+
+        if (_borderWidth > 0)
+        {
+            using var pen = new Pen(_borderColor, Theme.DpiScaleF(_borderWidth, DeviceDpi));
+            g.DrawPath(pen, path);
+        }
+    }
+}

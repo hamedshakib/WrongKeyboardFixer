@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Helpers;
 using WrongKeyboardFixer.Core.Model;
 using WrongKeyboardFixer.Core.Services;
+using WrongKeyboardFixer.Core.UI;
 
 namespace WrongKeyboardFixer.UI.Forms;
 
@@ -109,7 +110,14 @@ public class MainForm : Form
 
     private ContextMenuStrip BuildTrayMenu()
     {
-        var menu = new ContextMenuStrip();
+        var menu = new ContextMenuStrip
+        {
+            Renderer = Theme.CreateMenuRenderer(),
+            Font = Theme.BodyFont,
+            BackColor = Theme.Surface,
+            ForeColor = Theme.TextPrimary,
+            ShowImageMargin = true
+        };
 
         var settingsItem = new ToolStripMenuItem(Localization.Get("TraySettings"));
         settingsItem.Image = CreateEmojiIcon("⚙️");
@@ -289,7 +297,9 @@ public class MainForm : Form
             MinimizeBox = false,
             RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No,
             RightToLeftLayout = true,
-            ControlBox = false
+            ControlBox = false,
+            AutoScaleDimensions = new SizeF(96F, 96F),
+            AutoScaleMode = AutoScaleMode.Dpi
         };
 
         var lblMessage = new Label

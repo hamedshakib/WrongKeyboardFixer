@@ -1,7 +1,8 @@
 using System;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Drawing;
 using WrongKeyboardFixer.Core.Helpers;
 using WrongKeyboardFixer.Core.Model;
 using WrongKeyboardFixer.Core.Services;
@@ -9,7 +10,7 @@ using WrongKeyboardFixer.Core.UI;
 
 namespace WrongKeyboardFixer.UI.Forms;
 
-public partial class SettingsForm : Form
+public partial class SettingsForm : Form, ICloseRequestHandler
 {
     private uint lastHotkeyModifier;
     private Keys lastHotkeyKey;
@@ -18,23 +19,18 @@ public partial class SettingsForm : Form
     private readonly HotkeyManager _hotkeyManager;
     private bool _isHotkeyRegistered;
 
-    // کنترل‌های فرم
-    private CheckBox chkRunOnStartup = null!;
+    // Controls
+    private ToggleSwitch tglRunOnStartup = null!;
     private ComboBox cmbLanguage = null!;
-    private Label lblLanguage = null!;
-    private Label titleLabel = null!;
-    private GroupBox grpHotkey = null!;
-    private Label lblHotkey = null!;
     private ComboBox cmbHotkeyModifier = null!;
-    private Label lblPlus = null!;
     private ComboBox cmbHotkeyKey = null!;
-    private Button btnRegisterHotkey = null!;
+    private ModernButton btnRegisterHotkey = null!;
     private Label lblStatus = null!;
-    private Label lblVersionTitle = null!;
-    private Button btnCheckUpdate = null!;
-    private Button btnSave = null!;
-    private Button btnCancel = null!;
-    private Button btnKeyboardMappings = null!;
+    private Label lblVersionValue = null!;
+    private ModernButton btnCheckUpdate = null!;
+    private ModernButton btnSave = null!;
+    private ModernButton btnCancel = null!;
+    private ModernButton btnKeyboardMappings = null!;
 
     private enum StatusState { Checking, Registered, NotRegistered, RegisterSuccess, RegisterFailed }
     private StatusState _statusState = StatusState.Checking;
@@ -43,142 +39,115 @@ public partial class SettingsForm : Form
     {
         _settings = settings ?? new AppSettings();
         _hotkeyManager = hotkeyManager;
-
-        // زبان ذخیره‌شده را فعال کن قبل از ساخت کنترل‌ها
         Localization.SetLanguage(_settings.Language);
-
-        // RightToLeftLayout را ثابت نگه می‌داریم تا در زمان اجرا تغییر نکند
-        // (تغییر آن بعد از Show فرم پشتیبانی نمی‌شود)
         this.RightToLeftLayout = true;
+        this.DoubleBuffered = true;          // ← جدید
 
+        this.SuspendLayout();                // ← جدید
+        InitializeForm();
         InitializeControls();
+        this.ResumeLayout(false);            // ← جدید
+
         LoadSettings();
     }
 
-    private void InitializeControls()
+    private void InitializeForm()
     {
         this.Text = Localization.Get("Settings");
-        this.Size = new System.Drawing.Size(520, 450);
-        this.FormBorderStyle = FormBorderStyle.FixedDialog;
-        this.MaximizeBox = false;
-        this.MinimizeBox = false;
-        // When opened from the tray the main form is hidden/minimized, so
-        // CenterParent can position the dialog incorrectly. Use CenterScreen
-        // to ensure the settings window appears visible to the user.
+        this.FormBorderStyle = FormBorderStyle.None;
+        this.AutoScaleDimensions = new SizeF(96F, 96F);
+        this.AutoScaleMode = AutoScaleMode.Dpi;
+        this.ClientSize = new Size(560, 600);
+        this.MinimumSize = new Size(560, 600);
         this.StartPosition = FormStartPosition.CenterScreen;
-        this.Font = new System.Drawing.Font("Tahoma", 9);
+        this.BackColor = Theme.Background;
+        this.Font = Theme.BodyFont;
         this.Icon = IconLoader.GetIcon();
         this.RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No;
 
-        int marginX = 25; // فاصله استاندارد از لبه‌های چپ و راست فرم
-        int currentY = 20; // موقعیت عمودی شروع
-        int formWidth = this.ClientSize.Width;
-        int controlWidth = formWidth - (2 * marginX); // عرض مفید برای کنترل‌های سرتاسری
-
-        // ۱. عنوان اصلی
-        titleLabel = new Label
+        var titleBar = new ModernTitleBar
         {
+            Dock = DockStyle.Top,
             Text = Localization.Get("SettingsTitle"),
-            Font = new System.Drawing.Font("Tahoma", 11, System.Drawing.FontStyle.Bold),
-            Location = new Point(marginX, currentY),
-            Size = new Size(controlWidth, 30),
-            TextAlign = ContentAlignment.MiddleLeft
+            Subtitle = Localization.Get("SettingsSubtitle")
         };
-        this.Controls.Add(titleLabel);
-        currentY += 40;
+        this.Controls.Add(titleBar);
+    }
 
-        // ۲. انتخاب زبان
-        lblLanguage = new Label
-        {
-            Text = Localization.Get("Language"),
-            Location = new Point(marginX, currentY),
-            Size = new Size(70, 25),
-            TextAlign = ContentAlignment.MiddleLeft
-        };
-        this.Controls.Add(lblLanguage);
+    private const int StdHeight = 36;
+    private const int RowGap = 14;
+    private const int SectionGap = 22;
+    private TableLayoutPanel _layout = null!;
 
-        cmbLanguage = new ComboBox
+    private void InitializeControls()
+    {
+        var panel = new RoundedPanel
         {
-            DropDownStyle = ComboBoxStyle.DropDownList,
-            Location = new Point(marginX + 80, currentY),
-            Size = new Size(120, 25)
+            CornerRadius = 14,
+            BackColor = Theme.Surface,
+            Padding = new Padding(24),
+            Location = new Point(14, ModernTitleBar.TitleBarHeight + 10),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
+            AutoScroll = true
         };
-        // نام زبان‌ها به زبان خودشان نمایش داده می‌شود (endonym)
-        cmbLanguage.Items.AddRange(new object[]
+        panel.Size = new Size(this.ClientSize.Width - 28,
+            this.ClientSize.Height - ModernTitleBar.TitleBarHeight - 24);
+        this.Controls.Add(panel);
+
+        // Single vertical TableLayoutPanel that owns the whole layout.
+        // No absolute coordinates anywhere below: rows auto-size, spacing is
+        // controlled by row margins, and RTL mirroring is handled by the form.
+        _layout = new TableLayoutPanel
         {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            ColumnCount = 1,
+            RowCount = 0,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty,
+            BackColor = Theme.Surface
+        };
+        _layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        panel.Controls.Add(_layout);
+
+        // ── Language section ──────────────────────────────
+        AddHeaderRow(Localization.Get("Language"), topGap: 0);
+
+        cmbLanguage = Theme.CreateCombo(
             Localization.Get("LanguageEnglish"),
-            Localization.Get("LanguagePersian"),
-        });
+            Localization.Get("LanguagePersian"));
         cmbLanguage.SelectedIndexChanged += CmbLanguage_SelectedIndexChanged;
-        this.Controls.Add(cmbLanguage);
-        currentY += 35;
+        AddControlRow(cmbLanguage, width: 170, topGap: 10);
 
-        // ۳. اجرای خودکار با ویندوز
-        chkRunOnStartup = new CheckBox
+        tglRunOnStartup = new ToggleSwitch
         {
             Text = Localization.Get("RunOnStartup"),
-            CheckAlign = ContentAlignment.MiddleLeft,
-            TextAlign = ContentAlignment.MiddleLeft,
-            Location = new Point(marginX, currentY),
-            Size = new Size(controlWidth, 25)
+            Height = 30
         };
-        this.Controls.Add(chkRunOnStartup);
-        currentY += 32;
+        AddControlRow(tglRunOnStartup, fillWidth: true, topGap: RowGap);
 
-        // ۴. کادر میانبر (GroupBox)
-        grpHotkey = new GroupBox
-        {
-            Text = Localization.Get("HotkeyGroup"),
-            Location = new Point(marginX, currentY),
-            Size = new Size(controlWidth, 130),
-            RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No
-        };
+        AddDividerRow();
 
-        // المان‌های داخل کادر میانبر با موقعیت‌دهی محلی (نسبت به لبه‌های GroupBox)
-        lblHotkey = new Label
-        {
-            Text = Localization.Get("HotkeyLabel"),
-            Size = new Size(80, 20),
-            TextAlign = ContentAlignment.MiddleRight
-        };
-        grpHotkey.Controls.Add(lblHotkey);
+        // ── Hotkey section ────────────────────────────────
+        AddHeaderRow(Localization.Get("HotkeyGroup"));
 
-        // انتخاب‌گر Modifier
-        cmbHotkeyModifier = new ComboBox
-        {
-            DropDownStyle = ComboBoxStyle.DropDownList,
-            Size = new Size(110, 25)
-        };
-        cmbHotkeyModifier.Items.AddRange(new object[]
-        {
+        cmbHotkeyModifier = Theme.CreateCombo(
             Localization.Get("HotkeyModifierCtrlAlt"),
             Localization.Get("HotkeyModifierCtrlShift"),
             Localization.Get("HotkeyModifierAltShift"),
             Localization.Get("HotkeyModifierCtrl"),
             Localization.Get("HotkeyModifierAlt"),
-            Localization.Get("HotkeyModifierShift")
-        });
+            Localization.Get("HotkeyModifierShift"));
+        cmbHotkeyModifier.Width = 160;
         cmbHotkeyModifier.SelectedIndex = 0;
         cmbHotkeyModifier.SelectedIndexChanged += CmbHotkeyModifier_SelectedIndexChanged;
-        grpHotkey.Controls.Add(cmbHotkeyModifier);
 
-        // علامت مثبت بین دو کمبواباکس
-        lblPlus = new Label
-        {
-            Text = "+",
-            Size = new Size(15, 20),
-            TextAlign = ContentAlignment.MiddleCenter
-        };
-        grpHotkey.Controls.Add(lblPlus);
+        var lblPlus = Theme.BodyLabel("+", Theme.TextSecondary, Theme.BodyBoldFont);
+        lblPlus.TextAlign = ContentAlignment.MiddleCenter;
+        lblPlus.Width = 24;
 
-        // انتخاب‌گر کلید اصلی
-        cmbHotkeyKey = new ComboBox
-        {
-            DropDownStyle = ComboBoxStyle.DropDownList,
-            Size = new Size(90, 25)
-        };
-        cmbHotkeyKey.Items.AddRange(new object[]
-        {
+        cmbHotkeyKey = Theme.CreateCombo(
             Localization.Get("HotkeyKeyAdd"),
             Localization.Get("HotkeyKeySubtract"),
             Localization.Get("HotkeyKeyMultiply"),
@@ -200,182 +169,232 @@ public partial class SettingsForm : Form
             Localization.Get("HotkeyKeyPageDown"),
             Localization.Get("HotkeyKeyEnd"),
             Localization.Get("HotkeyKeyDelete"),
-            Localization.Get("HotkeyKeySpace")
-        });
+            Localization.Get("HotkeyKeySpace"));
+        cmbHotkeyKey.Width = 130;
         cmbHotkeyKey.SelectedIndex = 0;
         cmbHotkeyKey.SelectedIndexChanged += CmbHotkeyKey_SelectedIndexChanged;
-        grpHotkey.Controls.Add(cmbHotkeyKey);
+        AddColumnsRow(topGap: 10, (cmbHotkeyModifier, 160), (lblPlus, 24), (cmbHotkeyKey, 130));
 
-        // دکمه اعمال کلید ترکیبی
-        btnRegisterHotkey = new Button
+        btnRegisterHotkey = new ModernButton
         {
             Text = Localization.Get("ApplyHotkey"),
-            Size = new Size(160, 30),
-            BackColor = System.Drawing.Color.LightGreen,
-            FlatStyle = FlatStyle.Flat
+            ButtonVariant = ModernButton.Variant.Primary,
+            Width = 150
         };
         btnRegisterHotkey.Click += BtnRegisterHotkey_Click;
         btnRegisterHotkey.Enabled = false;
-        grpHotkey.Controls.Add(btnRegisterHotkey);
 
-        // برچسب وضعیت ثبت
-        lblStatus = new Label
-        {
-            Text = Localization.Get("StatusChecking"),
-            Size = new Size(grpHotkey.Width - 190, 20),
-            ForeColor = System.Drawing.Color.Blue,
-            TextAlign = ContentAlignment.MiddleLeft // وضعیت در سمت چپ دکمه ثبت قرار بگیرد
-        };
-        grpHotkey.Controls.Add(lblStatus);
+        lblStatus = CreateStatusChip(Localization.Get("StatusChecking"), Theme.Info, Theme.InfoSoft);
+        AddColumnsRow(topGap: RowGap, (btnRegisterHotkey, 150), (lblStatus, null));
 
-        PositionHotkeyControls();
-        PositionStatusControl();
+        AddDividerRow();
 
-        this.Controls.Add(grpHotkey);
-        currentY += grpHotkey.Height + 25;
+        // ── Keyboard section ──────────────────────────────
+        AddHeaderRow(Localization.Get("KeyboardMappings"));
 
-        // ۴.۵. دکمه نگاشت کیبورد (بالای بخش ورژن)
-        btnKeyboardMappings = new Button
+        btnKeyboardMappings = new ModernButton
         {
             Text = Localization.Get("KeyboardMappings"),
-            Location = new Point(marginX, currentY),
-            Size = new Size(150, 32),
-            FlatStyle = FlatStyle.Flat,
-            BackColor = System.Drawing.Color.LightYellow
+            ButtonVariant = ModernButton.Variant.Secondary,
+            Width = 240
         };
         btnKeyboardMappings.Click += BtnKeyboardMappings_Click;
-        this.Controls.Add(btnKeyboardMappings);
-        currentY += 40;
+        AddControlRow(btnKeyboardMappings, width: 240, topGap: 10);
 
-        // ۵. بخش نسخه و بروزرسانی
-        lblVersionTitle = new Label
-        {
-            Text = Localization.Get("CurrentVersion"),
-            Font = new System.Drawing.Font("Tahoma", 9, System.Drawing.FontStyle.Bold),
-            Location = new Point(marginX, currentY),
-            Size = new Size(130, 25),
-            TextAlign = ContentAlignment.MiddleLeft
-        };
-        this.Controls.Add(lblVersionTitle);
+        AddDividerRow();
 
-        var lblVersionValue = new Label
-        {
-            Text = AutoUpdater.GetCurrentVersionString(),
-            Font = new System.Drawing.Font("Tahoma", 9),
-            Location = new Point(marginX + 130, currentY),
-            Size = new Size(100, 25),
-            ForeColor = System.Drawing.Color.Blue,
-            TextAlign = ContentAlignment.MiddleLeft
-        };
-        this.Controls.Add(lblVersionValue);
+        // ── Current version section ───────────────────────
+        AddHeaderRow(Localization.Get("CurrentVersion"));
 
-        // دکمه بررسی بروزرسانی
-        btnCheckUpdate = new Button
+        lblVersionValue = Theme.BodyLabel(AutoUpdater.GetCurrentVersionString(), Theme.Accent, Theme.BodyBoldFont);
+        lblVersionValue.Width = 140;
+        btnCheckUpdate = new ModernButton
         {
             Text = Localization.Get("CheckUpdate"),
-            Location = new Point(this.ClientSize.Width - marginX - 185, currentY - 3),
-            Size = new Size(185, 32),
-            FlatStyle = FlatStyle.Flat
+            ButtonVariant = ModernButton.Variant.Secondary,
+            Width = 170
         };
         btnCheckUpdate.Click += async (_, _) => await BtnCheckUpdate_Click();
-        this.Controls.Add(btnCheckUpdate);
+        AddColumnsRow(topGap: 10, (lblVersionValue, 140), (btnCheckUpdate, 170));
 
-        currentY += 40;
+        AddDividerRow();
 
-        int buttonY = currentY;
-        int buttonWidth = 95;
+        // ── Footer ────────────────────────────────────────
+        AddFooterRow();
 
-        // دکمه ذخیره (حالا این دکمه کاملاً به لبه چپ فرم می‌چسبد)
-        btnSave = new Button
+        // Size the form to the actual content height (structural, no hardcoded Y).
+        var prefSize = _layout.GetPreferredSize(new Size(panel.ClientSize.Width, 0));
+        int panelHeight = panel.Padding.Top + prefSize.Height + panel.Padding.Bottom;
+        panel.Height = panelHeight;
+        this.ClientSize = new Size(this.ClientSize.Width, panel.Location.Y + panelHeight + 14);
+        this.MinimumSize = this.ClientSize;
+    }
+
+    private void AddRow(Control control)
+    {
+        _layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        _layout.Controls.Add(control, 0, _layout.RowCount);
+        _layout.RowCount++;
+    }
+
+    private void AddHeaderRow(string text, int topGap = 0)
+    {
+        var label = Theme.SectionLabel(text);
+        label.Margin = new Padding(0, topGap, 0, 0);
+        label.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+        AddRow(label);
+    }
+
+    private void AddControlRow(Control control, int topGap, int? width = null, bool fillWidth = false)
+    {
+        control.Margin = new Padding(0, topGap, 0, 0);
+        control.Anchor = fillWidth ? AnchorStyles.Left | AnchorStyles.Right : AnchorStyles.Left;
+        if (width.HasValue && !fillWidth)
+            control.Width = width.Value;
+        AddRow(control);
+    }
+
+    private void AddColumnsRow(int topGap, params (Control control, int? width)[] columns)
+    {
+        var row = new TableLayoutPanel
         {
-            Text = Localization.Get("Save"),
-            Location = new Point(this.ClientSize.Width - marginX - buttonWidth, buttonY),
-            Size = new Size(buttonWidth, 32),
-            BackColor = System.Drawing.Color.LightBlue,
-            FlatStyle = FlatStyle.Flat
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            ColumnCount = columns.Length,
+            RowCount = 1,
+            Margin = new Padding(0, topGap, 0, 0),
+            Padding = Padding.Empty,
+            BackColor = Theme.Surface,
+            Anchor = AnchorStyles.Left
         };
-        btnSave.Click += BtnSave_Click;
-        this.Controls.Add(btnSave);
+        row.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        foreach (var (control, width) in columns)
+        {
+            row.ColumnStyles.Add(width is int w
+                ? new ColumnStyle(SizeType.Absolute, w)
+                : new ColumnStyle(SizeType.AutoSize));
+            control.Margin = Padding.Empty;
+            control.Anchor = AnchorStyles.None;
+            row.Controls.Add(control);
+        }
+        AddRow(row);
+    }
 
-        // دکمه انصراف (۱۰ پیکسل فاصله گرفته و در سمت راستِ دکمه ذخیره قرار می‌گیرد)
-        btnCancel = new Button
+    private void AddDividerRow()
+    {
+        var divider = new RoundedPanel
+        {
+            Height = 1,
+            CornerRadius = 0,
+            BorderWidth = 0,
+            BackColor = Theme.Border,
+            Padding = Padding.Empty,
+            TabStop = false,
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0, SectionGap, 0, 0)
+        };
+        AddRow(divider);
+    }
+
+    private void AddFooterRow()
+    {
+        var footer = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            Height = StdHeight + 2,
+            ColumnCount = 3,
+            RowCount = 1,
+            Margin = new Padding(0, SectionGap, 0, 0),
+            Padding = Padding.Empty,
+            BackColor = Theme.Surface
+        };
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 112));
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 112));
+        footer.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+        btnCancel = new ModernButton
         {
             Text = Localization.Get("Cancel"),
-            Location = new Point(this.ClientSize.Width - marginX - (buttonWidth * 2) - 10, buttonY),
-            Size = new Size(buttonWidth, 32),
-            FlatStyle = FlatStyle.Flat
+            ButtonVariant = ModernButton.Variant.Secondary,
+            Dock = DockStyle.Fill
         };
         btnCancel.Click += BtnCancel_Click;
-        this.Controls.Add(btnCancel);
+        footer.Controls.Add(btnCancel, 2, 0);
+
+        btnSave = new ModernButton
+        {
+            Text = Localization.Get("Save"),
+            ButtonVariant = ModernButton.Variant.Primary,
+            Dock = DockStyle.Fill
+        };
+        btnSave.Click += BtnSave_Click;
+        footer.Controls.Add(btnSave, 1, 0);
+
+        AddRow(footer);
+    }
+
+    private Label CreateStatusChip(string text, Color fore, Color back)
+    {
+        var chip = new Label
+        {
+            Text = text,
+            Font = Theme.BodyBoldFont,
+            ForeColor = fore,
+            AutoSize = false,
+            Height = StdHeight,
+            TextAlign = ContentAlignment.MiddleLeft,
+            Padding = new Padding(12, 0, 12, 0)
+        };
+        chip.Paint += (s, e) =>
+        {
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            var bounds = new Rectangle(0, 0, chip.Width - 1, chip.Height - 1);
+            using var path = Theme.RoundRect(bounds, Theme.DpiScale(8, chip.DeviceDpi));
+            using (var brush = new SolidBrush(chip.BackColor))   // ← حالا واقعاً با وضعیت تغییر می‌کند
+                g.FillPath(brush, path);
+
+            int pad = Theme.DpiScale(12, chip.DeviceDpi);
+            var textRect = new Rectangle(pad, 0, chip.Width - pad * 2, chip.Height);
+            var flags = TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix;
+            if (Localization.IsRtl) flags |= TextFormatFlags.RightToLeft;
+
+            TextRenderer.DrawText(g, chip.Text, chip.Font, textRect, chip.ForeColor, flags);
+        };
+        chip.BackColor = Theme.Surface;
+        UpdateChipSize(chip);
+        return chip;
     }
 
     /// <summary>
-    /// موقعیت‌دهی کنترل‌های کادر میانبر بر اساس جهت زبان (چپ‌چین/راست‌چین).
+    /// Sizes the status chip to its content so it never stretches across the row.
     /// </summary>
-    private void PositionHotkeyControls()
+    private static void UpdateChipSize(Label chip)
     {
-        if (grpHotkey == null || lblHotkey == null || cmbHotkeyModifier == null || cmbHotkeyKey == null)
-            return;
-
-        int width = grpHotkey.Width;
-
-        if (Localization.IsRtl)
-        {
-            // فارسی: راست‌چین — برچسب سمت راست، دکمه زیر برچسب در سمت راست
-            lblHotkey.Location = new Point(width - 95, 33);
-            cmbHotkeyModifier.Location = new Point(width - 215, 30);
-            lblPlus.Location = new Point(width - 235, 33);
-            cmbHotkeyKey.Location = new Point(width - 330, 30);
-            lblHotkey.TextAlign = ContentAlignment.MiddleRight;
-
-            btnRegisterHotkey.Location = new Point(width - 175, 80);
-        }
-        else
-        {
-            // انگلیسی: چپ‌چین — برچسب سمت چپ، دکمه زیر برچسب در سمت چپ
-            lblHotkey.Location = new Point(15, 33);
-            cmbHotkeyModifier.Location = new Point(100, 30);
-            lblPlus.Location = new Point(215, 33);
-            cmbHotkeyKey.Location = new Point(235, 30);
-            lblHotkey.TextAlign = ContentAlignment.MiddleLeft;
-
-            btnRegisterHotkey.Location = new Point(15, 80);
-        }
+        if (chip is null) return;
+        int textWidth = TextRenderer.MeasureText(chip.Text, chip.Font).Width;
+        chip.Width = textWidth + Theme.DpiScale(24, chip.DeviceDpi);
     }
 
-    /// <summary>
-    /// موقعیت‌دهی برچسب وضعیت — در فارسی سمت چپ (زیر دراپ‌داون‌ها) و در انگلیسی سمت راست.
-    /// </summary>
-    private void PositionStatusControl()
+    protected override void OnHandleCreated(EventArgs e)
     {
-        if (grpHotkey == null || lblStatus == null)
-            return;
+        base.OnHandleCreated(e);
+        UpdateChipSize(lblStatus);
+    }
 
-        int width = grpHotkey.Width;
-
-        if (Localization.IsRtl)
-        {
-            // فارسی: وضعیت در سمت چپ کادر، مقابل دکمه که سمت راست است
-            lblStatus.Location = new Point(15, 85);
-            lblStatus.Size = new Size(width - 200, 20);
-        }
-        else
-        {
-            // انگلیسی: وضعیت در سمت راست کادر، مقابل دکمه که سمت چپ است
-            lblStatus.Location = new Point(180, 85);
-            lblStatus.Size = new Size(width - 195, 20);
-        }
+    protected override void OnDpiChanged(DpiChangedEventArgs e)
+    {
+        base.OnDpiChanged(e);
+        UpdateChipSize(lblStatus);
     }
 
     private void CmbLanguage_SelectedIndexChanged(object? sender, EventArgs e)
     {
         string lang = GetSelectedLanguage();
-
         if (Localization.CurrentLanguage != lang)
-        {
             Localization.SetLanguage(lang);
-            //ApplyLanguage();
-        }
     }
 
     private string GetSelectedLanguage()
@@ -388,51 +407,13 @@ public partial class SettingsForm : Form
         };
     }
 
-    /// <summary>
-    /// تمام متن‌های فرم و جهت چیدمان را بر اساس زبان فعال به‌روزرسانی می‌کند.
-    /// </summary>
-    private void ApplyLanguage()
-    {
-        bool isRtl = Localization.IsRtl;
-
-        // تغییر جهت چیدمان (فارسی: راست‌چین، انگلیسی/فرانسوی: چپ‌چین)
-        this.RightToLeft = isRtl ? RightToLeft.Yes : RightToLeft.No;
-        grpHotkey.RightToLeft = isRtl ? RightToLeft.Yes : RightToLeft.No;
-
-        this.Text = Localization.Get("Settings");
-        titleLabel.Text = Localization.Get("SettingsTitle");
-        lblLanguage.Text = Localization.Get("Language");
-        chkRunOnStartup.Text = Localization.Get("RunOnStartup");
-        grpHotkey.Text = Localization.Get("HotkeyGroup");
-        lblHotkey.Text = Localization.Get("HotkeyLabel");
-        btnRegisterHotkey.Text = Localization.Get("ApplyHotkey");
-        lblVersionTitle.Text = Localization.Get("CurrentVersion");
-        btnCheckUpdate.Text = Localization.Get("CheckUpdate");
-        btnSave.Text = Localization.Get("Save");
-        btnCancel.Text = Localization.Get("Cancel");
-        btnKeyboardMappings.Text = Localization.Get("KeyboardMappings");
-
-        PositionHotkeyControls();
-        PositionStatusControl();
-
-        UpdateStatusLabel();
-    }
-
-    private void CmbHotkeyModifier_SelectedIndexChanged(object? sender, EventArgs e)
-    {
-        UpdateStatus();
-    }
-
-    private void CmbHotkeyKey_SelectedIndexChanged(object? sender, EventArgs e)
-    {
-        UpdateStatus();
-    }
+    private void CmbHotkeyModifier_SelectedIndexChanged(object? sender, EventArgs e) => UpdateStatus();
+    private void CmbHotkeyKey_SelectedIndexChanged(object? sender, EventArgs e) => UpdateStatus();
 
     private void LoadSettings()
     {
-        chkRunOnStartup.Checked = _settings.RunOnStartup;
+        tglRunOnStartup.Checked = _settings.RunOnStartup;
 
-        // انتخاب زبان ذخیره‌شده (بدون فعال کردن رویداد تغییر زبان)
         cmbLanguage.SelectedIndex = _settings.Language switch
         {
             Localization.Languages.English => 0,
@@ -441,9 +422,6 @@ public partial class SettingsForm : Form
 
         LoadHotkeyFromSettings();
         UpdateStatus();
-
-        // اعمال زبان فعلی روی تمام کنترل‌ها
-        ApplyLanguage();
     }
 
     private void LoadHotkeyFromSettings()
@@ -462,11 +440,8 @@ public partial class SettingsForm : Form
         else if (modifier.HasFlag(HotkeyModifiers.Shift))
             cmbHotkeyModifier.SelectedIndex = 5;
 
-
         var key = _settings.HotkeyKey;
         string keyName = key.ToString();
-
-
         for (int i = 0; i < cmbHotkeyKey.Items.Count; i++)
         {
             string? item = cmbHotkeyKey.Items[i]?.ToString();
@@ -480,7 +455,6 @@ public partial class SettingsForm : Form
         lastHotkeyModifier = (uint)_settings.HotkeyModifier;
         lastHotkeyKey = key;
     }
-
 
     private void BtnRegisterHotkey_Click(object? sender, EventArgs e)
     {
@@ -549,10 +523,10 @@ public partial class SettingsForm : Form
         if (keyText == Localization.Get("HotkeyKeyEnd")) return Keys.End;
         if (keyText == Localization.Get("HotkeyKeyDelete")) return Keys.Delete;
         if (keyText == Localization.Get("HotkeyKeySpace")) return Keys.Space;
-        
+
         if (keyText.StartsWith("F") && int.TryParse(keyText[1..], out int fNum))
             return (Keys)((int)Keys.F1 + fNum - 1);
-        
+
         return Keys.Add;
     }
 
@@ -579,28 +553,26 @@ public partial class SettingsForm : Form
             _ => Localization.Get("StatusChecking")
         };
 
-        lblStatus.ForeColor = _statusState switch
+        (lblStatus.ForeColor, lblStatus.BackColor) = _statusState switch
         {
-            StatusState.Registered or StatusState.RegisterSuccess => System.Drawing.Color.Green,
-            StatusState.NotRegistered => System.Drawing.Color.Orange,
-            StatusState.RegisterFailed => System.Drawing.Color.Red,
-            _ => System.Drawing.Color.Blue
+            StatusState.Registered or StatusState.RegisterSuccess => (Theme.Success, Theme.SuccessSoft),
+            StatusState.NotRegistered => (Theme.Warning, Theme.WarningSoft),
+            StatusState.RegisterFailed => (Theme.Danger, Theme.DangerSoft),
+            _ => (Theme.Info, Theme.InfoSoft)
         };
+        UpdateChipSize(lblStatus);
+        lblStatus.Invalidate();
     }
 
     private void BtnCancel_Click(object? sender, EventArgs e)
     {
-        // اگر کاربر زبان را تغییر داده و انصراف بدهد، زبان ذخیره‌شده قبلی بازنشانی می‌شود
         Localization.SetLanguage(_settings.Language);
         DialogResult = DialogResult.Cancel;
+        Close();
     }
 
-    /// <summary>
-    /// بررسی دستی بروزرسانی با نمایش Progress Dialog
-    /// </summary>
     private async Task BtnCheckUpdate_Click()
     {
-        // ایجاد فرم Progress
         var progressForm = new Form
         {
             Text = Localization.Get("CheckingUpdate"),
@@ -611,7 +583,9 @@ public partial class SettingsForm : Form
             MinimizeBox = false,
             RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No,
             RightToLeftLayout = true,
-            ControlBox = false
+            ControlBox = false,
+            AutoScaleDimensions = new SizeF(96F, 96F),
+            AutoScaleMode = AutoScaleMode.Dpi
         };
 
         var lblMessage = new Label
@@ -620,7 +594,7 @@ public partial class SettingsForm : Form
             Dock = DockStyle.Top,
             Height = 30,
             TextAlign = ContentAlignment.MiddleCenter,
-            Font = new Font("Tahoma", 9)
+            Font = Theme.BodyFont
         };
 
         var progressBar = new ProgressBar
@@ -647,7 +621,6 @@ public partial class SettingsForm : Form
             var status = await AutoUpdater.CheckForUpdatesAsync(progress, silent: true);
             progressForm.Close();
 
-            // اگر آپدیتی نبود، پیام بده
             if (status == AutoUpdater.UpdateStatus.NoUpdate)
             {
                 MessageBox.Show(
@@ -664,7 +637,6 @@ public partial class SettingsForm : Form
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
-            // UpdateAvailable, DownloadedAndInstalling, UserDeclined - پیام‌های مربوطه در AutoUpdater نمایش داده می‌شوند
         }
         catch (Exception ex)
         {
@@ -681,7 +653,7 @@ public partial class SettingsForm : Form
     {
         try
         {
-            _settings.RunOnStartup = chkRunOnStartup.Checked;
+            _settings.RunOnStartup = tglRunOnStartup.Checked;
             _settings.Language = GetSelectedLanguage();
 
             if (!_isHotkeyRegistered)
@@ -709,5 +681,10 @@ public partial class SettingsForm : Form
     {
         using var mappingsForm = new KeyboardMappingsForm(_settings);
         mappingsForm.ShowDialog(this);
+    }
+
+    public void RequestClose()
+    {
+        BtnCancel_Click(this, EventArgs.Empty);
     }
 }
