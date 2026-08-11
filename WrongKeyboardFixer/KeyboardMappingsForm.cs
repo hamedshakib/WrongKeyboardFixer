@@ -1252,54 +1252,76 @@ public class KeyboardMappingsForm : Form
             return;
         }
 
-        if (isPersianToEnglish)
-        {
-            if (e.ColumnIndex == 0 && newValue.Length > 1)
-            {
-                e.Cancel = true;
-                MessageBox.Show(
-                    Localization.Get("InvalidPersianChar"),
-                    Localization.Get("Error"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-            else if (e.ColumnIndex == 1 &&
-                     (newValue.Length > 1 ||
-                      !char.IsLetter(newValue[0]) ||
-                      !char.IsAscii(newValue[0])))
-            {
-                e.Cancel = true;
-                MessageBox.Show(
-                    Localization.Get("InvalidEnglishChar"),
-                    Localization.Get("Error"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-        }
-        else
-        {
-            if (e.ColumnIndex == 0 &&
-                (newValue.Length > 1 ||
-                 !char.IsLetter(newValue[0]) ||
-                 !char.IsAscii(newValue[0])))
-            {
-                e.Cancel = true;
-                MessageBox.Show(
-                    Localization.Get("InvalidEnglishChar"),
-                    Localization.Get("Error"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-            else if (e.ColumnIndex == 1 && newValue.Length > 1)
-            {
-                e.Cancel = true;
-                MessageBox.Show(
-                    Localization.Get("InvalidPersianChar"),
-                    Localization.Get("Error"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-        }
+         if (isPersianToEnglish)
+         {
+             if (e.ColumnIndex == 0 && newValue.Length > 1)
+             {
+                 e.Cancel = true;
+                 MessageBox.Show(
+                     Localization.Get("InvalidPersianChar"),
+                     Localization.Get("Error"),
+                     MessageBoxButtons.OK,
+                     MessageBoxIcon.Error);
+             }
+             else if (e.ColumnIndex == 1 && newValue.Length == 1)
+             {
+                 char c = newValue[0];
+                 // Allow printable ASCII characters (32-126) including punctuation
+                 if (c < 32 || c > 126)
+                 {
+                     e.Cancel = true;
+                     MessageBox.Show(
+                         Localization.Get("InvalidEnglishChar"),
+                         Localization.Get("Error"),
+                         MessageBoxButtons.OK,
+                         MessageBoxIcon.Error);
+                 }
+             }
+             else if (e.ColumnIndex == 1 && newValue.Length > 1)
+             {
+                 e.Cancel = true;
+                 MessageBox.Show(
+                     Localization.Get("InvalidEnglishChar"),
+                     Localization.Get("Error"),
+                     MessageBoxButtons.OK,
+                     MessageBoxIcon.Error);
+             }
+         }
+         else
+         {
+             if (e.ColumnIndex == 0 && newValue.Length == 1)
+             {
+                 char c = newValue[0];
+                 // Allow printable ASCII characters (32-126) including punctuation
+                 if (c < 32 || c > 126)
+                 {
+                     e.Cancel = true;
+                     MessageBox.Show(
+                         Localization.Get("InvalidEnglishChar"),
+                         Localization.Get("Error"),
+                         MessageBoxButtons.OK,
+                         MessageBoxIcon.Error);
+                 }
+             }
+             else if (e.ColumnIndex == 0 && newValue.Length > 1)
+             {
+                 e.Cancel = true;
+                 MessageBox.Show(
+                     Localization.Get("InvalidEnglishChar"),
+                     Localization.Get("Error"),
+                     MessageBoxButtons.OK,
+                     MessageBoxIcon.Error);
+             }
+             else if (e.ColumnIndex == 1 && newValue.Length > 1)
+             {
+                 e.Cancel = true;
+                 MessageBox.Show(
+                     Localization.Get("InvalidPersianChar"),
+                     Localization.Get("Error"),
+                     MessageBoxButtons.OK,
+                     MessageBoxIcon.Error);
+             }
+         }
     }
 }
 
