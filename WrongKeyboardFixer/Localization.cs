@@ -87,33 +87,35 @@ public static class Localization
         ["UpdExeNotFound"] = "فایل اجرایی در فایل فشرده پیدا نشد.",
         ["UpdNotNewer"] = "نسخه فایل دانلودشده ({0}) از نسخه فعلی ({1}) جدیدتر نیست.\nلطفاً مطمئن شوید که فایل ZIP حاوی نسخه جدیدتر است.",
         ["UpdInstalling"] = "در حال نصب... برنامه مجدداً اجرا می‌شود",
-         ["UpdInstallComplete"] = "نصب کامل شد. برنامه مجدداً اجرا می‌شود.",
-         ["UpdDownloadInstallError"] = "خطا در دانلود یا نصب بروزرسانی:\n{0}",
+        ["UpdInstallComplete"] = "نصب کامل شد. برنامه مجدداً اجرا می‌شود.",
+        ["UpdDownloadInstallError"] = "خطا در دانلود یا نصب بروزرسانی:\n{0}",
 
-         // Keyboard mappings
-         ["KeyboardMappings"] = "نگاشت کیبورد",
-         ["KeyboardMappingsTitle"] = "تنظیم نگاشت کیبورد",
-         ["EnglishToPersian"] = "فارسی → انگلیسی",
-         ["PersianToEnglish"] = "انگلیسی → فارسی",
-         ["Key"] = "کلید",
-         ["KeyName"] = "نام دکمه",
-         ["PersianChar"] = "کارکتر فارسی",
-         ["EnglishChar"] = "کارکتر انگلیسی",
-         ["Reset"] = "برگردان",
-         ["ResetAll"] = "برگردان همه به پیش‌فرض",
-         ["ResetAllConfirm"] = "آیا مطمئن هستید که می‌خواهید تمام نگاشت‌های سفارشی را حذف کنید؟",
-         ["ResetKeyConfirm"] = "آیا مطمئن هستید که می‌خواهید نگاشت سفارشی این کلید را حذف کنید؟",
-         ["ResetSuccess"] = "نگاشت با موفقیت برگردانده شد.",
+        // Keyboard mappings
+        ["KeyboardMappings"] = "نگاشت کیبورد",
+        ["KeyboardMappingsTitle"] = "تنظیم نگاشت کیبورد",
+        ["EnglishToPersian"] = "فارسی → انگلیسی",
+        ["PersianToEnglish"] = "انگلیسی → فارسی",
+        ["Key"] = "کلید",
+        ["KeyName"] = "نام دکمه",
+        ["PersianChar"] = "کارکتر فارسی",
+        ["EnglishChar"] = "کارکتر انگلیسی",
+        ["Reset"] = "برگردان",
+        ["ResetAll"] = "برگردان همه به پیش‌فرض",
+        ["ResetAllConfirm"] = "آیا مطمئن هستید که می‌خواهید تمام نگاشت‌های سفارشی را حذف کنید؟",
+        ["ResetKeyConfirm"] = "آیا مطمئن هستید که می‌خواهید نگاشت سفارشی این کلید را حذف کنید؟",
+        ["ResetSuccess"] = "نگاشت با موفقیت برگردانده شد.",
          
-         // Add mapping
-         ["AddMapping"] = "افزودن نگاشت",
-         ["EnterPersianChar"] = "کارکتر فارسی را وارد کنید:",
-         ["EnterEnglishChar"] = "کارکتر انگلیسی را وارد کنید:",
-         ["InvalidPersianChar"] = "لطفاً یک کارکتر فارسی معتبر وارد کنید.",
-         ["InvalidEnglishChar"] = "لطفاً یک کارکتر انگلیسی معتبر وارد کنید.",
-         ["MappingAddedSuccess"] = "نگاشت با موفقیت اضافه شد.",
-         ["OK"] = "تأیید",
-      };
+        // Add mapping
+        ["AddMapping"] = "افزودن نگاشت",
+        ["EnterPersianChar"] = "کارکتر فارسی را وارد کنید:",
+        ["EnterEnglishChar"] = "کارکتر انگلیسی را وارد کنید:",
+        ["InvalidPersianChar"] = "لطفاً یک کارکتر فارسی معتبر وارد کنید.",
+        ["InvalidEnglishChar"] = "لطفاً یک کارکتر انگلیسی معتبر وارد کنید.",
+        ["MappingAddedSuccess"] = "نگاشت با موفقیت اضافه شد.",
+        ["OK"] = "تأیید",
+        ["Delete"] = "حذف",
+        ["DeleteMappingConfirm"] = "آیا مطمئن هستید که می‌خواهید این نگاشت را حذف کنید؟",
+       };
 
     private static readonly Dictionary<string, string> En = new()
     {
@@ -201,16 +203,18 @@ public static class Localization
         ["ResetAll"] = "Reset All to Default",
         ["ResetAllConfirm"] = "Are you sure you want to reset all custom mappings?",
         ["ResetKeyConfirm"] = "Are you sure you want to reset the custom mapping for this key?",
-         ["ResetSuccess"] = "Mapping reset successfully.",
+        ["ResetSuccess"] = "Mapping reset successfully.",
          
          // Add mapping
-         ["AddMapping"] = "Add Mapping",
-         ["EnterPersianChar"] = "Enter Persian character:",
-         ["EnterEnglishChar"] = "Enter English character:",
-         ["InvalidPersianChar"] = "Please enter a valid Persian character.",
-         ["InvalidEnglishChar"] = "Please enter a valid English character.",
-         ["MappingAddedSuccess"] = "Mapping added successfully.",
-         ["OK"] = "OK",
+        ["AddMapping"] = "Add Mapping",
+        ["EnterPersianChar"] = "Enter Persian character:",
+        ["EnterEnglishChar"] = "Enter English character:",
+        ["InvalidPersianChar"] = "Please enter a valid Persian character.",
+        ["InvalidEnglishChar"] = "Please enter a valid English character.",
+        ["MappingAddedSuccess"] = "Mapping added successfully.",
+        ["OK"] = "OK",
+        ["Delete"] = "Delete",
+        ["DeleteMappingConfirm"] = "Are you sure you want to delete this mapping?",
      };
 
     private static Dictionary<string, string> _current = En;

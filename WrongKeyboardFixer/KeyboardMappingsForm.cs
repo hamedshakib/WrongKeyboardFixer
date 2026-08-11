@@ -18,17 +18,18 @@ public partial class KeyboardMappingsForm : Form
     private Label? _titleLabel;
     private Label? _labelPersianToEnglish;
     private Label? _labelEnglishToPersian;
+    private const int RowHeight = 30;
+    private const int DefaultGridHeight = 140;
+    private const int MaxGridHeight = 250;
 
     public KeyboardMappingsForm(AppSettings settings)
     {
         _settings = settings ?? new AppSettings();
-        // Ensure PersianToEnglishMap and EnglishToPersianMap are initialized
         if (_settings.PersianToEnglishMap == null)
             _settings.PersianToEnglishMap = new Dictionary<char, char>();
         if (_settings.EnglishToPersianMap == null)
             _settings.EnglishToPersianMap = new Dictionary<char, char>();
 
-        // Set language before creating controls
         Localization.SetLanguage(_settings.Language);
 
         InitializeControls();
@@ -38,7 +39,10 @@ public partial class KeyboardMappingsForm : Form
     private void InitializeControls()
     {
         this.Text = Localization.Get("KeyboardMappingsTitle");
-        this.Size = new System.Drawing.Size(600, 700);
+        
+        // محاسبه ارتفاع داینامیک فرم
+        int formHeight = CalculateFormHeight();
+        this.Size = new System.Drawing.Size(600, formHeight);
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
         this.MinimizeBox = false;
@@ -79,7 +83,7 @@ public partial class KeyboardMappingsForm : Form
         _dataGridViewPersianToEnglish = new DataGridView
         {
             Location = new System.Drawing.Point(marginX, currentY),
-            Size = new System.Drawing.Size(formWidth - (2 * marginX), 140),
+            Size = new System.Drawing.Size(formWidth - (2 * marginX), DefaultGridHeight),
             AutoGenerateColumns = false,
             AllowUserToAddRows = true,
             AllowUserToDeleteRows = true,
@@ -87,7 +91,8 @@ public partial class KeyboardMappingsForm : Form
             ReadOnly = false,
             SelectionMode = DataGridViewSelectionMode.FullRowSelect,
             MultiSelect = false,
-            Dock = DockStyle.None
+            Dock = DockStyle.None,
+             ScrollBars = ScrollBars.Both
         };
 
         // Persian character column (read only)
@@ -107,6 +112,15 @@ public partial class KeyboardMappingsForm : Form
         };
         _dataGridViewPersianToEnglish.Columns.Add(englishColumn);
 
+        // Delete button column
+        var deleteColumn = new DataGridViewButtonColumn
+        {
+            HeaderText = Localization.Get("Delete"),
+            UseColumnTextForButtonValue = true,
+            Width = 70
+        };
+        _dataGridViewPersianToEnglish.Columns.Add(deleteColumn);
+
         // Reset button column
         var resetColumn = new DataGridViewButtonColumn
         {
@@ -125,7 +139,7 @@ public partial class KeyboardMappingsForm : Form
         _dataGridViewPersianToEnglish.CellValidating += DataGridViewPersianToEnglish_CellValidating;
 
         this.Controls.Add(_dataGridViewPersianToEnglish);
-        currentY += 160;
+        currentY += DefaultGridHeight + 15;
 
         // Add button for Persian to English
         _btnAddPersianToEnglish = new Button
@@ -138,7 +152,7 @@ public partial class KeyboardMappingsForm : Form
         };
         _btnAddPersianToEnglish.Click += BtnAddPersianToEnglish_Click;
         this.Controls.Add(_btnAddPersianToEnglish);
-        currentY += 50;
+        currentY += 45;
 
         // Reset All button for Persian to English
         _btnResetAllPersianToEnglish = new Button
@@ -151,7 +165,7 @@ public partial class KeyboardMappingsForm : Form
         };
         _btnResetAllPersianToEnglish.Click += BtnResetAllPersianToEnglish_Click;
         this.Controls.Add(_btnResetAllPersianToEnglish);
-        currentY += 50;
+        currentY += 45;
 
         // English to Persian section
         _labelEnglishToPersian = new Label
@@ -168,7 +182,7 @@ public partial class KeyboardMappingsForm : Form
         _dataGridViewEnglishToPersian = new DataGridView
         {
             Location = new System.Drawing.Point(marginX, currentY),
-            Size = new System.Drawing.Size(formWidth - (2 * marginX), 140),
+            Size = new System.Drawing.Size(formWidth - (2 * marginX), DefaultGridHeight),
             AutoGenerateColumns = false,
             AllowUserToAddRows = true,
             AllowUserToDeleteRows = true,
@@ -176,7 +190,8 @@ public partial class KeyboardMappingsForm : Form
             ReadOnly = false,
             SelectionMode = DataGridViewSelectionMode.FullRowSelect,
             MultiSelect = false,
-            Dock = DockStyle.None
+            Dock = DockStyle.None,
+            ScrollBars = ScrollBars.Both
         };
 
         // English character column (read only)
@@ -196,6 +211,15 @@ public partial class KeyboardMappingsForm : Form
         };
         _dataGridViewEnglishToPersian.Columns.Add(persianColumn2);
 
+        // Delete button column
+        var deleteColumn2 = new DataGridViewButtonColumn
+        {
+            HeaderText = Localization.Get("Delete"),
+            UseColumnTextForButtonValue = true,
+            Width = 70
+        };
+        _dataGridViewEnglishToPersian.Columns.Add(deleteColumn2);
+
         // Reset button column
         var resetColumn2 = new DataGridViewButtonColumn
         {
@@ -214,7 +238,7 @@ public partial class KeyboardMappingsForm : Form
         _dataGridViewEnglishToPersian.CellValidating += DataGridViewEnglishToPersian_CellValidating;
 
         this.Controls.Add(_dataGridViewEnglishToPersian);
-        currentY += 160;
+        currentY += DefaultGridHeight + 15;
 
         // Add button for English to Persian
         _btnAddEnglishToPersian = new Button
@@ -227,7 +251,7 @@ public partial class KeyboardMappingsForm : Form
         };
         _btnAddEnglishToPersian.Click += BtnAddEnglishToPersian_Click;
         this.Controls.Add(_btnAddEnglishToPersian);
-        currentY += 50;
+        currentY += 45;
 
         // Reset All button for English to Persian
         _btnResetAllEnglishToPersian = new Button
@@ -240,7 +264,7 @@ public partial class KeyboardMappingsForm : Form
         };
         _btnResetAllEnglishToPersian.Click += BtnResetAllEnglishToPersian_Click;
         this.Controls.Add(_btnResetAllEnglishToPersian);
-        currentY += 50;
+        currentY += 45;
 
         // Close/Save button
         _btnClose = new Button
@@ -253,6 +277,15 @@ public partial class KeyboardMappingsForm : Form
         };
         _btnClose.Click += BtnClose_Click;
         this.Controls.Add(_btnClose);
+        
+        // تنظیم ارتفاع نهایی فرم بر اساس محتوا
+        this.ClientSize = new System.Drawing.Size(formWidth, currentY + 30);
+    }
+
+    private int CalculateFormHeight()
+    {
+        int currentY = 20 + 45 + 30 + DefaultGridHeight + 15 + 45 + 45 + 30 + DefaultGridHeight + 15 + 45 + 45 + 32 + 30;
+        return currentY;
     }
 
     private void LoadMappings()
@@ -260,7 +293,6 @@ public partial class KeyboardMappingsForm : Form
         _dataGridViewPersianToEnglish!.Rows.Clear();
         _dataGridViewEnglishToPersian!.Rows.Clear();
 
-        // Load Persian to English mappings
         if (_settings.PersianToEnglishMap != null)
         {
             var sortedPersianChars = _settings.PersianToEnglishMap.Keys.OrderBy(c => c).ToList();
@@ -274,7 +306,6 @@ public partial class KeyboardMappingsForm : Form
             }
         }
 
-        // Load English to Persian mappings
         if (_settings.EnglishToPersianMap != null)
         {
             var sortedEnglishChars = _settings.EnglishToPersianMap.Keys.OrderBy(c => c).ToList();
@@ -293,9 +324,22 @@ public partial class KeyboardMappingsForm : Form
     {
         if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
         {
-            if (_dataGridViewPersianToEnglish!.Columns[e.ColumnIndex] is DataGridViewButtonColumn && e.ColumnIndex == _dataGridViewPersianToEnglish.Columns.Count - 1)
+            var dataGridView = (DataGridView)sender!;
+            
+            // ستون حذف (delete) - اولین دکمه
+            if (e.ColumnIndex == 2 && dataGridView.Columns[e.ColumnIndex] is DataGridViewButtonColumn)
             {
-                var persianCell = _dataGridViewPersianToEnglish.Rows[e.RowIndex].Cells[0];
+                var persianCell = dataGridView.Rows[e.RowIndex].Cells[0];
+                var persianCharStr = persianCell.Value?.ToString();
+                if (!string.IsNullOrEmpty(persianCharStr) && persianCharStr.Length == 1)
+                {
+                    DeletePersianMapping(persianCharStr[0]);
+                }
+            }
+            // ستون برگردان (reset) - دومین دکمه
+            else if (e.ColumnIndex == 3 && dataGridView.Columns[e.ColumnIndex] is DataGridViewButtonColumn)
+            {
+                var persianCell = dataGridView.Rows[e.RowIndex].Cells[0];
                 var persianCharStr = persianCell.Value?.ToString();
                 if (!string.IsNullOrEmpty(persianCharStr) && persianCharStr.Length == 1)
                 {
@@ -309,9 +353,22 @@ public partial class KeyboardMappingsForm : Form
     {
         if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
         {
-            if (_dataGridViewEnglishToPersian!.Columns[e.ColumnIndex] is DataGridViewButtonColumn && e.ColumnIndex == _dataGridViewEnglishToPersian.Columns.Count - 1)
+            var dataGridView = (DataGridView)sender!;
+            
+            // ستون حذف (delete) - اولین دکمه
+            if (e.ColumnIndex == 2 && dataGridView.Columns[e.ColumnIndex] is DataGridViewButtonColumn)
             {
-                var englishCell = _dataGridViewEnglishToPersian.Rows[e.RowIndex].Cells[0];
+                var englishCell = dataGridView.Rows[e.RowIndex].Cells[0];
+                var englishCharStr = englishCell.Value?.ToString();
+                if (!string.IsNullOrEmpty(englishCharStr) && englishCharStr.Length == 1)
+                {
+                    DeleteEnglishMapping(englishCharStr[0]);
+                }
+            }
+            // ستون برگردان (reset) - دومین دکمه
+            else if (e.ColumnIndex == 3 && dataGridView.Columns[e.ColumnIndex] is DataGridViewButtonColumn)
+            {
+                var englishCell = dataGridView.Rows[e.RowIndex].Cells[0];
                 var englishCharStr = englishCell.Value?.ToString();
                 if (!string.IsNullOrEmpty(englishCharStr) && englishCharStr.Length == 1)
                 {
@@ -400,9 +457,42 @@ public partial class KeyboardMappingsForm : Form
         }
     }
 
+    private void DeletePersianMapping(char persianChar)
+    {
+        var result = MessageBox.Show(
+            Localization.Format("DeleteMappingConfirm"),
+            Localization.Get("Attention"),
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question);
+        if (result == DialogResult.Yes)
+        {
+            if (_settings.PersianToEnglishMap.ContainsKey(persianChar))
+            {
+                _settings.PersianToEnglishMap.Remove(persianChar);
+            }
+            LoadMappings();
+        }
+    }
+
+    private void DeleteEnglishMapping(char englishChar)
+    {
+        var result = MessageBox.Show(
+            Localization.Format("DeleteMappingConfirm"),
+            Localization.Get("Attention"),
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question);
+        if (result == DialogResult.Yes)
+        {
+            if (_settings.EnglishToPersianMap.ContainsKey(englishChar))
+            {
+                _settings.EnglishToPersianMap.Remove(englishChar);
+            }
+            LoadMappings();
+        }
+    }
+
     private void AddPersianToEnglishMapping()
     {
-        // Show input box for Persian character
         string? persianCharInput = InputBox.Show(
             Localization.Get("EnterPersianChar"),
             Localization.Get("AddMapping"),
@@ -422,7 +512,6 @@ public partial class KeyboardMappingsForm : Form
 
         char persianChar = persianCharInput[0];
 
-        // Show input box for English character
         string? englishCharInput = InputBox.Show(
             Localization.Get("EnterEnglishChar"),
             Localization.Get("AddMapping"),
@@ -442,7 +531,6 @@ public partial class KeyboardMappingsForm : Form
 
         char englishChar = englishCharInput[0];
 
-        // Add the mapping
         if (_settings.PersianToEnglishMap.ContainsKey(persianChar))
         {
             _settings.PersianToEnglishMap[persianChar] = englishChar;
@@ -463,7 +551,6 @@ public partial class KeyboardMappingsForm : Form
 
     private void AddEnglishToPersianMapping()
     {
-        // Show input box for English character
         string? englishCharInput = InputBox.Show(
             Localization.Get("EnterEnglishChar"),
             Localization.Get("AddMapping"),
@@ -483,7 +570,6 @@ public partial class KeyboardMappingsForm : Form
 
         char englishChar = englishCharInput[0];
 
-        // Show input box for Persian character
         string? persianCharInput = InputBox.Show(
             Localization.Get("EnterPersianChar"),
             Localization.Get("AddMapping"),
@@ -503,7 +589,6 @@ public partial class KeyboardMappingsForm : Form
 
         char persianChar = persianCharInput[0];
 
-        // Add the mapping
         if (_settings.EnglishToPersianMap.ContainsKey(englishChar))
         {
             _settings.EnglishToPersianMap[englishChar] = persianChar;
@@ -656,10 +741,8 @@ public static class InputBox
         };
         form.Controls.Add(cancelButton);
 
-        // Set OK as accept button
         form.AcceptButton = okButton;
 
-        // Show dialog and return result
         var result = form.ShowDialog();
         return result == DialogResult.OK ? textBox.Text : null;
     }
