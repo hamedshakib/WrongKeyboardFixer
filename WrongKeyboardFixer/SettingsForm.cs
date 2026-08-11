@@ -88,7 +88,7 @@ public partial class SettingsForm : Form
         {
             Text = Localization.Get("Language"),
             Location = new Point(marginX, currentY),
-            Size = new Size(100, 25),
+            Size = new Size(70, 25),
             TextAlign = ContentAlignment.MiddleLeft
         };
         this.Controls.Add(lblLanguage);
@@ -96,7 +96,7 @@ public partial class SettingsForm : Form
         cmbLanguage = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Location = new Point(marginX + 110, currentY),
+            Location = new Point(marginX + 80, currentY),
             Size = new Size(120, 25)
         };
         // نام زبان‌ها به زبان خودشان نمایش داده می‌شود (endonym)

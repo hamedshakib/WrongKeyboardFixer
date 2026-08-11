@@ -13,27 +13,32 @@ public class KeyboardMappingsForm : Form
     private DataGridView? _dataGridViewPersianToEnglish;
     private DataGridView? _dataGridViewEnglishToPersian;
 
+    private Panel? _panelPersianToEnglish;
+    private Panel? _panelEnglishToPersian;
+
+    private Panel? _borderPanelPersianToEnglish;
+    private Panel? _borderPanelEnglishToPersian;
+
     private Button? _btnAddPersianToEnglish;
     private Button? _btnAddEnglishToPersian;
 
     private Button? _btnResetAllPersianToEnglish;
     private Button? _btnResetAllEnglishToPersian;
 
-    private Button? _btnClose;
+    private Button? _btnSave;
+    private Button? _btnCancel;
 
     private Label? _titleLabel;
     private Label? _labelPersianToEnglish;
     private Label? _labelEnglishToPersian;
 
-    private const int FormWidth = 700;
+    private const int FormWidth = 720;
 
-    private const int Margin = 20;
+    private const int ControlMargin = 20;
 
-    private const int GridHeight = 165;
+    private const int GridHeight = 180;
 
-    private const int ButtonHeight = 34;
-
-    private const int SectionSpacing = 18;
+    private const int ButtonHeight = 32;
 
     public KeyboardMappingsForm(AppSettings settings)
     {
@@ -58,39 +63,24 @@ public class KeyboardMappingsForm : Form
 
     private void InitializeControls()
     {
-        this.Text =
-            Localization.Get("KeyboardMappingsTitle");
-
-        this.ClientSize =
-            new Size(FormWidth, 610);
-
-        this.FormBorderStyle =
-            FormBorderStyle.FixedDialog;
-
+        this.Text = Localization.Get("KeyboardMappingsTitle");
+        this.ClientSize = new Size(FormWidth, 560);
+        this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
         this.MinimizeBox = false;
+        this.StartPosition = FormStartPosition.CenterScreen;
+        this.Font = new Font("Tahoma", 9);
+        this.Icon = IconLoader.GetIcon();
+        this.RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No;
+        this.RightToLeftLayout = Localization.IsRtl;
 
-        this.StartPosition =
-            FormStartPosition.CenterScreen;
-
-        this.Font =
-            new Font("Tahoma", 9);
-
-        this.Icon =
-            IconLoader.GetIcon();
-
-        this.RightToLeft =
-            Localization.IsRtl
-                ? RightToLeft.Yes
-                : RightToLeft.No;
-
-        this.RightToLeftLayout =
-            Localization.IsRtl;
-
-        int contentWidth =
-            FormWidth - (Margin * 2);
-
+        int contentWidth = FormWidth - (ControlMargin * 2); // 680px
         int currentY = 15;
+
+        const int innerPadding = 8;
+        int sectionWidth = contentWidth;
+        int innerWidth = sectionWidth - (innerPadding * 2); // 664px
+        int sectionHeight = innerPadding + ButtonHeight + innerPadding + GridHeight + innerPadding; // 236px
 
         // =====================================================
         // TITLE
@@ -98,23 +88,11 @@ public class KeyboardMappingsForm : Form
 
         _titleLabel = new Label
         {
-            Text =
-                Localization.Get(
-                    "KeyboardMappingsTitle"),
-
-            Font = new Font(
-                "Tahoma",
-                12,
-                FontStyle.Bold),
-
-            Location =
-                new Point(Margin, currentY),
-
-            Size =
-                new Size(contentWidth, 32),
-
-            TextAlign =
-                ContentAlignment.MiddleLeft
+            Text = Localization.Get("KeyboardMappingsTitle"),
+            Font = new Font("Tahoma", 12, FontStyle.Bold),
+            Location = new Point(ControlMargin, currentY),
+            Size = new Size(contentWidth, 32),
+            TextAlign = ContentAlignment.MiddleLeft
         };
 
         Controls.Add(_titleLabel);
@@ -125,210 +103,141 @@ public class KeyboardMappingsForm : Form
         // PERSIAN -> ENGLISH
         // =====================================================
 
-        _labelPersianToEnglish = CreateSectionTitle(
-            Localization.Get("PersianToEnglish"));
-
-        _labelPersianToEnglish.Location =
-            new Point(Margin, currentY);
-
+        _labelPersianToEnglish = CreateSectionTitle(Localization.Get("PersianToEnglish"));
+        _labelPersianToEnglish.Location = new Point(ControlMargin, currentY);
         Controls.Add(_labelPersianToEnglish);
 
-        currentY += 30;
+        currentY += 28;
 
-        ////Info box
-        //var persianToEnglishInfo =
-        //    CreateInfoLabel(
-        //        "ⓘ  Persian characters (left column) are read-only. " +
-        //        "You can change the English character (second column).");
+        // Border panel for Persian→English section
+        _borderPanelPersianToEnglish = new Panel
+        {
+            Location = new Point(ControlMargin, currentY),
+            Size = new Size(sectionWidth, sectionHeight),
+            BorderStyle = BorderStyle.FixedSingle,
+            BackColor = Color.White
+        };
 
-        //persianToEnglishInfo.Location =
-        //    new Point(Margin, currentY);
+        _panelPersianToEnglish = new Panel
+        {
+            Location = new Point(innerPadding, innerPadding),
+            Size = new Size(innerWidth, ButtonHeight),
+            BackColor = Color.Transparent
+        };
 
-        //Controls.Add(persianToEnglishInfo);
-
-        //currentY += 36;
-
-        // Grid
-        _dataGridViewPersianToEnglish =
-            CreateMappingGrid(true);
-
-        _dataGridViewPersianToEnglish.Location =
-            new Point(Margin, currentY);
-
-        _dataGridViewPersianToEnglish.Size =
-            new Size(contentWidth, GridHeight);
-
-        Controls.Add(
-            _dataGridViewPersianToEnglish);
-
-        currentY += GridHeight + 8;
+        _borderPanelPersianToEnglish.Controls.Add(_panelPersianToEnglish);
 
         // Buttons
-        _btnAddPersianToEnglish =
-            CreateActionButton(
-                "＋ " +
-                Localization.Get("AddMapping"),
-                Color.LightGreen);
+        _btnAddPersianToEnglish = CreateActionButton(
+            "＋ " + Localization.Get("AddMapping"),
+            Color.LightGreen);
+        _btnAddPersianToEnglish.Location = new Point(0, 0);
+        _btnAddPersianToEnglish.Size = new Size(120, ButtonHeight);
+        _btnAddPersianToEnglish.Click += BtnAddPersianToEnglish_Click;
+        _panelPersianToEnglish.Controls.Add(_btnAddPersianToEnglish);
 
-        _btnAddPersianToEnglish.Location =
-            new Point(Margin, currentY);
+        _btnResetAllPersianToEnglish = CreateActionButton(
+            "↻ " + Localization.Get("ResetAll"),
+            Color.Orange);
+        _btnResetAllPersianToEnglish.Location = new Point(128, 0);
+        _btnResetAllPersianToEnglish.Size = new Size(155, ButtonHeight);
+        _btnResetAllPersianToEnglish.Click += BtnResetAllPersianToEnglish_Click;
+        _panelPersianToEnglish.Controls.Add(_btnResetAllPersianToEnglish);
 
-        _btnAddPersianToEnglish.Size =
-            new Size(140, ButtonHeight);
+        // Grid
+        _dataGridViewPersianToEnglish = CreateMappingGrid(true);
+        _dataGridViewPersianToEnglish.Location = new Point(innerPadding, innerPadding + ButtonHeight + innerPadding);
+        _dataGridViewPersianToEnglish.Size = new Size(innerWidth, GridHeight);
+        _borderPanelPersianToEnglish.Controls.Add(_dataGridViewPersianToEnglish);
 
-        _btnAddPersianToEnglish.Click +=
-            BtnAddPersianToEnglish_Click;
+        Controls.Add(_borderPanelPersianToEnglish);
 
-        Controls.Add(_btnAddPersianToEnglish);
-
-        _btnResetAllPersianToEnglish =
-            CreateActionButton(
-                "↻ " +
-                Localization.Get("ResetAll"),
-                Color.Orange);
-
-        _btnResetAllPersianToEnglish.Size =
-            new Size(160, ButtonHeight);
-
-        _btnResetAllPersianToEnglish.Location =
-            new Point(
-                FormWidth -
-                Margin -
-                _btnResetAllPersianToEnglish.Width,
-                currentY);
-
-        _btnResetAllPersianToEnglish.Click +=
-            BtnResetAllPersianToEnglish_Click;
-
-        Controls.Add(
-            _btnResetAllPersianToEnglish);
-
-        currentY +=
-            ButtonHeight +
-            SectionSpacing;
+        currentY += sectionHeight + 15;
 
         // =====================================================
         // ENGLISH -> PERSIAN
         // =====================================================
 
-        _labelEnglishToPersian =
-            CreateSectionTitle(
-                Localization.Get(
-                    "EnglishToPersian"));
-
-        _labelEnglishToPersian.Location =
-            new Point(Margin, currentY);
-
+        _labelEnglishToPersian = CreateSectionTitle(Localization.Get("EnglishToPersian"));
+        _labelEnglishToPersian.Location = new Point(ControlMargin, currentY);
         Controls.Add(_labelEnglishToPersian);
 
-        currentY += 30;
+        currentY += 28;
 
-        //// Info box
-        //var englishToPersianInfo =
-        //    CreateInfoLabel(
-        //        "ⓘ  English characters (left column) are read-only. " +
-        //        "You can change the Persian character (second column).");
+        // Border panel for English→Persian section
+        _borderPanelEnglishToPersian = new Panel
+        {
+            Location = new Point(ControlMargin, currentY),
+            Size = new Size(sectionWidth, sectionHeight),
+            BorderStyle = BorderStyle.FixedSingle,
+            BackColor = Color.White
+        };
 
-        //englishToPersianInfo.Location =
-        //    new Point(Margin, currentY);
+        _panelEnglishToPersian = new Panel
+        {
+            Location = new Point(innerPadding, innerPadding),
+            Size = new Size(innerWidth, ButtonHeight),
+            BackColor = Color.Transparent
+        };
 
-        //Controls.Add(englishToPersianInfo);
-
-        //currentY += 36;
-
-        // Grid
-        _dataGridViewEnglishToPersian =
-            CreateMappingGrid(false);
-
-        _dataGridViewEnglishToPersian.Location =
-            new Point(Margin, currentY);
-
-        _dataGridViewEnglishToPersian.Size =
-            new Size(contentWidth, GridHeight);
-
-        Controls.Add(
-            _dataGridViewEnglishToPersian);
-
-        currentY += GridHeight + 8;
+        _borderPanelEnglishToPersian.Controls.Add(_panelEnglishToPersian);
 
         // Buttons
-        _btnAddEnglishToPersian =
-            CreateActionButton(
-                "＋ " +
-                Localization.Get("AddMapping"),
-                Color.LightGreen);
+        _btnAddEnglishToPersian = CreateActionButton(
+            "＋ " + Localization.Get("AddMapping"),
+            Color.LightGreen);
+        _btnAddEnglishToPersian.Location = new Point(0, 0);
+        _btnAddEnglishToPersian.Size = new Size(120, ButtonHeight);
+        _btnAddEnglishToPersian.Click += BtnAddEnglishToPersian_Click;
+        _panelEnglishToPersian.Controls.Add(_btnAddEnglishToPersian);
 
-        _btnAddEnglishToPersian.Location =
-            new Point(Margin, currentY);
+        _btnResetAllEnglishToPersian = CreateActionButton(
+            "↻ " + Localization.Get("ResetAll"),
+            Color.Orange);
+        _btnResetAllEnglishToPersian.Location = new Point(128, 0);
+        _btnResetAllEnglishToPersian.Size = new Size(155, ButtonHeight);
+        _btnResetAllEnglishToPersian.Click += BtnResetAllEnglishToPersian_Click;
+        _panelEnglishToPersian.Controls.Add(_btnResetAllEnglishToPersian);
 
-        _btnAddEnglishToPersian.Size =
-            new Size(140, ButtonHeight);
+        // Grid
+        _dataGridViewEnglishToPersian = CreateMappingGrid(false);
+        _dataGridViewEnglishToPersian.Location = new Point(innerPadding, innerPadding + ButtonHeight + innerPadding);
+        _dataGridViewEnglishToPersian.Size = new Size(innerWidth, GridHeight);
+        _borderPanelEnglishToPersian.Controls.Add(_dataGridViewEnglishToPersian);
 
-        _btnAddEnglishToPersian.Click +=
-            BtnAddEnglishToPersian_Click;
+        Controls.Add(_borderPanelEnglishToPersian);
 
-        Controls.Add(
-            _btnAddEnglishToPersian);
-
-        _btnResetAllEnglishToPersian =
-            CreateActionButton(
-                "↻ " +
-                Localization.Get("ResetAll"),
-                Color.Orange);
-
-        _btnResetAllEnglishToPersian.Size =
-            new Size(160, ButtonHeight);
-
-        _btnResetAllEnglishToPersian.Location =
-            new Point(
-                FormWidth -
-                Margin -
-                _btnResetAllEnglishToPersian.Width,
-                currentY);
-
-        _btnResetAllEnglishToPersian.Click +=
-            BtnResetAllEnglishToPersian_Click;
-
-        Controls.Add(
-            _btnResetAllEnglishToPersian);
-
-        currentY +=
-            ButtonHeight + 15;
+        currentY += sectionHeight + 15;
 
         // =====================================================
-        // SAVE
+        // SAVE AND CANCEL BUTTONS
         // =====================================================
 
-        _btnClose =
-            CreateActionButton(
-                Localization.Get("Save"),
-                Color.LightBlue);
+        const int buttonWidth = 95;
 
-        _btnClose.Size =
-            new Size(140, ButtonHeight);
+        _btnSave = CreateActionButton(
+            Localization.Get("Save"),
+            Color.LightBlue);
+        _btnSave.Size = new Size(buttonWidth, ButtonHeight);
+        _btnSave.Location = new Point(ControlMargin + contentWidth - buttonWidth, currentY);
+        _btnSave.Click += BtnSave_Click;
 
-        _btnClose.Location =
-            new Point(
-                FormWidth -
-                Margin -
-                _btnClose.Width,
-                currentY);
+        Controls.Add(_btnSave);
 
-        _btnClose.Click +=
-            BtnClose_Click;
+        _btnCancel = CreateActionButton(
+            Localization.Get("Cancel"),
+            Color.Empty);
+        _btnCancel.Size = new Size(buttonWidth, ButtonHeight);
+        _btnCancel.Location = new Point(ControlMargin + contentWidth - (buttonWidth * 2) - 10, currentY);
+        _btnCancel.Click += BtnCancel_Click;
 
-        Controls.Add(_btnClose);
+        Controls.Add(_btnCancel);
 
         // =====================================================
         // FINAL FORM HEIGHT
         // =====================================================
 
-        this.ClientSize =
-            new Size(
-                FormWidth,
-                currentY +
-                ButtonHeight +
-                15);
+        this.ClientSize = new Size(FormWidth, currentY + ButtonHeight + 25);
     }
 
     // =========================================================
@@ -348,7 +257,7 @@ public class KeyboardMappingsForm : Form
 
             Size =
                 new Size(
-                    FormWidth - (Margin * 2),
+                    FormWidth - (ControlMargin * 2),
                     25),
 
             TextAlign =
@@ -371,7 +280,7 @@ public class KeyboardMappingsForm : Form
 
             Size =
                 new Size(
-                    FormWidth - (Margin * 2),
+                    FormWidth - (ControlMargin * 2),
                     32),
 
             TextAlign =
@@ -412,18 +321,10 @@ public class KeyboardMappingsForm : Form
 
             FlatStyle =
                 FlatStyle.Flat,
-
-            BackColor =
-                backColor,
-
-            UseVisualStyleBackColor =
-                false,
-
-            TextAlign =
-                ContentAlignment.MiddleCenter,
-
-            Cursor =
-                Cursors.Hand
+            BackColor = backColor,
+            UseVisualStyleBackColor = false,
+            TextAlign = ContentAlignment.MiddleCenter,
+            Cursor = Cursors.Hand, Padding = new Padding(6, 0, 6, 0)
         };
 
         button.FlatAppearance.BorderColor =
@@ -1009,157 +910,31 @@ public class KeyboardMappingsForm : Form
     }
 
     // =========================================================
-    // CELL PARSING
+    // BUTTON CLICK HANDLERS
     // =========================================================
 
-    private void DataGridView_CellParsing(
+    private void BtnAddPersianToEnglish_Click(
         object? sender,
-        DataGridViewCellParsingEventArgs e)
+        EventArgs e)
     {
-        e.ParsingApplied = true;
+        AddPersianToEnglishMapping();
     }
 
-    // =========================================================
-    // PERSIAN -> ENGLISH VALIDATION
-    // =========================================================
-
-    private void DataGridViewPersianToEnglish_CellValidating(
+    private void BtnAddEnglishToPersian_Click(
         object? sender,
-        DataGridViewCellValidatingEventArgs e)
+        EventArgs e)
     {
-        var gridView =
-            (DataGridView)sender!;
-
-        if (e.ColumnIndex < 0 ||
-            e.RowIndex < 0)
-            return;
-
-        // فقط ستون دوم قابل ویرایش است
-        if (e.ColumnIndex != 1)
-            return;
-
-        var persianCell =
-            gridView
-                .Rows[e.RowIndex]
-                .Cells[0];
-
-        var persianCharStr =
-            persianCell
-                .Value?
-                .ToString();
-
-        if (string.IsNullOrEmpty(
-                persianCharStr) ||
-            persianCharStr.Length != 1)
-            return;
-
-        string value =
-            e.FormattedValue?
-                .ToString() ??
-            string.Empty;
-
-        if (string.IsNullOrEmpty(value))
-            return;
-
-        if (value.Length > 1)
-        {
-            MessageBox.Show(
-                Localization.Get("Error"),
-                Localization.Get("Error"),
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-
-            e.Cancel = true;
-            return;
-        }
-
-        char persianChar =
-            persianCharStr[0];
-
-        char englishChar =
-            value[0];
-
-        _settings
-            .PersianToEnglishMap[persianChar] =
-            englishChar;
+        AddEnglishToPersianMapping();
     }
 
-    // =========================================================
-    // ENGLISH -> PERSIAN VALIDATION
-    // =========================================================
-
-    private void DataGridViewEnglishToPersian_CellValidating(
+    private void BtnResetAllPersianToEnglish_Click(
         object? sender,
-        DataGridViewCellValidatingEventArgs e)
-    {
-        var gridView =
-            (DataGridView)sender!;
-
-        if (e.ColumnIndex < 0 ||
-            e.RowIndex < 0)
-            return;
-
-        // فقط ستون دوم قابل ویرایش است
-        if (e.ColumnIndex != 1)
-            return;
-
-        var englishCell =
-            gridView
-                .Rows[e.RowIndex]
-                .Cells[0];
-
-        var englishCharStr =
-            englishCell
-                .Value?
-                .ToString();
-
-        if (string.IsNullOrEmpty(
-                englishCharStr) ||
-            englishCharStr.Length != 1)
-            return;
-
-        string value =
-            e.FormattedValue?
-                .ToString() ??
-            string.Empty;
-
-        if (string.IsNullOrEmpty(value))
-            return;
-
-        if (value.Length > 1)
-        {
-            MessageBox.Show(
-                Localization.Get("Error"),
-                Localization.Get("Error"),
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-
-            e.Cancel = true;
-            return;
-        }
-
-        char englishChar =
-            englishCharStr[0];
-
-        char persianChar =
-            value[0];
-
-        _settings
-            .EnglishToPersianMap[englishChar] =
-            persianChar;
-    }
-
-    // =========================================================
-    // DELETE PERSIAN
-    // =========================================================
-
-    private void DeletePersianMapping(
-        char persianChar)
+        EventArgs e)
     {
         var result =
             MessageBox.Show(
                 Localization.Format(
-                    "DeleteMappingConfirm"),
+                    "ResetAllConfirm"),
 
                 Localization.Get(
                     "Attention"),
@@ -1171,29 +946,21 @@ public class KeyboardMappingsForm : Form
         if (result != DialogResult.Yes)
             return;
 
-        if (_settings
+        _settings
             .PersianToEnglishMap
-            .ContainsKey(persianChar))
-        {
-            _settings
-                .PersianToEnglishMap
-                .Remove(persianChar);
-        }
+            = MappingDefaults.GetDefaultPersianToEnglishMap();
 
         LoadMappings();
     }
 
-    // =========================================================
-    // DELETE ENGLISH
-    // =========================================================
-
-    private void DeleteEnglishMapping(
-        char englishChar)
+    private void BtnResetAllEnglishToPersian_Click(
+        object? sender,
+        EventArgs e)
     {
         var result =
             MessageBox.Show(
                 Localization.Format(
-                    "DeleteMappingConfirm"),
+                    "ResetAllConfirm"),
 
                 Localization.Get(
                     "Attention"),
@@ -1205,20 +972,37 @@ public class KeyboardMappingsForm : Form
         if (result != DialogResult.Yes)
             return;
 
-        if (_settings
+        _settings
             .EnglishToPersianMap
-            .ContainsKey(englishChar))
-        {
-            _settings
-                .EnglishToPersianMap
-                .Remove(englishChar);
-        }
+            = MappingDefaults.GetDefaultEnglishToPersianMap();
 
         LoadMappings();
     }
 
+    private void BtnSave_Click(
+        object? sender,
+        EventArgs e)
+    {
+        SettingsManager.Save(_settings);
+
+        DialogResult =
+            DialogResult.OK;
+
+        Close();
+    }
+
+    private void BtnCancel_Click(
+        object? sender,
+        EventArgs e)
+    {
+        DialogResult =
+            DialogResult.Cancel;
+
+        Close();
+    }
+
     // =========================================================
-    // ADD PERSIAN -> ENGLISH
+    // MAPPING OPERATIONS
     // =========================================================
 
     private void AddPersianToEnglishMapping()
@@ -1251,8 +1035,7 @@ public class KeyboardMappingsForm : Form
             return;
         }
 
-        char persianChar =
-            persianCharInput[0];
+        char persianChar = persianCharInput[0];
 
         string? englishCharInput =
             InputBox.Show(
@@ -1262,7 +1045,7 @@ public class KeyboardMappingsForm : Form
                 Localization.Get(
                     "AddMapping"),
 
-                "");
+                persianChar.ToString());
 
         if (string.IsNullOrEmpty(
                 englishCharInput) ||
@@ -1282,8 +1065,13 @@ public class KeyboardMappingsForm : Form
             return;
         }
 
-        char englishChar =
-            englishCharInput[0];
+        char englishChar = englishCharInput[0];
+
+        if (_settings.EnglishToPersianMap.ContainsKey(englishChar))
+        {
+            _settings.EnglishToPersianMap.Remove(englishChar);
+            LoadMappings();
+        }
 
         _settings
             .PersianToEnglishMap[persianChar] =
@@ -1302,10 +1090,6 @@ public class KeyboardMappingsForm : Form
 
             MessageBoxIcon.Information);
     }
-
-    // =========================================================
-    // ADD ENGLISH -> PERSIAN
-    // =========================================================
 
     private void AddEnglishToPersianMapping()
     {
@@ -1337,8 +1121,7 @@ public class KeyboardMappingsForm : Form
             return;
         }
 
-        char englishChar =
-            englishCharInput[0];
+        char englishChar = englishCharInput[0];
 
         string? persianCharInput =
             InputBox.Show(
@@ -1350,7 +1133,9 @@ public class KeyboardMappingsForm : Form
 
                 "");
 
-        if (string.IsNullOrEmpty(persianCharInput) || persianCharInput.Length != 1)
+        if (string.IsNullOrEmpty(
+                persianCharInput) ||
+            persianCharInput.Length != 1)
         {
             MessageBox.Show(
                 Localization.Get(
@@ -1366,8 +1151,13 @@ public class KeyboardMappingsForm : Form
             return;
         }
 
-        char persianChar =
-            persianCharInput[0];
+        char persianChar = persianCharInput[0];
+
+        if (_settings.PersianToEnglishMap.ContainsKey(persianChar))
+        {
+            _settings.PersianToEnglishMap.Remove(persianChar);
+            LoadMappings();
+        }
 
         _settings
             .EnglishToPersianMap[englishChar] =
@@ -1387,185 +1177,137 @@ public class KeyboardMappingsForm : Form
             MessageBoxIcon.Information);
     }
 
-    // =========================================================
-    // RESET PERSIAN CHARACTER
-    // =========================================================
-
-    private void ResetPersianCharMapping(
-        char persianChar)
+    private void DeletePersianMapping(char persianChar)
     {
-        // بررسی اگر این کاراکتر در مپ پیش‌فرض وجود دارد
-        var defaultMap = SettingsManager.GetDefaultPersianToEnglishMap();
-        
-        if (defaultMap.ContainsKey(persianChar))
+        if (_settings.PersianToEnglishMap != null &&
+            _settings.PersianToEnglishMap.ContainsKey(persianChar))
         {
-            // اگر کلید در مپ پیش‌فرض وجود دارد
-            if (_settings.PersianToEnglishMap.ContainsKey(persianChar))
-            {
-                char currentEnglishChar = _settings.PersianToEnglishMap[persianChar];
-                char defaultEnglishChar = defaultMap[persianChar];
+            _settings.PersianToEnglishMap.Remove(persianChar);
+            LoadMappings();
+        }
+    }
 
-                // اگر مقدار فعلی با مقدار پیش‌فرض متفاوت است، آن را به مقدار پیش‌فرض بازمی‌گردانیم
-                if (currentEnglishChar != defaultEnglishChar)
-                {
-                    _settings.PersianToEnglishMap[persianChar] = defaultEnglishChar;
-                    LoadMappings();
-                }
-                // اگر مقدار فعلی همان مقدار پیش‌فرض است، هیچ کاری نمی‌کنیم
-            }
-            else
+    private void DeleteEnglishMapping(char englishChar)
+    {
+        if (_settings.EnglishToPersianMap != null &&
+            _settings.EnglishToPersianMap.ContainsKey(englishChar))
+        {
+            _settings.EnglishToPersianMap.Remove(englishChar);
+            LoadMappings();
+        }
+    }
+
+    private void ResetPersianCharMapping(char persianChar)
+    {
+        if (_settings.PersianToEnglishMap != null &&
+            _settings.PersianToEnglishMap.ContainsKey(persianChar))
+        {
+            _settings.PersianToEnglishMap[persianChar] = persianChar;
+            LoadMappings();
+        }
+    }
+
+    private void ResetEnglishCharMapping(char englishChar)
+    {
+        if (_settings.EnglishToPersianMap != null &&
+            _settings.EnglishToPersianMap.ContainsKey(englishChar))
+        {
+            _settings.EnglishToPersianMap[englishChar] = englishChar;
+            LoadMappings();
+        }
+    }
+
+    // =========================================================
+    // CELL PARSING
+    // =========================================================
+
+    private void DataGridView_CellParsing(
+        object? sender,
+        DataGridViewCellParsingEventArgs e)
+    {
+        // Allow parsing of input
+    }
+
+    // =========================================================
+    // CELL VALIDATION
+    // =========================================================
+
+    private void DataGridViewPersianToEnglish_CellValidating(
+        object? sender,
+        DataGridViewCellValidatingEventArgs e)
+    {
+        ValidateCell(e, true);
+    }
+
+    private void DataGridViewEnglishToPersian_CellValidating(
+        object? sender,
+        DataGridViewCellValidatingEventArgs e)
+    {
+        ValidateCell(e, false);
+    }
+
+    private void ValidateCell(
+        DataGridViewCellValidatingEventArgs e,
+        bool isPersianToEnglish)
+    {
+        var newValue = e.FormattedValue?.ToString();
+
+        if (string.IsNullOrWhiteSpace(newValue))
+        {
+            e.Cancel = true;
+            return;
+        }
+
+        if (isPersianToEnglish)
+        {
+            if (e.ColumnIndex == 0 && newValue.Length > 1)
             {
-                // اگر کلید در تنظیمات کاربر وجود ندارد، هیچ کاری نمی‌کنیم
+                e.Cancel = true;
+                MessageBox.Show(
+                    Localization.Get("InvalidPersianChar"),
+                    Localization.Get("Error"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            else if (e.ColumnIndex == 1 &&
+                     (newValue.Length > 1 ||
+                      !char.IsLetter(newValue[0]) ||
+                      !char.IsAscii(newValue[0])))
+            {
+                e.Cancel = true;
+                MessageBox.Show(
+                    Localization.Get("InvalidEnglishChar"),
+                    Localization.Get("Error"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
         else
         {
-            // اگر کلید در مپ پیش‌فرض وجود ندارد، اما در تنظیمات کاربر وجود دارد، آن را حذف می‌کنیم
-            if (_settings.PersianToEnglishMap.ContainsKey(persianChar))
+            if (e.ColumnIndex == 0 &&
+                (newValue.Length > 1 ||
+                 !char.IsLetter(newValue[0]) ||
+                 !char.IsAscii(newValue[0])))
             {
-                _settings.PersianToEnglishMap.Remove(persianChar);
-                LoadMappings();
+                e.Cancel = true;
+                MessageBox.Show(
+                    Localization.Get("InvalidEnglishChar"),
+                    Localization.Get("Error"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            else if (e.ColumnIndex == 1 && newValue.Length > 1)
+            {
+                e.Cancel = true;
+                MessageBox.Show(
+                    Localization.Get("InvalidPersianChar"),
+                    Localization.Get("Error"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
-    }
-
-    // =========================================================
-    // RESET ENGLISH CHARACTER
-    // =========================================================
-
-    private void ResetEnglishCharMapping(
-        char englishChar)
-    {
-        // بررسی اگر این کاراکتر در مپ پیش‌فرض وجود دارد
-        var defaultMap = SettingsManager.GetDefaultEnglishToPersianMap();
-        
-        if (defaultMap.ContainsKey(englishChar))
-        {
-            // اگر کلید در مپ پیش‌فرض وجود دارد
-            if (_settings.EnglishToPersianMap.ContainsKey(englishChar))
-            {
-                char currentPersianChar = _settings.EnglishToPersianMap[englishChar];
-                char defaultPersianChar = defaultMap[englishChar];
-
-                // اگر مقدار فعلی با مقدار پیش‌فرض متفاوت است، آن را به مقدار پیش‌فرض بازمی‌گردانیم
-                if (currentPersianChar != defaultPersianChar)
-                {
-                    _settings.EnglishToPersianMap[englishChar] = defaultPersianChar;
-                    LoadMappings();
-                }
-                // اگر مقدار فعلی همان مقدار پیش‌فرض است، هیچ کاری نمی‌کنیم
-            }
-            else
-            {
-                // اگر کلید در تنظیمات کاربر وجود ندارد، هیچ کاری نمی‌کنیم
-            }
-        }
-        else
-        {
-            // اگر کلید در مپ پیش‌فرض وجود ندارد، اما در تنظیمات کاربر وجود دارد، آن را حذف می‌کنیم
-            if (_settings.EnglishToPersianMap.ContainsKey(englishChar))
-            {
-                _settings.EnglishToPersianMap.Remove(englishChar);
-                LoadMappings();
-            }
-        }
-    }
-
-    // =========================================================
-    // BUTTON EVENTS
-    // =========================================================
-
-    private void BtnAddPersianToEnglish_Click(
-        object? sender,
-        EventArgs e)
-    {
-        AddPersianToEnglishMapping();
-    }
-
-    private void BtnAddEnglishToPersian_Click(
-        object? sender,
-        EventArgs e)
-    {
-        AddEnglishToPersianMapping();
-    }
-
-    // =========================================================
-    // RESET ALL - PERSIAN -> ENGLISH
-    // =========================================================
-
-    private void BtnResetAllPersianToEnglish_Click(
-        object? sender,
-        EventArgs e)
-    {
-        var result =
-            MessageBox.Show(
-                Localization.Format(
-                    "ResetAllConfirm"),
-
-                Localization.Get(
-                    "Attention"),
-
-                MessageBoxButtons.YesNo,
-
-                MessageBoxIcon.Question);
-
-        if (result != DialogResult.Yes)
-            return;
-
-        _settings
-            .PersianToEnglishMap
-            = SettingsManager.GetDefaultPersianToEnglishMap();
-
-        LoadMappings();
-    }
-
-    // =========================================================
-    // RESET ALL - ENGLISH -> PERSIAN
-    // =========================================================
-
-    private void BtnResetAllEnglishToPersian_Click(
-        object? sender,
-        EventArgs e)
-    {
-        var result =
-            MessageBox.Show(
-                Localization.Format(
-                    "ResetAllConfirm"),
-
-                Localization.Get(
-                    "Attention"),
-
-                MessageBoxButtons.YesNo,
-
-                MessageBoxIcon.Question);
-
-        if (result != DialogResult.Yes)
-            return;
-
-        _settings
-            .EnglishToPersianMap
-            = SettingsManager.GetDefaultEnglishToPersianMap();
-
-        LoadMappings();
-    }
-
-    // =========================================================
-    // SAVE
-    // =========================================================
-
-    private void BtnClose_Click(
-        object? sender,
-        EventArgs e)
-    {
-        SettingsManager.Save(_settings);
-
-        DialogResult =
-            DialogResult.OK;
-
-        Close();
     }
 }
-
 
 // =============================================================
 // INPUT BOX
