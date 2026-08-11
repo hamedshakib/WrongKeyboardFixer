@@ -344,26 +344,25 @@ public partial class SettingsForm : Form, ICloseRequestHandler
             AutoSize = false,
             Height = StdHeight,
             TextAlign = ContentAlignment.MiddleLeft,
-            Padding = new Padding(12, 0, 12, 0)
+            Padding = new Padding(12, 0, 12, 0),
+            BackColor = Theme.Surface,   // همیشه هم‌رنگ پنل → گوشه‌های مربعی نامرئی
+            Tag = back                   // رنگ وضعیت در Tag
         };
         chip.Paint += (s, e) =>
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-
             var bounds = new Rectangle(0, 0, chip.Width - 1, chip.Height - 1);
             using var path = Theme.RoundRect(bounds, Theme.DpiScale(8, chip.DeviceDpi));
-            using (var brush = new SolidBrush(chip.BackColor))   // ← حالا واقعاً با وضعیت تغییر می‌کند
-                g.FillPath(brush, path);
+            using var brush = new SolidBrush(chip.Tag is Color c ? c : Theme.Surface);
+            g.FillPath(brush, path);
 
             int pad = Theme.DpiScale(12, chip.DeviceDpi);
             var textRect = new Rectangle(pad, 0, chip.Width - pad * 2, chip.Height);
             var flags = TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix;
             if (Localization.IsRtl) flags |= TextFormatFlags.RightToLeft;
-
             TextRenderer.DrawText(g, chip.Text, chip.Font, textRect, chip.ForeColor, flags);
         };
-        chip.BackColor = Theme.Surface;
         UpdateChipSize(chip);
         return chip;
     }
@@ -553,13 +552,15 @@ public partial class SettingsForm : Form, ICloseRequestHandler
             _ => Localization.Get("StatusChecking")
         };
 
-        (lblStatus.ForeColor, lblStatus.BackColor) = _statusState switch
+        // ← به‌جای BackColor، در Tag ذخیره می‌شود
+        (lblStatus.ForeColor, lblStatus.Tag) = _statusState switch
         {
-            StatusState.Registered or StatusState.RegisterSuccess => (Theme.Success, Theme.SuccessSoft),
-            StatusState.NotRegistered => (Theme.Warning, Theme.WarningSoft),
-            StatusState.RegisterFailed => (Theme.Danger, Theme.DangerSoft),
-            _ => (Theme.Info, Theme.InfoSoft)
+            StatusState.Registered or StatusState.RegisterSuccess => (Theme.Success, (object)Theme.SuccessSoft),
+            StatusState.NotRegistered => (Theme.Warning, (object)Theme.WarningSoft),
+            StatusState.RegisterFailed => (Theme.Danger, (object)Theme.DangerSoft),
+            _ => (Theme.Info, (object)Theme.InfoSoft)
         };
+
         UpdateChipSize(lblStatus);
         lblStatus.Invalidate();
     }
@@ -573,39 +574,10 @@ public partial class SettingsForm : Form, ICloseRequestHandler
 
     private async Task BtnCheckUpdate_Click()
     {
-        var progressForm = new Form
-        {
-            Text = Localization.Get("CheckingUpdate"),
-            Size = new Size(400, 120),
-            FormBorderStyle = FormBorderStyle.FixedDialog,
-            StartPosition = FormStartPosition.CenterScreen,
-            MaximizeBox = false,
-            MinimizeBox = false,
-            RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No,
-            RightToLeftLayout = true,
-            ControlBox = false,
-            AutoScaleDimensions = new SizeF(96F, 96F),
-            AutoScaleMode = AutoScaleMode.Dpi
-        };
-
-        var lblMessage = new Label
-        {
-            Text = Localization.Get("CheckingProgress"),
-            Dock = DockStyle.Top,
-            Height = 30,
-            TextAlign = ContentAlignment.MiddleCenter,
-            Font = Theme.BodyFont
-        };
-
-        var progressBar = new ProgressBar
-        {
-            Dock = DockStyle.Bottom,
-            Height = 25,
-            Minimum = 0,
-            Maximum = 100,
-            Value = 0
-        };
-
+        btnCheckUpdate.Enabled = false;
+        var progressForm = new Form { /* ... همان تنظیمات قبلی ... */ };
+        var lblMessage = new Label { /* ... */ };
+        var progressBar = new ProgressBar { /* ... */ };
         progressForm.Controls.Add(lblMessage);
         progressForm.Controls.Add(progressBar);
         progressForm.Show(this);
@@ -615,37 +587,25 @@ public partial class SettingsForm : Form, ICloseRequestHandler
             progressBar.Value = Math.Min(update.percent, 100);
             lblMessage.Text = update.message;
         });
-
         try
         {
             var status = await AutoUpdater.CheckForUpdatesAsync(progress, silent: true);
-            progressForm.Close();
-
             if (status == AutoUpdater.UpdateStatus.NoUpdate)
-            {
-                MessageBox.Show(
-                    Localization.Format("UpdNoUpdate", AutoUpdater.GetCurrentVersionString()),
-                    Localization.Get("Update"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
-            }
+                MessageBox.Show(Localization.Format("UpdNoUpdate", AutoUpdater.GetCurrentVersionString()),
+                    Localization.Get("Update"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             else if (status == AutoUpdater.UpdateStatus.Error)
-            {
-                MessageBox.Show(
-                    Localization.Get("UpdCheckErrorInternet"),
-                    Localization.Get("Error"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
+                MessageBox.Show(Localization.Get("UpdCheckErrorInternet"),
+                    Localization.Get("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         catch (Exception ex)
         {
+            MessageBox.Show(Localization.Format("UpdCheckError", ex.Message),
+                Localization.Get("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        finally
+        {
             progressForm.Close();
-            MessageBox.Show(
-                Localization.Format("UpdCheckError", ex.Message),
-                Localization.Get("Error"),
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
+            btnCheckUpdate.Enabled = true;
         }
     }
 

@@ -21,6 +21,7 @@ public class ModernButton : Button
     private Variant _variant = Variant.Primary;
     private bool _hovered;
     private bool _pressed;
+    private int _cornerRadius = 7;
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Variant ButtonVariant
@@ -30,7 +31,11 @@ public class ModernButton : Button
     }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public int CornerRadius { get; set; } = 7;
+    public int CornerRadius
+    {
+        get => _cornerRadius;
+        set { _cornerRadius = Math.Max(0, value); Invalidate(); }
+    }
 
     public ModernButton()
     {

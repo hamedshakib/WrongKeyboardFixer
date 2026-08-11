@@ -89,7 +89,7 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
         const int cardGap = 16;
         int cardWidth = (innerWidth - cardGap) / 2;
         const int cardY = 14;
-        const int gridHeight = 300;
+        const int gridHeight = 306;
 
         // ── کارت فارسی → انگلیسی ──────────────────────────
         var card1 = new RoundedPanel
@@ -384,6 +384,13 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
         // ── ۳) خط مویی یکنواخت زیر همهٔ سلول‌های هر ردیف (در همهٔ ستون‌ها) ──
         using (var linePen = new Pen(grid.GridColor))
             e.Graphics.DrawLine(linePen, bounds.Left, bounds.Bottom - 1, bounds.Right - 1, bounds.Bottom - 1);
+
+        if ((e.State & DataGridViewElementStates.Selected) != 0)
+        {
+            using var focusPen = new Pen(Theme.AccentBorder);
+            e.Graphics.DrawRectangle(focusPen,
+                bounds.X + 1, bounds.Y + 1, bounds.Width - 3, bounds.Height - 3);
+        }
 
         // هیچ رسم پیش‌فرضی انجام نشود → هیچ خط سیاه/حاشیهٔ اضافه‌ای باقی نمی‌ماند
         e.Handled = true;
@@ -694,92 +701,13 @@ public static class MappingInputBox
         };
         form.Controls.Add(cancelButton);
 
+        form.Icon = IconLoader.GetIcon();                     // آیکون برنامه برای دیالوگ
+        form.Shown += (_, _) => { txt1.Focus(); txt1.SelectAll(); };   // به‌جای فقط Focus
+
         form.AcceptButton = okButton;
         form.CancelButton = cancelButton;
         form.Shown += (_, _) => txt1.Focus();
 
         return form.ShowDialog() == DialogResult.OK ? (txt1.Text, txt2.Text) : null;
-    }
-}
-
-// کلاس InputBox قبلی بدون تغییر در انتهای فایل باقی بماند
-// (در صورتی که جای دیگری از پروژه استفاده نمی‌شود، قابل حذف است).
-public static class InputBox
-{
-    public static string? Show(string prompt, string title, string defaultValue)
-    {
-        using var form = new Form
-        {
-            Text = title,
-            FormBorderStyle = FormBorderStyle.FixedDialog,
-            MaximizeBox = false,
-            MinimizeBox = false,
-            StartPosition = FormStartPosition.CenterParent,
-            Size = new Size(360, 178),
-            BackColor = Theme.Surface,
-            Font = Theme.BodyFont,
-            RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No,
-            RightToLeftLayout = true,
-            AutoScaleDimensions = new SizeF(96F, 96F),
-            AutoScaleMode = AutoScaleMode.Dpi
-        };
-
-        var label = new Label
-        {
-            Text = prompt,
-            AutoSize = false,
-            Location = new Point(24, 20),
-            Size = new Size(312, 28),
-            TextAlign = ContentAlignment.MiddleLeft,
-            ForeColor = Theme.TextPrimary,
-            Font = Theme.BodyFont
-        };
-        form.Controls.Add(label);
-
-        var textBox = new TextBox
-        {
-            Text = defaultValue,
-            Location = new Point(24, 52),
-            Size = new Size(312, 30),
-            MaxLength = 1,
-            TextAlign = HorizontalAlignment.Center,
-            Font = Theme.TitleFont,
-            BorderStyle = BorderStyle.FixedSingle,
-            ForeColor = Theme.TextPrimary,
-            BackColor = Theme.SurfaceAlt
-        };
-        form.Controls.Add(textBox);
-
-        var okButton = new ModernButton
-        {
-            Text = Localization.Get("OK"),
-            ButtonVariant = ModernButton.Variant.Primary,
-            DialogResult = DialogResult.OK,
-            Location = new Point(110, 94),
-            Size = new Size(96, 38)
-        };
-        form.Controls.Add(okButton);
-
-        var cancelButton = new ModernButton
-        {
-            Text = Localization.Get("Cancel"),
-            ButtonVariant = ModernButton.Variant.Secondary,
-            DialogResult = DialogResult.Cancel,
-            Location = new Point(214, 94),
-            Size = new Size(96, 38)
-        };
-        form.Controls.Add(cancelButton);
-
-        form.AcceptButton = okButton;
-        form.CancelButton = cancelButton;
-
-        form.Shown += (_, _) =>
-        {
-            textBox.Focus();
-            textBox.SelectAll();
-        };
-
-        var result = form.ShowDialog();
-        return result == DialogResult.OK ? textBox.Text : null;
     }
 }

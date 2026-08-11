@@ -21,21 +21,16 @@ public class ModernTitleBar : Control
     public const int ControlAreaWidth = 96;
     private const int ButtonWidth = 46;
 
-    /// <summary>Design-baseline (96 DPI) pixel value scaled to the current DPI.</summary>
     private int Scaled(int value) => Theme.DpiScale(value, DeviceDpi);
-
     private int BtnW => Scaled(ButtonWidth);
     private int CtrlW => Scaled(ControlAreaWidth);
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public string Subtitle { get; set; } = string.Empty;
-
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Color SubtitleColor { get; set; } = Theme.TextSecondary;
-
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Color TitleColor { get; set; } = Theme.TextPrimary;
-
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Color IconColor { get; set; } = Theme.Accent;
 
@@ -48,11 +43,15 @@ public class ModernTitleBar : Control
         Cursor = Cursors.Default;
     }
 
+    private static TextFormatFlags Flags(string text) =>
+        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
+        TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix |
+        (Theme.IsRtlText(text) ? TextFormatFlags.RightToLeft : (TextFormatFlags)0);
+
     protected override void OnMouseDown(MouseEventArgs e)
     {
         base.OnMouseDown(e);
         if (e.Button != MouseButtons.Left) return;
-
         if (e.X >= Width - CtrlW)
         {
             _pressedMin = e.X < Width - BtnW;
@@ -60,7 +59,6 @@ public class ModernTitleBar : Control
             Invalidate();
             return;
         }
-
         if (FindForm() is { } form)
         {
             if (form.WindowState == FormWindowState.Maximized)
@@ -129,63 +127,51 @@ public class ModernTitleBar : Control
 
         var top = Scaled(8);
         var r = new Rectangle(0, top, Width - 1, Height - top - 1);
-        using (var path = Theme.RoundRect(r, Scaled(12)))
-        {
-            using var brush = new SolidBrush(Theme.Surface);
+        using var path = Theme.RoundRect(r, Scaled(12));
+        using (var brush = new SolidBrush(Theme.Surface))
             g.FillPath(brush, path);
-        }
 
-        var textStart = Scaled(34);
-        float titleH;
-        float startY;
+        // ── مهم: برش همهٔ رسم‌های بعدی (به‌ویژه hover قرمز دکمهٔ بستن)
+        //    به مسیر گردِ نوار تا گوشهٔ مربعی بیرون نزند ──
+        g.SetClip(path);
+
+        int textStart = Scaled(34);
+        int availW = Width - CtrlW - textStart;
+        int startY;
+        int titleH;
 
         if (string.IsNullOrEmpty(Subtitle))
         {
-            titleH = g.MeasureString(Text, Font).Height;
-            startY = top + MathF.Max(0, (Height - top - titleH) / 2f);
-            using var brush = new SolidBrush(TitleColor);
-            g.DrawString(Text, Font, brush,
-                new RectangleF(textStart, startY, Width - CtrlW - textStart, titleH),
-                Theme.CreateCenterFormat(Text));
+            titleH = TextRenderer.MeasureText(Text, Font).Height;
+            startY = top + Math.Max(0, (Height - top - titleH) / 2);
+            TextRenderer.DrawText(g, Text, Font,
+                new Rectangle(textStart, startY, availW, titleH), TitleColor, Flags(Text));
         }
         else
         {
-            // Two disjoint stacked rows: title above, subtitle below, both
-            // vertically centered as a group. No overlap is possible because
-            // each row's rect height matches its own measured line height.
-            var titleFmt = Theme.CreateCenterFormat(Text);
-            titleFmt.FormatFlags &= ~StringFormatFlags.LineLimit;
+            int tH = TextRenderer.MeasureText(Text, Font).Height;
+            int sH = TextRenderer.MeasureText(Subtitle, Theme.SmallFont).Height;
+            int gap = Scaled(3);
+            int blockH = tH + gap + sH;
+            startY = top + Math.Max(0, (Height - top - blockH) / 2);
+            titleH = tH;
 
-            float titleH1 = g.MeasureString(Text, Font).Height + Scaled(1);
-            float subH = g.MeasureString(Subtitle, Theme.SmallFont).Height + Scaled(1);
-            float gap = Scaled(3);
-            float blockH = titleH1 + gap + subH;
-            startY = top + MathF.Max(0, (Height - top - blockH) / 2f);
-            titleH = titleH1;
-
-            using (var titleBrush = new SolidBrush(TitleColor))
-                g.DrawString(Text, Font, titleBrush,
-                    new RectangleF(textStart, startY, Width - CtrlW - textStart, titleH1),
-                    titleFmt);
-
-            using (var subBrush = new SolidBrush(SubtitleColor))
-                g.DrawString(Subtitle, Theme.SmallFont, subBrush,
-                    new RectangleF(textStart, startY + titleH1 + gap, Width - CtrlW - textStart, subH),
-                    Theme.CreateCenterFormat(Subtitle));
+            TextRenderer.DrawText(g, Text, Font,
+                new Rectangle(textStart, startY, availW, tH), TitleColor, Flags(Text));
+            TextRenderer.DrawText(g, Subtitle, Theme.SmallFont,
+                new Rectangle(textStart, startY + tH + gap, availW, sH), SubtitleColor, Flags(Subtitle));
         }
 
-        // Accent brand dot, vertically aligned with the title line
-        float dotCenterY = startY + titleH / 2f;
+        // ── نقطهٔ برند، هم‌تراز با خط عنوان ──
         int dotSize = Scaled(10);
         using (var dot = new SolidBrush(IconColor))
-            g.FillEllipse(dot, Scaled(16), dotCenterY - dotSize / 2f, dotSize, dotSize);
+            g.FillEllipse(dot, Scaled(16), startY + titleH / 2f - dotSize / 2f, dotSize, dotSize);
 
-        // Buttons
-        // دکمه کوچک‌نمایی (اصلاح شده: موقعیت X به اندازه دو دکمه به عقب می‌آید)
+        // ── دکمه‌ها (حالا داخل clip امن‌اند) ──
         DrawWindowButton(g, Width - (BtnW * 2), top, _hoveredMin, _pressedMin, isClose: false);
-
-        // دکمه بستن
         DrawWindowButton(g, Width - BtnW, top, _hoveredClose, _pressedClose, isClose: true);
+
+        g.ResetClip();
     }
 
     private void DrawWindowButton(Graphics g, int x, int top, bool hover, bool pressed, bool isClose)
@@ -195,20 +181,19 @@ public class ModernTitleBar : Control
         using var brush = new SolidBrush(bg);
         g.FillRectangle(brush, rect);
 
+        int cx = rect.X + rect.Width / 2;
+        int cy = rect.Y + rect.Height / 2;
+
         if (isClose)
         {
             using var pen = new Pen(hover ? Theme.TextOnAccent : Theme.TextSecondary, 1.4f);
             int s = Scaled(8);
-            int cx = rect.X + rect.Width / 2;
-            int cy = rect.Y + rect.Height / 2;
             g.DrawLine(pen, cx - s, cy - s, cx + s, cy + s);
             g.DrawLine(pen, cx + s, cy - s, cx - s, cy + s);
         }
         else
         {
             using var pen = new Pen(Theme.TextSecondary, 1.4f);
-            int cx = rect.X + rect.Width / 2;
-            int cy = rect.Y + rect.Height / 2;
             g.DrawLine(pen, cx - Scaled(8), cy + Scaled(5), cx + Scaled(8), cy + Scaled(5));
             g.DrawLine(pen, cx - Scaled(5), cy, cx + Scaled(5), cy);
         }
@@ -216,9 +201,8 @@ public class ModernTitleBar : Control
 
     [System.Runtime.InteropServices.DllImport("user32.dll")]
     private static extern bool ReleaseCapture();
-
     [System.Runtime.InteropServices.DllImport("user32.dll")]
-    private static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wParam, IntPtr lParam);
+    private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 }
 
 /// <summary>

@@ -159,6 +159,7 @@ public static class Theme
         grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
         grid.BackgroundColor = Surface;
         grid.GridColor = Color.FromArgb(238, 241, 248);
+        grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;  // حذف حاشیهٔ سه‌بعدی Raised
         grid.RowHeadersVisible = false;
         grid.EnableHeadersVisualStyles = false;
         grid.AllowUserToAddRows = false;

@@ -69,8 +69,14 @@ public class RoundedPanel : Panel
 
         if (_borderWidth > 0)
         {
-            using var pen = new Pen(_borderColor, Theme.DpiScaleF(_borderWidth, DeviceDpi));
-            g.DrawPath(pen, path);
+            float bw = Theme.DpiScaleF(_borderWidth, DeviceDpi);
+            int inset = (int)Math.Ceiling(bw / 2f);
+            var strokeRect = new Rectangle(0, 0, Width - 1, Height - 1);
+            strokeRect.Inflate(-inset, -inset);
+            using var strokePath = Theme.RoundRect(strokeRect,
+                Math.Max(0, Theme.DpiScale(_cornerRadius, DeviceDpi) - inset));
+            using var pen = new Pen(_borderColor, bw);
+            g.DrawPath(pen, strokePath);
         }
     }
 }
