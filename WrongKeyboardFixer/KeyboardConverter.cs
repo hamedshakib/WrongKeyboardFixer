@@ -72,39 +72,85 @@ public static class KeyboardConverter
     /// <summary>
     /// Convert text from English to Persian.
     /// </summary>
-    public static string ConvertEnglishToPersian(string text, Dictionary<char, char>? customMappings = null)
+    public static string ConvertEnglishToPersian(
+        string text,
+        Dictionary<char, char>? customMappings = null)
     {
-        if (string.IsNullOrEmpty(text)) return text;
+        if (string.IsNullOrEmpty(text))
+            return text;
 
         var sb = new StringBuilder(text.Length);
 
-        foreach (char c in text)
+        for (int i = 0; i < text.Length; i++)
         {
-            char? mapped = ConvertEnglishToPersian(c, customMappings);
+            char c = text[i];
+
+            // مشخص می‌کند حرف در ابتدای کلمه است یا خیر
+            bool isWordStart =
+                i == 0 ||
+                !char.IsLetterOrDigit(text[i - 1]);
+
+            char? mapped = ConvertEnglishToPersian(
+                c,
+                customMappings,
+                isWordStart);
+
             if (mapped.HasValue)
             {
-                char result = mapped.Value;
-                if (char.IsUpper(c))
-                    result = char.ToUpperInvariant(result);
-                sb.Append(result);
+                sb.Append(mapped.Value);
+                continue;
             }
-            else
+
+            // برای حروفی که mapping مستقیم ندارند،
+            // lowercase آن‌ها را نیز امتحان می‌کنیم.
+            char lowerChar = char.ToLowerInvariant(c);
+
+            mapped = ConvertEnglishToPersian(
+                lowerChar,
+                customMappings,
+                isWordStart);
+
+            if (mapped.HasValue)
             {
-                var lowerChar = char.ToLowerInvariant(c);
-                mapped = ConvertEnglishToPersian(lowerChar, customMappings);
-                if (mapped.HasValue)
-                {
-                    char result = mapped.Value;
-                    if (char.IsUpper(c))
-                        result = char.ToUpperInvariant(result);
-                    sb.Append(result);
-                } 
-                else
-                    sb.Append(c);
+                sb.Append(mapped.Value);
+                continue;
             }
+
+            sb.Append(c);
         }
 
         return sb.ToString();
+    }
+
+    private static char? ConvertEnglishToPersian(
+        char c,
+        Dictionary<char, char>? customMappings,
+        bool isWordStart)
+    {
+        // 1. Mapping اختصاصی کاربر همیشه اولویت دارد
+        if (customMappings != null &&
+            customMappings.TryGetValue(c, out var customMapped))
+        {
+            return customMapped;
+        }
+
+        // 2. اگر حرف بزرگ انگلیسی است و وسط کلمه قرار دارد،
+        // mapping مخصوص آن را بررسی کن.
+        if (char.IsUpper(c) && !isWordStart)
+        {
+            if (MappingDefaults.GetDefaultMiddlePositionEnglishToPersianMap().TryGetValue(c, out var middleMapped))
+            {
+                return middleMapped;
+            }
+        }
+
+        // 3. Mapping عادی
+        if (MappingDefaults.GetDefaultEnglishToPersianMap().TryGetValue(c, out var mapped))
+        {
+            return mapped;
+        }
+
+        return null;
     }
 
     /// <summary>

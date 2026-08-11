@@ -33,6 +33,35 @@ public static class MappingDefaults
     }
 
     /// <summary>
+    /// Get a copy of default English to Persian character mappings for middle position of words.
+    /// These mappings are used when an uppercase English letter appears in the middle of a word.
+    /// </summary>
+    public static Dictionary<char, char> GetDefaultMiddlePositionEnglishToPersianMap()
+    {
+        return new Dictionary<char, char>(InitializeDefaultMiddlePositionEnglishToPersianMap());
+    }
+
+    /// <summary>
+    /// Initialize default English to Persian character mappings for middle position.
+    /// </summary>
+    private static Dictionary<char, char> InitializeDefaultMiddlePositionEnglishToPersianMap()
+    {
+        var mappings = new Dictionary<char, char>();
+
+        // Uppercase English letters in middle position map to different Persian characters
+        // These are Persian characters that are distinct from the standard mappings
+        mappings['Q'] = 'ً'; mappings['W'] = 'ٌ'; mappings['E'] = 'ٍ'; mappings['T'] = '،'; mappings['Y'] = '؛'; mappings['U'] = ','; mappings['I'] = ']'; mappings['O'] = '['; mappings['P'] = '\\';
+        mappings['A'] = 'َ'; mappings['S'] = 'ُ'; mappings['D'] = 'ِ'; mappings['F'] = 'ّ'; mappings['G'] = 'ۀ'; mappings['H'] = 'آ'; mappings['J'] = 'ـ'; mappings['K'] = '«'; mappings['L'] = '»';
+        mappings['Z'] = 'ة'; mappings['X'] = 'ي'; mappings['C'] = 'ژ'; mappings['V'] = 'ؤ'; mappings['B'] = 'إ'; mappings['N'] = 'أ'; mappings['M'] = 'ء';
+        
+        
+        //mappings['?'] = '؟';
+        //mappings['0'] = '۰'; mappings['1'] = '۱'; mappings['2'] = '۲'; mappings['3'] = '۳'; mappings['4'] = '۴'; mappings['5'] = '۵'; mappings['6'] = '۶'; mappings['7'] = '۷'; mappings['8'] = '۸'; mappings['9'] = '۹';
+
+        return mappings;
+    }
+
+    /// <summary>
     /// Initialize default Persian to English character mappings.
     /// </summary>
     private static Dictionary<char, char> InitializeDefaultPersianToEnglishMap()
@@ -49,7 +78,6 @@ public static class MappingDefaults
         mappings['ً'] = 'Q'; mappings['ٌ'] = 'W'; mappings['ٍ'] = 'E'; mappings['،'] = 'T'; mappings['؛'] = 'Y'; mappings[','] = 'U'; mappings[']'] = 'I'; mappings['['] = 'O'; mappings['\\'] = 'P'; mappings['}'] = '{'; mappings['{'] = '}';
         mappings['َ'] = 'A'; mappings['ُ'] = 'S'; mappings['ِ'] = 'D'; mappings['ّ'] = 'F'; mappings['ۀ'] = 'G'; mappings['آ'] = 'H'; mappings['ـ'] = 'J'; mappings['«'] = 'K'; mappings['»'] = 'L';
         mappings['ة'] = 'Z'; mappings['ي'] = 'X'; mappings['ژ'] = 'C'; mappings['ؤ'] = 'V'; mappings['إ'] = 'B'; mappings['أ'] = 'N'; mappings['ء'] = 'M'; mappings['؟'] = '?';
-        
         
         return mappings;
     }
