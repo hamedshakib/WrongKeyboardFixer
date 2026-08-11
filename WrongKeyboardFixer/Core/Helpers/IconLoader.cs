@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Reflection;
 
-namespace WrongKeyboardFixer;
+namespace WrongKeyboardFixer.Core.Helpers;
 
 /// <summary>
 /// Loads the application icon directly from an embedded manifest resource.

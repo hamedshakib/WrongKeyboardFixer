@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Helpers;
+using WrongKeyboardFixer.Core.Model;
 
-namespace WrongKeyboardFixer;
+namespace WrongKeyboardFixer.Core.Services;
 
 public static class SettingsManager
 {
@@ -14,16 +16,17 @@ public static class SettingsManager
         "settings.json"
     );
 
-    public static AppSettings Load()
+    public static WrongKeyboardFixer.Core.Model.AppSettings Load()
     {
         try
         {
             if (!File.Exists(SettingsPath))
-                return new AppSettings();
+            return new WrongKeyboardFixer.Core.Model.AppSettings();
 
             string json = File.ReadAllText(SettingsPath);
             var settings = JsonSerializer.Deserialize(json, AppSettingsJsonContext.Default.AppSettings);
-            var result = settings ?? new AppSettings();
+            var result = settings;
+            if (result == null) result = new WrongKeyboardFixer.Core.Model.AppSettings();
 
             // Initialize custom mappings from defaults if empty
             if (result.PersianToEnglishMap == null || result.PersianToEnglishMap.Count == 0)
@@ -41,11 +44,11 @@ public static class SettingsManager
         catch
         {
             // در صورت خطا، تنظیمات پیش‌فرض بازنشانی می‌شود
-            return new AppSettings();
+            return new WrongKeyboardFixer.Core.Model.AppSettings();
         }
     }
 
-    public static void Save(AppSettings settings)
+    public static void Save(WrongKeyboardFixer.Core.Model.AppSettings settings)
     {
         try
         {

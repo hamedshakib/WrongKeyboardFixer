@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace WrongKeyboardFixer;
+namespace WrongKeyboardFixer.Core.Helpers;
 
 /// <summary>
 /// Central localization manager for the application.
@@ -293,7 +293,7 @@ public static class Localization
           
          // Clipboard
          ["ClipboardSetTextError"] = "Failed to set clipboard text",
-      };
+       };
 
     private static Dictionary<string, string> _current = En;
 

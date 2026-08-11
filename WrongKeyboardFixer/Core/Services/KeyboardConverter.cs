@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace WrongKeyboardFixer;
+namespace WrongKeyboardFixer.Core.Services;
 
 /// <summary>
 /// Converts characters between Persian and English based on user-defined mappings.
@@ -138,14 +138,14 @@ public static class KeyboardConverter
         // mapping مخصوص آن را بررسی کن.
         if (char.IsUpper(c) && !isWordStart)
         {
-            if (MappingDefaults.GetDefaultMiddlePositionEnglishToPersianMap().TryGetValue(c, out var middleMapped))
+            if (Core.Model.MappingDefaults.GetDefaultMiddlePositionEnglishToPersianMap().TryGetValue(c, out var middleMapped))
             {
                 return middleMapped;
             }
         }
 
         // 3. Mapping عادی
-        if (MappingDefaults.GetDefaultEnglishToPersianMap().TryGetValue(c, out var mapped))
+        if (Core.Model.MappingDefaults.GetDefaultEnglishToPersianMap().TryGetValue(c, out var mapped))
         {
             return mapped;
         }

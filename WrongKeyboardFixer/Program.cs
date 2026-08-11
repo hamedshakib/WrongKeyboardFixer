@@ -21,11 +21,11 @@ internal static class Program
         if (!createdNew)
         {
             // زبان ذخیره‌شده را بارگذاری کن تا پیام به زبان درست نمایش داده شود
-            Localization.SetLanguage(SettingsManager.Load().Language);
+            Core.Helpers.Localization.SetLanguage(Core.Services.SettingsManager.Load().Language);
 
             MessageBox.Show(
-                Localization.Get("AlreadyRunning"),
-                Localization.Get("Attention"),
+                Core.Helpers.Localization.Get("AlreadyRunning"),
+                Core.Helpers.Localization.Get("Attention"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning
             );
@@ -37,7 +37,7 @@ internal static class Program
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            Application.Run(new UI.Forms.MainForm());
         }
         finally
         {

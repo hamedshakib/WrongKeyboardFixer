@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace WrongKeyboardFixer;
+namespace WrongKeyboardFixer.Core.Model;
 
 /// <summary>
 /// Represents a character-to-character mapping for Persian-English conversion.

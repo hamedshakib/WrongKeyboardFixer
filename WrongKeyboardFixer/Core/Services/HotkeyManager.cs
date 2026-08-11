@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace WrongKeyboardFixer;
+namespace WrongKeyboardFixer.Core.Services;
 
 public static class HotkeyModifier
 {

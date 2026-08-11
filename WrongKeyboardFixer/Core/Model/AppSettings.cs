@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Helpers;
 
-namespace WrongKeyboardFixer;
+namespace WrongKeyboardFixer.Core.Model;
 
 public class AppSettings
 {

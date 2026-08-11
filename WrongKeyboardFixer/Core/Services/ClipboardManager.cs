@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Helpers;
 
-namespace WrongKeyboardFixer;
+namespace WrongKeyboardFixer.Core.Services;
 
 public class ClipboardManager
 {
