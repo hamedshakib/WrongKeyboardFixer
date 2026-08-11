@@ -140,7 +140,7 @@ public class KeyboardMappingsForm : Form
             "↻ " + Localization.Get("ResetAll"),
             Color.Orange);
         _btnResetAllPersianToEnglish.Location = new Point(128, 0);
-        _btnResetAllPersianToEnglish.Size = new Size(155, ButtonHeight);
+        _btnResetAllPersianToEnglish.Size = new Size(180, ButtonHeight);
         _btnResetAllPersianToEnglish.Click += BtnResetAllPersianToEnglish_Click;
         _panelPersianToEnglish.Controls.Add(_btnResetAllPersianToEnglish);
 
@@ -195,7 +195,7 @@ public class KeyboardMappingsForm : Form
             "↻ " + Localization.Get("ResetAll"),
             Color.Orange);
         _btnResetAllEnglishToPersian.Location = new Point(128, 0);
-        _btnResetAllEnglishToPersian.Size = new Size(155, ButtonHeight);
+        _btnResetAllEnglishToPersian.Size = new Size(180, ButtonHeight);
         _btnResetAllEnglishToPersian.Click += BtnResetAllEnglishToPersian_Click;
         _panelEnglishToPersian.Controls.Add(_btnResetAllEnglishToPersian);
 

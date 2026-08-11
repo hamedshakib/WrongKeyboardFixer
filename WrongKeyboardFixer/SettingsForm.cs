@@ -586,7 +586,7 @@ public partial class SettingsForm : Form
 
     private void BtnCancel_Click(object? sender, EventArgs e)
     {
-        // اگر کاربر زبان را تغییر داده و انصراف بدهد، زبان ذخیره‌شده قبلی برگردانده می‌شود
+        // اگر کاربر زبان را تغییر داده و انصراف بدهد، زبان ذخیره‌شده قبلی بازنشانی می‌شود
         Localization.SetLanguage(_settings.Language);
         DialogResult = DialogResult.Cancel;
     }

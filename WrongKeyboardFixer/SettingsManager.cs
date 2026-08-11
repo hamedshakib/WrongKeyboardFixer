@@ -40,7 +40,7 @@ public static class SettingsManager
         }
         catch
         {
-            // در صورت خطا، تنظیمات پیش‌فرض برگردانده می‌شود
+            // در صورت خطا، تنظیمات پیش‌فرض بازنشانی می‌شود
             return new AppSettings();
         }
     }
