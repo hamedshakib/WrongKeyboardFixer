@@ -3,12 +3,11 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using WrongKeyboardFixer.Core.Services;
-using WrongKeyboardFixer.Core.Model;
 using WrongKeyboardFixer.Core.Helpers;
+using WrongKeyboardFixer.Core.Model;
+using WrongKeyboardFixer.Core.Services;
 
 namespace WrongKeyboardFixer.UI.Forms;
 
@@ -16,10 +15,10 @@ public class MainForm : Form
 {
     private HotkeyManager? _hotkeyManager;
     private ClipboardManager _clipboardManager = null!;
-    private WrongKeyboardFixer.Core.Model.AppSettings _settings = null!;
+    private AppSettings _settings = null!;
     private NotifyIcon? _trayIcon;
     private ContextMenuStrip? _trayMenu;
-    private bool _isInitialized; // Used for potential future initialization checks
+    private bool _isInitialized;
 
     public MainForm()
     {
@@ -103,86 +102,257 @@ public class MainForm : Form
             ContextMenuStrip = _trayMenu,
             Text = Localization.Get("TrayText")
         };
+
+        // دابل کلیک برای باز کردن تنظیمات
+        _trayIcon.DoubleClick += (_, _) => OpenSettings();
     }
 
     private ContextMenuStrip BuildTrayMenu()
     {
         var menu = new ContextMenuStrip();
-        menu.Items.Add(Localization.Get("TraySettings"), null, (s, e) => ShowSettings());
-        menu.Items.Add(Localization.Get("TrayCheckUpdate"), null, (s, e) => CheckForUpdatesAsync());
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(Localization.Get("TrayExit"), null, (s, e) => Application.Exit());
+
+        var settingsItem = new ToolStripMenuItem(Localization.Get("TraySettings"));
+        settingsItem.Image = CreateEmojiIcon("⚙️");
+        settingsItem.Click += (_, _) => OpenSettings();
+        menu.Items.Add(settingsItem);
+
+        //menu.Items.Add(Localization.Get("TrayCheckUpdate"), null, (_, _) => _ = CheckForUpdatesManualAsync());
+
+        menu.Items.Add("-"); // جداکننده
+
+        var exitItem = new ToolStripMenuItem(Localization.Get("TrayExit"));
+        exitItem.Image = CreateEmojiIcon("⏻");
+        exitItem.Click += (_, _) => Application.Exit();
+        menu.Items.Add(exitItem);
+
         return menu;
     }
 
-    private void ShowSettings()
+    /// <summary>
+    /// تبدیل یک ایموجی به تصویر برای استفاده به عنوان آیکون آیتم منو
+    /// </summary>
+    private static Bitmap CreateEmojiIcon(string emoji)
     {
-        if (_settings == null) return;
-        
-        var settingsForm = new SettingsForm(_settings, _hotkeyManager!);
-        settingsForm.ShowDialog();
+        var bitmap = new Bitmap(16, 16);
+        using var graphics = Graphics.FromImage(bitmap);
+        graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
+
+        using var font = new Font("Segoe UI Emoji", 11f, FontStyle.Regular, GraphicsUnit.Pixel);
+        using var brush = new SolidBrush(Color.Black);
+
+        var format = new StringFormat
+        {
+            Alignment = StringAlignment.Center,
+            LineAlignment = StringAlignment.Center
+        };
+
+        var rect = new RectangleF(0, 0, 16, 16);
+        graphics.DrawString(emoji, font, brush, rect, format);
+
+        return bitmap;
     }
 
-    private async void CheckForUpdatesAsync()
+    private void OpenSettings()
     {
-        await AutoUpdater.CheckForUpdatesAsync();
+        if (_hotkeyManager == null)
+            return;
+
+        using var settingsForm = new SettingsForm(_settings, _hotkeyManager);
+        if (settingsForm.ShowDialog() == DialogResult.OK)
+        {
+            // بارگذاری مجدد تنظیمات
+            _settings = SettingsManager.Load();
+
+            // اعمال زبان جدید و بازسازی منوی tray
+            Localization.SetLanguage(_settings.Language);
+            RefreshTrayMenu();
+
+            // ثبت مجدد کلید ترکیبی
+            RegisterHotkeyFromSettings();
+        }
+    }
+
+    private void RefreshTrayMenu()
+    {
+        if (_trayMenu == null || _trayIcon == null)
+            return;
+
+        _trayMenu.Items.Clear();
+        _trayMenu.Items.AddRange(BuildTrayMenu().Items);
+        _trayIcon.Text = Localization.Get("TrayText");
     }
 
     private void ApplyStartupSettings()
     {
-        if (_settings.RunOnStartup)
-        {
-            SettingsManager.AddToStartup(true);
-        }
-        else
-        {
-            SettingsManager.AddToStartup(false);
-        }
+        // اجرای خودکار با ویندوز
+        SettingsManager.AddToStartup(_settings.RunOnStartup);
     }
 
-    protected override void WndProc(ref Message m)
+    protected override void WndProc(ref Message message)
     {
-        base.WndProc(ref m);
-
-        if (_hotkeyManager?.HandleHotkeyMessage(ref m) == true)
+        if (_hotkeyManager != null && _hotkeyManager.HandleHotkeyMessage(ref message))
         {
-            ToggleClipboardConversion();
+            Debug.WriteLine("🔥 Hotkey detected!");
+            _ = ProcessSelectedTextAsync();
         }
+
+        base.WndProc(ref message);
     }
 
-    private void ToggleClipboardConversion()
+    private async Task ProcessSelectedTextAsync()
     {
+        if (_clipboardManager == null || !_isInitialized)
+            return;
+
+        string previousClipboard = _clipboardManager.GetText();
+
         try
         {
-            // ارسال Ctrl+C برای کپی متن انتخاب شده
+            Debug.WriteLine("🔄 Starting text conversion...");
+
             KeyboardSimulator.SendCtrlC();
-            Thread.Sleep(100);
+            await Task.Delay(300);
 
-            // دریافت متن کلیپ‌بورد
-            string originalText = _clipboardManager.GetText();
-
+            string originalText = await _clipboardManager.GetTextWithRetryAsync();
             if (string.IsNullOrWhiteSpace(originalText))
-                return;
-
-            // تشخیص جهت تبدیل و تبدیل متن
-            string convertedText;
-            if (KeyboardConverter.ShouldConvertToPersian(originalText))
             {
-                convertedText = KeyboardConverter.ConvertEnglishToPersian(originalText);
+                _clipboardManager.RestoreText(previousClipboard);
+                return;
+            }
+
+            bool toPersian = KeyboardConverter.ShouldConvertToPersian(originalText);
+
+            string convertedText;
+            if (toPersian)
+            {
+                // Convert English to Persian
+                convertedText = KeyboardConverter.ConvertEnglishToPersian(originalText, _settings.EnglishToPersianMap);
             }
             else
             {
-                convertedText = KeyboardConverter.ConvertPersianToEnglish(originalText);
+                // Convert Persian to English
+                convertedText = KeyboardConverter.ConvertPersianToEnglish(originalText, _settings.PersianToEnglishMap);
             }
 
-            // بازگرداندن متن تبدیل شده به کلیپ‌بورد
-            _clipboardManager.RestoreText(convertedText);
+            _clipboardManager.SetText(convertedText);
+            await Task.Delay(200);
+            KeyboardSimulator.SendCtrlV();
+            await Task.Delay(200);
 
-            Debug.WriteLine($"Converted: {originalText} -> {convertedText}");
+            _clipboardManager.RestoreText(previousClipboard);
+            Debug.WriteLine("✅ Conversion completed successfully");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error in clipboard conversion: {ex.Message}");
+            Debug.WriteLine($"❌ Error: {ex.Message}");
+            _clipboardManager?.RestoreText(previousClipboard);
+        }
+    }
+
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        _hotkeyManager?.Unregister();
+        _hotkeyManager?.Dispose();
+        _trayIcon?.Dispose();
+        base.OnFormClosing(e);
+    }
+
+    /// <summary>
+    /// بررسی خودکار بروزرسانی در استارتاپ (silent - بدون نمایش پیام "بروزرسانی موجود نیست")
+    /// </summary>
+    private async void CheckForUpdatesAsync()
+    {
+        try
+        {
+            await AutoUpdater.CheckForUpdatesAsync(silent: true);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"❌ Update check error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// بررسی دستی بروزرسانی با نمایش Progress Dialog
+    /// </summary>
+    private async Task CheckForUpdatesManualAsync()
+    {
+        // ایجاد فرم Progress
+        var progressForm = new Form
+        {
+            Text = Localization.Get("CheckingUpdate"),
+            Size = new Size(400, 120),
+            FormBorderStyle = FormBorderStyle.FixedDialog,
+            StartPosition = FormStartPosition.CenterScreen,
+            MaximizeBox = false,
+            MinimizeBox = false,
+            RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No,
+            RightToLeftLayout = true,
+            ControlBox = false
+        };
+
+        var lblMessage = new Label
+        {
+            Text = Localization.Get("CheckingProgress"),
+            Dock = DockStyle.Top,
+            Height = 30,
+            TextAlign = ContentAlignment.MiddleCenter,
+            Font = new Font("Tahoma", 9)
+        };
+
+        var progressBar = new ProgressBar
+        {
+            Dock = DockStyle.Bottom,
+            Height = 25,
+            Minimum = 0,
+            Maximum = 100,
+            Value = 0
+        };
+
+        progressForm.Controls.Add(lblMessage);
+        progressForm.Controls.Add(progressBar);
+        progressForm.Show();
+
+        var progress = new Progress<(int percent, string message)>(update =>
+        {
+            progressBar.Value = Math.Min(update.percent, 100);
+            lblMessage.Text = update.message;
+        });
+
+        try
+        {
+            var status = await AutoUpdater.CheckForUpdatesAsync(progress, silent: true);
+            progressForm.Close();
+
+            // اگر آپدیتی نبود، پیام بده
+            if (status == AutoUpdater.UpdateStatus.NoUpdate)
+            {
+                MessageBox.Show(
+                    Localization.Format("UpdNoUpdate", AutoUpdater.GetCurrentVersionString()),
+                    Localization.Get("Update"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            else if (status == AutoUpdater.UpdateStatus.Error)
+            {
+                MessageBox.Show(
+                    Localization.Get("UpdCheckErrorInternet"),
+                    Localization.Get("Error"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            // UpdateAvailable, DownloadedAndInstalling, UserDeclined - پیام‌های مربوطه در AutoUpdater نمایش داده می‌شوند
+        }
+        catch (Exception ex)
+        {
+            progressForm.Close();
+            Debug.WriteLine($"❌ Update check error: {ex.Message}");
+            MessageBox.Show(
+                Localization.Format("UpdCheckError", ex.Message),
+                Localization.Get("Error"),
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
         }
     }
 }

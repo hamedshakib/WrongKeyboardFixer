@@ -11,6 +11,7 @@ namespace WrongKeyboardFixer;
     WriteIndented = true,
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(WrongKeyboardFixer.Core.Model.AppSettings))]
+[JsonSerializable(typeof(WrongKeyboardFixer.Core.Model.KeyboardMapping))]
 [JsonSerializable(typeof(Dictionary<char, char>))]
 internal partial class AppSettingsJsonContext : JsonSerializerContext
 {
