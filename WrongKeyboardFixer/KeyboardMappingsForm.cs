@@ -1051,15 +1051,9 @@ public class KeyboardMappingsForm : Form
                 englishCharInput) ||
             englishCharInput.Length != 1)
         {
-            MessageBox.Show(
-                Localization.Get(
-                    "InvalidEnglishChar"),
-
-                Localization.Get(
-                    "Error"),
-
+            MessageBox.Show(Localization.Get("InvalidEnglishChar"),
+                Localization.Get("Error"),
                 MessageBoxButtons.OK,
-
                 MessageBoxIcon.Error);
 
             return;

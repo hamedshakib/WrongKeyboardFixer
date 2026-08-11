@@ -230,6 +230,19 @@ public partial class SettingsForm : Form
         this.Controls.Add(grpHotkey);
         currentY += grpHotkey.Height + 25;
 
+        // ۴.۵. دکمه نگاشت کیبورد (بالای بخش ورژن)
+        btnKeyboardMappings = new Button
+        {
+            Text = Localization.Get("KeyboardMappings"),
+            Location = new Point(marginX, currentY),
+            Size = new Size(150, 32),
+            FlatStyle = FlatStyle.Flat,
+            BackColor = System.Drawing.Color.LightYellow
+        };
+        btnKeyboardMappings.Click += BtnKeyboardMappings_Click;
+        this.Controls.Add(btnKeyboardMappings);
+        currentY += 40;
+
         // ۵. بخش نسخه و بروزرسانی
         lblVersionTitle = new Label
         {
@@ -264,19 +277,6 @@ public partial class SettingsForm : Form
         this.Controls.Add(btnCheckUpdate);
 
         currentY += 40;
-
-        // دکمه نگاشت کیبورد
-        btnKeyboardMappings = new Button
-        {
-            Text = Localization.Get("KeyboardMappings"),
-            Location = new Point(marginX, currentY),
-            Size = new Size(150, 32),
-            FlatStyle = FlatStyle.Flat,
-            BackColor = System.Drawing.Color.LightYellow
-        };
-        btnKeyboardMappings.Click += BtnKeyboardMappings_Click;
-        this.Controls.Add(btnKeyboardMappings);
-        currentY += 45;
 
         int buttonY = currentY;
         int buttonWidth = 95;
