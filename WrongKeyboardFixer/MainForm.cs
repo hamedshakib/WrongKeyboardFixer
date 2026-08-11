@@ -78,7 +78,7 @@ public class MainForm : Form
 
     private void InitializeForm()
     {
-        Text = "Wrong Keyboard Fixer";
+        Text = Localization.Get("TrayText");
         WindowState = FormWindowState.Minimized;
         ShowInTaskbar = false;
         Visible = false;

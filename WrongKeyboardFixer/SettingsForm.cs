@@ -145,7 +145,15 @@ public partial class SettingsForm : Form
             DropDownStyle = ComboBoxStyle.DropDownList,
             Size = new Size(110, 25)
         };
-        cmbHotkeyModifier.Items.AddRange(new object[] { "Ctrl + Alt", "Ctrl + Shift", "Alt + Shift", "Ctrl", "Alt", "Shift" });
+        cmbHotkeyModifier.Items.AddRange(new object[]
+        {
+            Localization.Get("HotkeyModifierCtrlAlt"),
+            Localization.Get("HotkeyModifierCtrlShift"),
+            Localization.Get("HotkeyModifierAltShift"),
+            Localization.Get("HotkeyModifierCtrl"),
+            Localization.Get("HotkeyModifierAlt"),
+            Localization.Get("HotkeyModifierShift")
+        });
         cmbHotkeyModifier.SelectedIndex = 0;
         cmbHotkeyModifier.SelectedIndexChanged += CmbHotkeyModifier_SelectedIndexChanged;
         grpHotkey.Controls.Add(cmbHotkeyModifier);
@@ -165,7 +173,31 @@ public partial class SettingsForm : Form
             DropDownStyle = ComboBoxStyle.DropDownList,
             Size = new Size(90, 25)
         };
-        cmbHotkeyKey.Items.AddRange(new object[] { "Add (+)", "Subtract (-)", "Multiply (*)", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "Insert", "Home", "PageUp", "PageDown", "End", "Delete", "Space" });
+        cmbHotkeyKey.Items.AddRange(new object[]
+        {
+            Localization.Get("HotkeyKeyAdd"),
+            Localization.Get("HotkeyKeySubtract"),
+            Localization.Get("HotkeyKeyMultiply"),
+            Localization.Get("HotkeyKeyF1"),
+            Localization.Get("HotkeyKeyF2"),
+            Localization.Get("HotkeyKeyF3"),
+            Localization.Get("HotkeyKeyF4"),
+            Localization.Get("HotkeyKeyF5"),
+            Localization.Get("HotkeyKeyF6"),
+            Localization.Get("HotkeyKeyF7"),
+            Localization.Get("HotkeyKeyF8"),
+            Localization.Get("HotkeyKeyF9"),
+            Localization.Get("HotkeyKeyF10"),
+            Localization.Get("HotkeyKeyF11"),
+            Localization.Get("HotkeyKeyF12"),
+            Localization.Get("HotkeyKeyInsert"),
+            Localization.Get("HotkeyKeyHome"),
+            Localization.Get("HotkeyKeyPageUp"),
+            Localization.Get("HotkeyKeyPageDown"),
+            Localization.Get("HotkeyKeyEnd"),
+            Localization.Get("HotkeyKeyDelete"),
+            Localization.Get("HotkeyKeySpace")
+        });
         cmbHotkeyKey.SelectedIndex = 0;
         cmbHotkeyKey.SelectedIndexChanged += CmbHotkeyKey_SelectedIndexChanged;
         grpHotkey.Controls.Add(cmbHotkeyKey);
@@ -503,22 +535,21 @@ public partial class SettingsForm : Form
 
     private Keys ParseKeyText(string keyText)
     {
-        return keyText switch
-        {
-            "Add (+)" => Keys.Add,
-            "Subtract (-)" => Keys.Subtract,
-            "Multiply (*)" => Keys.Multiply,
-            "Insert" => Keys.Insert,
-            "Home" => Keys.Home,
-            "PageUp" => Keys.PageUp,
-            "PageDown" => Keys.PageDown,
-            "End" => Keys.End,
-            "Delete" => Keys.Delete,
-            "Space" => Keys.Space,
-            _ when keyText.StartsWith("F") && int.TryParse(keyText[1..], out int fNum)
-                => (Keys)((int)Keys.F1 + fNum - 1),
-            _ => Keys.Add
-        };
+        if (keyText == Localization.Get("HotkeyKeyAdd")) return Keys.Add;
+        if (keyText == Localization.Get("HotkeyKeySubtract")) return Keys.Subtract;
+        if (keyText == Localization.Get("HotkeyKeyMultiply")) return Keys.Multiply;
+        if (keyText == Localization.Get("HotkeyKeyInsert")) return Keys.Insert;
+        if (keyText == Localization.Get("HotkeyKeyHome")) return Keys.Home;
+        if (keyText == Localization.Get("HotkeyKeyPageUp")) return Keys.PageUp;
+        if (keyText == Localization.Get("HotkeyKeyPageDown")) return Keys.PageDown;
+        if (keyText == Localization.Get("HotkeyKeyEnd")) return Keys.End;
+        if (keyText == Localization.Get("HotkeyKeyDelete")) return Keys.Delete;
+        if (keyText == Localization.Get("HotkeyKeySpace")) return Keys.Space;
+        
+        if (keyText.StartsWith("F") && int.TryParse(keyText[1..], out int fNum))
+            return (Keys)((int)Keys.F1 + fNum - 1);
+        
+        return Keys.Add;
     }
 
     private void UpdateStatus()

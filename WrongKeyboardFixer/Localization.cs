@@ -114,8 +114,47 @@ public static class Localization
         ["MappingAddedSuccess"] = "نگاشت با موفقیت اضافه شد.",
         ["OK"] = "تأیید",
         ["Delete"] = "حذف",
-        ["DeleteMappingConfirm"] = "آیا مطمئن هستید که می‌خواهید این نگاشت را حذف کنید؟",
-       };
+         ["DeleteMappingConfirm"] = "آیا مطمئن هستید که می‌خواهید این نگاشت را حذف کنید؟",
+          
+         // Hotkey settings
+         ["HotkeyModifierCtrlAlt"] = "Ctrl + Alt",
+         ["HotkeyModifierCtrlShift"] = "Ctrl + Shift",
+         ["HotkeyModifierAltShift"] = "Alt + Shift",
+         ["HotkeyModifierCtrl"] = "Ctrl",
+         ["HotkeyModifierAlt"] = "Alt",
+         ["HotkeyModifierShift"] = "Shift",
+         ["HotkeyKeyAdd"] = "Add (+)",
+         ["HotkeyKeySubtract"] = "Subtract (-)",
+         ["HotkeyKeyMultiply"] = "Multiply (*)",
+         ["HotkeyKeyF1"] = "F1",
+         ["HotkeyKeyF2"] = "F2",
+         ["HotkeyKeyF3"] = "F3",
+         ["HotkeyKeyF4"] = "F4",
+         ["HotkeyKeyF5"] = "F5",
+         ["HotkeyKeyF6"] = "F6",
+         ["HotkeyKeyF7"] = "F7",
+         ["HotkeyKeyF8"] = "F8",
+         ["HotkeyKeyF9"] = "F9",
+         ["HotkeyKeyF10"] = "F10",
+         ["HotkeyKeyF11"] = "F11",
+         ["HotkeyKeyF12"] = "F12",
+         ["HotkeyKeyInsert"] = "Insert",
+         ["HotkeyKeyHome"] = "Home",
+         ["HotkeyKeyPageUp"] = "PageUp",
+         ["HotkeyKeyPageDown"] = "PageDown",
+         ["HotkeyKeyEnd"] = "End",
+         ["HotkeyKeyDelete"] = "Delete",
+         ["HotkeyKeySpace"] = "Space",
+          
+         // Keyboard mappings form column headers
+         ["GridColumnPersianCharReadOnly"] = "🔒 Persian Char (Read-only)",
+         ["GridColumnEnglishCharEditable"] = "✎ English Char (Editable)",
+         ["GridColumnEnglishCharReadOnly"] = "🔒 English Char (Read-only)",
+         ["GridColumnPersianCharEditable"] = "✎ Persian Char (Editable)",
+          
+         // Clipboard
+         ["ClipboardSetTextError"] = "Failed to set clipboard text",
+        };
 
     private static readonly Dictionary<string, string> En = new()
     {
@@ -214,8 +253,47 @@ public static class Localization
         ["MappingAddedSuccess"] = "Mapping added successfully.",
         ["OK"] = "OK",
         ["Delete"] = "Delete",
-        ["DeleteMappingConfirm"] = "Are you sure you want to delete this mapping?",
-     };
+         ["DeleteMappingConfirm"] = "Are you sure you want to delete this mapping?",
+          
+         // Hotkey settings
+         ["HotkeyModifierCtrlAlt"] = "Ctrl + Alt",
+         ["HotkeyModifierCtrlShift"] = "Ctrl + Shift",
+         ["HotkeyModifierAltShift"] = "Alt + Shift",
+         ["HotkeyModifierCtrl"] = "Ctrl",
+         ["HotkeyModifierAlt"] = "Alt",
+         ["HotkeyModifierShift"] = "Shift",
+         ["HotkeyKeyAdd"] = "Add (+)",
+         ["HotkeyKeySubtract"] = "Subtract (-)",
+         ["HotkeyKeyMultiply"] = "Multiply (*)",
+         ["HotkeyKeyF1"] = "F1",
+         ["HotkeyKeyF2"] = "F2",
+         ["HotkeyKeyF3"] = "F3",
+         ["HotkeyKeyF4"] = "F4",
+         ["HotkeyKeyF5"] = "F5",
+         ["HotkeyKeyF6"] = "F6",
+         ["HotkeyKeyF7"] = "F7",
+         ["HotkeyKeyF8"] = "F8",
+         ["HotkeyKeyF9"] = "F9",
+         ["HotkeyKeyF10"] = "F10",
+         ["HotkeyKeyF11"] = "F11",
+         ["HotkeyKeyF12"] = "F12",
+         ["HotkeyKeyInsert"] = "Insert",
+         ["HotkeyKeyHome"] = "Home",
+         ["HotkeyKeyPageUp"] = "PageUp",
+         ["HotkeyKeyPageDown"] = "PageDown",
+         ["HotkeyKeyEnd"] = "End",
+         ["HotkeyKeyDelete"] = "Delete",
+         ["HotkeyKeySpace"] = "Space",
+          
+         // Keyboard mappings form column headers
+         ["GridColumnPersianCharReadOnly"] = "🔒 Persian Char (Read-only)",
+         ["GridColumnEnglishCharEditable"] = "✎ English Char (Editable)",
+         ["GridColumnEnglishCharReadOnly"] = "🔒 English Char (Read-only)",
+         ["GridColumnPersianCharEditable"] = "✎ Persian Char (Editable)",
+          
+         // Clipboard
+         ["ClipboardSetTextError"] = "Failed to set clipboard text",
+      };
 
     private static Dictionary<string, string> _current = En;
 

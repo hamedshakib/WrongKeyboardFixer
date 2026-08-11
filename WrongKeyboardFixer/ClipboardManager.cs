@@ -30,7 +30,7 @@ public class ClipboardManager
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("Failed to set clipboard text", ex);
+            throw new InvalidOperationException(Localization.Get("ClipboardSetTextError"), ex);
         }
     }
 

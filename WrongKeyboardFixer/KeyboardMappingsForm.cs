@@ -550,8 +550,8 @@ public class KeyboardMappingsForm : Form
 
         string firstHeader =
             isPersianToEnglish
-                ? "🔒  Persian Char (Read-only)"
-                : "🔒  English Char (Read-only)";
+                ? Localization.Get("GridColumnPersianCharReadOnly")
+                : Localization.Get("GridColumnEnglishCharReadOnly");
 
         var firstColumn =
             new DataGridViewTextBoxColumn
@@ -603,8 +603,8 @@ public class KeyboardMappingsForm : Form
 
         string secondHeader =
             isPersianToEnglish
-                ? "✎  English Char (Editable)"
-                : "✎  Persian Char (Editable)";
+                ? Localization.Get("GridColumnEnglishCharEditable")
+                : Localization.Get("GridColumnPersianCharEditable");
 
         var secondColumn =
             new DataGridViewTextBoxColumn
@@ -1578,7 +1578,7 @@ public static class InputBox
             FormStartPosition.CenterParent;
 
         form.Size =
-            new Size(350, 155);
+            new Size(350, 170);
 
         form.Font =
             new Font("Tahoma", 9);
