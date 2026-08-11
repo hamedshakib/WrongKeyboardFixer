@@ -219,7 +219,18 @@ public class MainForm : Form
             }
 
             bool toPersian = KeyboardConverter.ShouldConvertToPersian(originalText);
-            string convertedText = KeyboardConverter.Convert(originalText, toPersian);
+
+            string convertedText;
+            if (toPersian)
+            {
+                // Convert English to Persian
+                convertedText = KeyboardConverter.ConvertEnglishToPersian(originalText, _settings.EnglishToPersianMap);
+            }
+            else
+            {
+                // Convert Persian to English
+                convertedText = KeyboardConverter.ConvertPersianToEnglish(originalText, _settings.PersianToEnglishMap);
+            }
 
             _clipboardManager.SetText(convertedText);
             await Task.Delay(200);

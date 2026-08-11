@@ -30,6 +30,7 @@ public partial class SettingsForm : Form
     private Button btnCheckUpdate = null!;
     private Button btnSave = null!;
     private Button btnCancel = null!;
+    private Button btnKeyboardMappings = null!;
 
     private enum StatusState { Checking, Registered, NotRegistered, RegisterSuccess, RegisterFailed }
     private StatusState _statusState = StatusState.Checking;
@@ -53,7 +54,7 @@ public partial class SettingsForm : Form
     private void InitializeControls()
     {
         this.Text = Localization.Get("Settings");
-        this.Size = new System.Drawing.Size(520, 410);
+        this.Size = new System.Drawing.Size(520, 450);
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
         this.MinimizeBox = false;
@@ -232,6 +233,19 @@ public partial class SettingsForm : Form
 
         currentY += 40;
 
+        // دکمه نگاشت کیبورد
+        btnKeyboardMappings = new Button
+        {
+            Text = Localization.Get("KeyboardMappings"),
+            Location = new Point(marginX, currentY),
+            Size = new Size(150, 32),
+            FlatStyle = FlatStyle.Flat,
+            BackColor = System.Drawing.Color.LightYellow
+        };
+        btnKeyboardMappings.Click += BtnKeyboardMappings_Click;
+        this.Controls.Add(btnKeyboardMappings);
+        currentY += 45;
+
         int buttonY = currentY;
         int buttonWidth = 95;
 
@@ -333,7 +347,8 @@ public partial class SettingsForm : Form
         return cmbLanguage.SelectedIndex switch
         {
             0 => Localization.Languages.English,
-            1 => Localization.Languages.Persian
+            1 => Localization.Languages.Persian,
+            _ => Localization.Languages.English
         };
     }
 
@@ -359,6 +374,7 @@ public partial class SettingsForm : Form
         btnCheckUpdate.Text = Localization.Get("CheckUpdate");
         btnSave.Text = Localization.Get("Save");
         btnCancel.Text = Localization.Get("Cancel");
+        btnKeyboardMappings.Text = Localization.Get("KeyboardMappings");
 
         PositionHotkeyControls();
         PositionStatusControl();
@@ -652,5 +668,11 @@ public partial class SettingsForm : Form
         {
             MessageBox.Show(Localization.Format("SaveSettingsError", ex.Message), Localization.Get("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+    }
+
+    private void BtnKeyboardMappings_Click(object? sender, EventArgs e)
+    {
+        using var mappingsForm = new KeyboardMappingsForm(_settings);
+        mappingsForm.ShowDialog(this);
     }
 }

@@ -1,91 +1,62 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace WrongKeyboardFixer;
 
+/// <summary>
+/// Converts characters between Persian and English based on user-defined mappings.
+/// Supports bidirectional conversion for clipboard text.
+/// </summary>
 public static class KeyboardConverter
 {
-    private const double ComparisonCoefficientLanguages = 0.35;
-    private static readonly Dictionary<char, char> EnToFa = new()
+    /// <summary>
+    /// Convert Persian character to English character using custom mappings.
+    /// </summary>
+    public static char? ConvertPersianToEnglish(char persianChar, Dictionary<char, char>? customMappings = null)
     {
-        ['`'] = '‍',
-        ['1'] = '۱',
-        ['2'] = '۲',
-        ['3'] = '۳',
-        ['4'] = '۴',
-        ['5'] = '۵',
-        ['6'] = '۶',
-        ['7'] = '۷',
-        ['8'] = '۸',
-        ['9'] = '۹',
-        ['0'] = '۰',
-        ['q'] = 'ض',
-        ['w'] = 'ص',
-        ['e'] = 'ث',
-        ['r'] = 'ق',
-        ['t'] = 'ف',
-        ['y'] = 'غ',
-        ['u'] = 'ع',
-        ['i'] = 'ه',
-        ['o'] = 'خ',
-        ['p'] = 'ح',
-        ['['] = 'ج',
-        [']'] = 'چ',
-        ['\\'] = 'پ',
-        ['a'] = 'ش',
-        ['s'] = 'س',
-        ['d'] = 'ی',
-        ['f'] = 'ب',
-        ['g'] = 'ل',
-        ['h'] = 'ا',
-        ['j'] = 'ت',
-        ['k'] = 'ن',
-        ['l'] = 'م',
-        [';'] = 'ک',
-        ['\''] = 'گ',
-        ['z'] = 'ظ',
-        ['x'] = 'ط',
-        ['c'] = 'ز',
-        ['v'] = 'ر',
-        ['b'] = 'ذ',
-        ['n'] = 'د',
-        ['m'] = 'ئ',
-        [','] = 'و',
-        ['.'] = '.',
-        ['/'] = '/',
+        // Check custom mapping first
+        if (customMappings != null && customMappings.TryGetValue(persianChar, out var englishChar))
+        {
+            return englishChar;
+        }
 
-        ['!'] = '!',
-        ['@'] = '٬',
-        ['%'] = '٪',
-        ['^'] = '×',
-        ['?'] = '؟',
-        [')'] = '(',
-        ['('] = ')',
-    };
-
-    private static readonly Dictionary<char, char> FaToEn = new();
-
-    static KeyboardConverter()
-    {
-        foreach (var pair in EnToFa)
-            if (!FaToEn.ContainsKey(pair.Value))
-                FaToEn[pair.Value] = pair.Key;
+        // No default mapping - returns null if not found
+        return null;
     }
 
-    public static string Convert(string text, bool toPersian)
+    /// <summary>
+    /// Convert English character to Persian character using custom mappings.
+    /// </summary>
+    public static char? ConvertEnglishToPersian(char englishChar, Dictionary<char, char>? customMappings = null)
+    {
+        // Check custom mapping first
+        if (customMappings != null && customMappings.TryGetValue(englishChar, out var persianChar))
+        {
+            return persianChar;
+        }
+
+        // No default mapping - returns null if not found
+        return null;
+    }
+
+    /// <summary>
+    /// Convert text from Persian to English.
+    /// </summary>
+    public static string ConvertPersianToEnglish(string text, Dictionary<char, char>? customMappings = null)
     {
         if (string.IsNullOrEmpty(text)) return text;
 
-        var map = toPersian ? EnToFa : FaToEn;
         var sb = new StringBuilder(text.Length);
 
         foreach (char c in text)
         {
-            char lower = char.ToLowerInvariant(c);
-            if (map.TryGetValue(lower, out char mapped))
+            char? mapped = ConvertPersianToEnglish(c, customMappings);
+            if (mapped.HasValue)
             {
-                char result = mapped;
-                if (!toPersian && char.IsUpper(c))
+                char result = mapped.Value;
+                if (char.IsUpper(c))
                     result = char.ToUpperInvariant(result);
                 sb.Append(result);
             }
@@ -94,9 +65,41 @@ public static class KeyboardConverter
                 sb.Append(c);
             }
         }
+
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Convert text from English to Persian.
+    /// </summary>
+    public static string ConvertEnglishToPersian(string text, Dictionary<char, char>? customMappings = null)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+
+        var sb = new StringBuilder(text.Length);
+
+        foreach (char c in text)
+        {
+            char? mapped = ConvertEnglishToPersian(c, customMappings);
+            if (mapped.HasValue)
+            {
+                char result = mapped.Value;
+                if (char.IsUpper(c))
+                    result = char.ToUpperInvariant(result);
+                sb.Append(result);
+            }
+            else
+            {
+                sb.Append(c);
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Detect if text is mostly English or Persian to determine conversion direction.
+    /// </summary>
     public static bool ShouldConvertToPersian(string text)
     {
         if (string.IsNullOrEmpty(text)) return false;
@@ -107,6 +110,7 @@ public static class KeyboardConverter
             if (c >= 0x0600 && c <= 0x06FF) persianCount++;
         }
 
-        return persianCount < text.Length * ComparisonCoefficientLanguages; // بیشتر انگلیسی → تبدیل به فارسی
+        // If less than 35% Persian, assume English input that needs conversion to Persian
+        return persianCount < text.Length * 0.35;
     }
 }
