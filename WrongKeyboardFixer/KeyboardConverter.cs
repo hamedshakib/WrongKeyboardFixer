@@ -90,7 +90,17 @@ public static class KeyboardConverter
             }
             else
             {
-                sb.Append(c);
+                var lowerChar = char.ToLowerInvariant(c);
+                mapped = ConvertEnglishToPersian(lowerChar, customMappings);
+                if (mapped.HasValue)
+                {
+                    char result = mapped.Value;
+                    if (char.IsUpper(c))
+                        result = char.ToUpperInvariant(result);
+                    sb.Append(result);
+                } 
+                else
+                    sb.Append(c);
             }
         }
 
