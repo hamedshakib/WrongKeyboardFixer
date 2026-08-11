@@ -301,7 +301,6 @@ public class KeyboardMappingsForm : Form
 
         _btnClose =
             CreateActionButton(
-                "▣  " +
                 Localization.Get("Save"),
                 Color.LightBlue);
 
@@ -1499,7 +1498,7 @@ public class KeyboardMappingsForm : Form
 
         _settings
             .PersianToEnglishMap
-            .Clear();
+            = SettingsManager.GetDefaultPersianToEnglishMap();
 
         LoadMappings();
     }
@@ -1529,7 +1528,7 @@ public class KeyboardMappingsForm : Form
 
         _settings
             .EnglishToPersianMap
-            .Clear();
+            = SettingsManager.GetDefaultEnglishToPersianMap();
 
         LoadMappings();
     }

@@ -62,6 +62,22 @@ public static class SettingsManager
     }
 
     /// <summary>
+    /// Get a copy of default Persian to English character mappings.
+    /// </summary>
+    public static Dictionary<char, char> GetDefaultPersianToEnglishMap()
+    {
+        return new Dictionary<char, char>(InitializeDefaultPersianToEnglishMap());
+    }
+
+    /// <summary>
+    /// Get a copy of default English to Persian character mappings.
+    /// </summary>
+    public static Dictionary<char, char> GetDefaultEnglishToPersianMap()
+    {
+        return new Dictionary<char, char>(InitializeDefaultEnglishToPersianMap());
+    }
+
+    /// <summary>
     /// Initialize default English to Persian character mappings.
     /// </summary>
     private static Dictionary<char, char> InitializeDefaultEnglishToPersianMap()
