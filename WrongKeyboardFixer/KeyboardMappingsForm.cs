@@ -10,6 +10,8 @@ public partial class KeyboardMappingsForm : Form
     private readonly AppSettings _settings;
     private DataGridView? _dataGridViewPersianToEnglish;
     private DataGridView? _dataGridViewEnglishToPersian;
+    private Button? _btnAddPersianToEnglish;
+    private Button? _btnAddEnglishToPersian;
     private Button? _btnResetAllPersianToEnglish;
     private Button? _btnResetAllEnglishToPersian;
     private Button? _btnClose;
@@ -36,7 +38,7 @@ public partial class KeyboardMappingsForm : Form
     private void InitializeControls()
     {
         this.Text = Localization.Get("KeyboardMappingsTitle");
-        this.Size = new System.Drawing.Size(600, 620);
+        this.Size = new System.Drawing.Size(600, 700);
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
         this.MinimizeBox = false;
@@ -65,7 +67,7 @@ public partial class KeyboardMappingsForm : Form
         // Persian to English section
         _labelPersianToEnglish = new Label
         {
-            Text = "فارسی → انگلیسی",
+            Text = Localization.Get("PersianToEnglish"),
             Font = new System.Drawing.Font("Tahoma", 10, System.Drawing.FontStyle.Bold),
             Location = new System.Drawing.Point(marginX, currentY),
             Size = new System.Drawing.Size(formWidth - (2 * marginX), 25)
@@ -125,6 +127,19 @@ public partial class KeyboardMappingsForm : Form
         this.Controls.Add(_dataGridViewPersianToEnglish);
         currentY += 160;
 
+        // Add button for Persian to English
+        _btnAddPersianToEnglish = new Button
+        {
+            Text = "➕ " + Localization.Get("AddMapping"),
+            Location = new System.Drawing.Point(marginX, currentY),
+            Size = new System.Drawing.Size(120, 32),
+            FlatStyle = FlatStyle.Flat,
+            BackColor = System.Drawing.Color.LightGreen
+        };
+        _btnAddPersianToEnglish.Click += BtnAddPersianToEnglish_Click;
+        this.Controls.Add(_btnAddPersianToEnglish);
+        currentY += 50;
+
         // Reset All button for Persian to English
         _btnResetAllPersianToEnglish = new Button
         {
@@ -141,7 +156,7 @@ public partial class KeyboardMappingsForm : Form
         // English to Persian section
         _labelEnglishToPersian = new Label
         {
-            Text = "انگلیسی → فارسی",
+            Text = Localization.Get("EnglishToPersian"),
             Font = new System.Drawing.Font("Tahoma", 10, System.Drawing.FontStyle.Bold),
             Location = new System.Drawing.Point(marginX, currentY),
             Size = new System.Drawing.Size(formWidth - (2 * marginX), 25)
@@ -200,6 +215,19 @@ public partial class KeyboardMappingsForm : Form
 
         this.Controls.Add(_dataGridViewEnglishToPersian);
         currentY += 160;
+
+        // Add button for English to Persian
+        _btnAddEnglishToPersian = new Button
+        {
+            Text = "➕ " + Localization.Get("AddMapping"),
+            Location = new System.Drawing.Point(marginX, currentY),
+            Size = new System.Drawing.Size(120, 32),
+            FlatStyle = FlatStyle.Flat,
+            BackColor = System.Drawing.Color.LightGreen
+        };
+        _btnAddEnglishToPersian.Click += BtnAddEnglishToPersian_Click;
+        this.Controls.Add(_btnAddEnglishToPersian);
+        currentY += 50;
 
         // Reset All button for English to Persian
         _btnResetAllEnglishToPersian = new Button
@@ -372,6 +400,128 @@ public partial class KeyboardMappingsForm : Form
         }
     }
 
+    private void AddPersianToEnglishMapping()
+    {
+        // Show input box for Persian character
+        string? persianCharInput = InputBox.Show(
+            Localization.Get("EnterPersianChar"),
+            Localization.Get("AddMapping"),
+            ""
+        );
+
+        if (string.IsNullOrEmpty(persianCharInput) || persianCharInput.Length != 1)
+        {
+            MessageBox.Show(
+                Localization.Get("InvalidPersianChar"),
+                Localization.Get("Error"),
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error
+            );
+            return;
+        }
+
+        char persianChar = persianCharInput[0];
+
+        // Show input box for English character
+        string? englishCharInput = InputBox.Show(
+            Localization.Get("EnterEnglishChar"),
+            Localization.Get("AddMapping"),
+            ""
+        );
+
+        if (string.IsNullOrEmpty(englishCharInput) || englishCharInput.Length != 1)
+        {
+            MessageBox.Show(
+                Localization.Get("InvalidEnglishChar"),
+                Localization.Get("Error"),
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error
+            );
+            return;
+        }
+
+        char englishChar = englishCharInput[0];
+
+        // Add the mapping
+        if (_settings.PersianToEnglishMap.ContainsKey(persianChar))
+        {
+            _settings.PersianToEnglishMap[persianChar] = englishChar;
+        }
+        else
+        {
+            _settings.PersianToEnglishMap.Add(persianChar, englishChar);
+        }
+
+        LoadMappings();
+        MessageBox.Show(
+            Localization.Get("MappingAddedSuccess"),
+            Localization.Get("Success"),
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information
+        );
+    }
+
+    private void AddEnglishToPersianMapping()
+    {
+        // Show input box for English character
+        string? englishCharInput = InputBox.Show(
+            Localization.Get("EnterEnglishChar"),
+            Localization.Get("AddMapping"),
+            ""
+        );
+
+        if (string.IsNullOrEmpty(englishCharInput) || englishCharInput.Length != 1)
+        {
+            MessageBox.Show(
+                Localization.Get("InvalidEnglishChar"),
+                Localization.Get("Error"),
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error
+            );
+            return;
+        }
+
+        char englishChar = englishCharInput[0];
+
+        // Show input box for Persian character
+        string? persianCharInput = InputBox.Show(
+            Localization.Get("EnterPersianChar"),
+            Localization.Get("AddMapping"),
+            ""
+        );
+
+        if (string.IsNullOrEmpty(persianCharInput) || persianCharInput.Length != 1)
+        {
+            MessageBox.Show(
+                Localization.Get("InvalidPersianChar"),
+                Localization.Get("Error"),
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error
+            );
+            return;
+        }
+
+        char persianChar = persianCharInput[0];
+
+        // Add the mapping
+        if (_settings.EnglishToPersianMap.ContainsKey(englishChar))
+        {
+            _settings.EnglishToPersianMap[englishChar] = persianChar;
+        }
+        else
+        {
+            _settings.EnglishToPersianMap.Add(englishChar, persianChar);
+        }
+
+        LoadMappings();
+        MessageBox.Show(
+            Localization.Get("MappingAddedSuccess"),
+            Localization.Get("Success"),
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information
+        );
+    }
+
     private void ResetPersianCharMapping(char persianChar)
     {
         var result = MessageBox.Show(
@@ -404,6 +554,16 @@ public partial class KeyboardMappingsForm : Form
             }
             LoadMappings();
         }
+    }
+
+    private void BtnAddPersianToEnglish_Click(object? sender, EventArgs e)
+    {
+        AddPersianToEnglishMapping();
+    }
+
+    private void BtnAddEnglishToPersian_Click(object? sender, EventArgs e)
+    {
+        AddEnglishToPersianMapping();
     }
 
     private void BtnResetAllPersianToEnglish_Click(object? sender, EventArgs e)
@@ -439,5 +599,68 @@ public partial class KeyboardMappingsForm : Form
         SettingsManager.Save(_settings);
         DialogResult = DialogResult.OK;
         Close();
+    }
+}
+
+/// <summary>
+/// Simple input box for entering single characters
+/// </summary>
+public static class InputBox
+{
+    public static string? Show(string prompt, string title, string defaultValue)
+    {
+        using var form = new Form();
+        form.Text = title;
+        form.FormBorderStyle = FormBorderStyle.FixedDialog;
+        form.MaximizeBox = false;
+        form.MinimizeBox = false;
+        form.StartPosition = FormStartPosition.CenterScreen;
+        form.Size = new System.Drawing.Size(350, 150);
+        form.Font = new System.Drawing.Font("Tahoma", 9);
+
+        var label = new Label
+        {
+            Text = prompt,
+            AutoSize = true,
+            Location = new System.Drawing.Point(20, 20),
+            Dock = DockStyle.None,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+        };
+        form.Controls.Add(label);
+
+        var textBox = new TextBox
+        {
+            Text = defaultValue,
+            Location = new System.Drawing.Point(20, 50),
+            Size = new System.Drawing.Size(300, 25)
+        };
+        form.Controls.Add(textBox);
+
+        var okButton = new Button
+        {
+            Text = Localization.Get("OK"),
+            DialogResult = DialogResult.OK,
+            Location = new System.Drawing.Point(110, 90),
+            FlatStyle = FlatStyle.Flat,
+            BackColor = System.Drawing.Color.LightBlue
+        };
+        form.Controls.Add(okButton);
+
+        var cancelButton = new Button
+        {
+            Text = Localization.Get("Cancel"),
+            DialogResult = DialogResult.Cancel,
+            Location = new System.Drawing.Point(200, 90),
+            FlatStyle = FlatStyle.Flat,
+            BackColor = System.Drawing.Color.LightGray
+        };
+        form.Controls.Add(cancelButton);
+
+        // Set OK as accept button
+        form.AcceptButton = okButton;
+
+        // Show dialog and return result
+        var result = form.ShowDialog();
+        return result == DialogResult.OK ? textBox.Text : null;
     }
 }

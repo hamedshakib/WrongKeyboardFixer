@@ -93,6 +93,8 @@ public static class Localization
          // Keyboard mappings
          ["KeyboardMappings"] = "نگاشت کیبورد",
          ["KeyboardMappingsTitle"] = "تنظیم نگاشت کیبورد",
+         ["EnglishToPersian"] = "فارسی → انگلیسی",
+         ["PersianToEnglish"] = "انگلیسی → فارسی",
          ["Key"] = "کلید",
          ["KeyName"] = "نام دکمه",
          ["PersianChar"] = "کارکتر فارسی",
@@ -102,7 +104,16 @@ public static class Localization
          ["ResetAllConfirm"] = "آیا مطمئن هستید که می‌خواهید تمام نگاشت‌های سفارشی را حذف کنید؟",
          ["ResetKeyConfirm"] = "آیا مطمئن هستید که می‌خواهید نگاشت سفارشی این کلید را حذف کنید؟",
          ["ResetSuccess"] = "نگاشت با موفقیت برگردانده شد.",
-     };
+         
+         // Add mapping
+         ["AddMapping"] = "افزودن نگاشت",
+         ["EnterPersianChar"] = "کارکتر فارسی را وارد کنید:",
+         ["EnterEnglishChar"] = "کارکتر انگلیسی را وارد کنید:",
+         ["InvalidPersianChar"] = "لطفاً یک کارکتر فارسی معتبر وارد کنید.",
+         ["InvalidEnglishChar"] = "لطفاً یک کارکتر انگلیسی معتبر وارد کنید.",
+         ["MappingAddedSuccess"] = "نگاشت با موفقیت اضافه شد.",
+         ["OK"] = "تأیید",
+      };
 
     private static readonly Dictionary<string, string> En = new()
     {
@@ -180,6 +191,8 @@ public static class Localization
         // Keyboard mappings
         ["KeyboardMappings"] = "Keyboard Mappings",
         ["KeyboardMappingsTitle"] = "Keyboard Mapping Settings",
+        ["EnglishToPersian"] = "English → Persian",
+        ["PersianToEnglish"] = "Persian → English",
         ["Key"] = "Key",
         ["KeyName"] = "Key Name",
         ["PersianChar"] = "Persian Char",
@@ -188,8 +201,17 @@ public static class Localization
         ["ResetAll"] = "Reset All to Default",
         ["ResetAllConfirm"] = "Are you sure you want to reset all custom mappings?",
         ["ResetKeyConfirm"] = "Are you sure you want to reset the custom mapping for this key?",
-        ["ResetSuccess"] = "Mapping reset successfully.",
-    };
+         ["ResetSuccess"] = "Mapping reset successfully.",
+         
+         // Add mapping
+         ["AddMapping"] = "Add Mapping",
+         ["EnterPersianChar"] = "Enter Persian character:",
+         ["EnterEnglishChar"] = "Enter English character:",
+         ["InvalidPersianChar"] = "Please enter a valid Persian character.",
+         ["InvalidEnglishChar"] = "Please enter a valid English character.",
+         ["MappingAddedSuccess"] = "Mapping added successfully.",
+         ["OK"] = "OK",
+     };
 
     private static Dictionary<string, string> _current = En;
 
