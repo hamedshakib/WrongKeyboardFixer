@@ -1394,31 +1394,39 @@ public class KeyboardMappingsForm : Form
     private void ResetPersianCharMapping(
         char persianChar)
     {
-        var result =
-            MessageBox.Show(
-                Localization.Format(
-                    "ResetKeyConfirm"),
-
-                Localization.Get(
-                    "Attention"),
-
-                MessageBoxButtons.YesNo,
-
-                MessageBoxIcon.Question);
-
-        if (result != DialogResult.Yes)
-            return;
-
-        if (_settings
-            .PersianToEnglishMap
-            .ContainsKey(persianChar))
+        // بررسی اگر این کاراکتر در مپ پیش‌فرض وجود دارد
+        var defaultMap = SettingsManager.GetDefaultPersianToEnglishMap();
+        
+        if (defaultMap.ContainsKey(persianChar))
         {
-            _settings
-                .PersianToEnglishMap
-                .Remove(persianChar);
-        }
+            // اگر کلید در مپ پیش‌فرض وجود دارد
+            if (_settings.PersianToEnglishMap.ContainsKey(persianChar))
+            {
+                char currentEnglishChar = _settings.PersianToEnglishMap[persianChar];
+                char defaultEnglishChar = defaultMap[persianChar];
 
-        LoadMappings();
+                // اگر مقدار فعلی با مقدار پیش‌فرض متفاوت است، آن را به مقدار پیش‌فرض بازمی‌گردانیم
+                if (currentEnglishChar != defaultEnglishChar)
+                {
+                    _settings.PersianToEnglishMap[persianChar] = defaultEnglishChar;
+                    LoadMappings();
+                }
+                // اگر مقدار فعلی همان مقدار پیش‌فرض است، هیچ کاری نمی‌کنیم
+            }
+            else
+            {
+                // اگر کلید در تنظیمات کاربر وجود ندارد، هیچ کاری نمی‌کنیم
+            }
+        }
+        else
+        {
+            // اگر کلید در مپ پیش‌فرض وجود ندارد، اما در تنظیمات کاربر وجود دارد، آن را حذف می‌کنیم
+            if (_settings.PersianToEnglishMap.ContainsKey(persianChar))
+            {
+                _settings.PersianToEnglishMap.Remove(persianChar);
+                LoadMappings();
+            }
+        }
     }
 
     // =========================================================
@@ -1428,31 +1436,39 @@ public class KeyboardMappingsForm : Form
     private void ResetEnglishCharMapping(
         char englishChar)
     {
-        var result =
-            MessageBox.Show(
-                Localization.Format(
-                    "ResetKeyConfirm"),
-
-                Localization.Get(
-                    "Attention"),
-
-                MessageBoxButtons.YesNo,
-
-                MessageBoxIcon.Question);
-
-        if (result != DialogResult.Yes)
-            return;
-
-        if (_settings
-            .EnglishToPersianMap
-            .ContainsKey(englishChar))
+        // بررسی اگر این کاراکتر در مپ پیش‌فرض وجود دارد
+        var defaultMap = SettingsManager.GetDefaultEnglishToPersianMap();
+        
+        if (defaultMap.ContainsKey(englishChar))
         {
-            _settings
-                .EnglishToPersianMap
-                .Remove(englishChar);
-        }
+            // اگر کلید در مپ پیش‌فرض وجود دارد
+            if (_settings.EnglishToPersianMap.ContainsKey(englishChar))
+            {
+                char currentPersianChar = _settings.EnglishToPersianMap[englishChar];
+                char defaultPersianChar = defaultMap[englishChar];
 
-        LoadMappings();
+                // اگر مقدار فعلی با مقدار پیش‌فرض متفاوت است، آن را به مقدار پیش‌فرض بازمی‌گردانیم
+                if (currentPersianChar != defaultPersianChar)
+                {
+                    _settings.EnglishToPersianMap[englishChar] = defaultPersianChar;
+                    LoadMappings();
+                }
+                // اگر مقدار فعلی همان مقدار پیش‌فرض است، هیچ کاری نمی‌کنیم
+            }
+            else
+            {
+                // اگر کلید در تنظیمات کاربر وجود ندارد، هیچ کاری نمی‌کنیم
+            }
+        }
+        else
+        {
+            // اگر کلید در مپ پیش‌فرض وجود ندارد، اما در تنظیمات کاربر وجود دارد، آن را حذف می‌کنیم
+            if (_settings.EnglishToPersianMap.ContainsKey(englishChar))
+            {
+                _settings.EnglishToPersianMap.Remove(englishChar);
+                LoadMappings();
+            }
+        }
     }
 
     // =========================================================
