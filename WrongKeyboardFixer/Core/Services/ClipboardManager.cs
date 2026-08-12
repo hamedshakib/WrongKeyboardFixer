@@ -3,15 +3,22 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Contracts;
 using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.Core.Services;
 
-public class ClipboardManager
+/// <summary>
+/// Manages clipboard operations with retry logic and error handling.
+/// </summary>
+public sealed class ClipboardManager : IClipboardService
 {
     private const int MaxRetryAttempts = 8;
     private const int RetryDelayMs = 150;
 
+    /// <summary>
+    /// Gets the current text content of the clipboard.
+    /// </summary>
     public string GetText()
     {
         try
@@ -24,8 +31,13 @@ public class ClipboardManager
         }
     }
 
+    /// <summary>
+    /// Sets the text content of the clipboard.
+    /// </summary>
     public void SetText(string text)
     {
+        if (string.IsNullOrEmpty(text)) throw new ArgumentException("Text cannot be null or empty.", nameof(text));
+
         try
         {
             Clipboard.SetText(text);
@@ -36,11 +48,14 @@ public class ClipboardManager
         }
     }
 
-    public async Task<string> GetTextWithRetryAsync()
+    /// <summary>
+    /// Asynchronously gets the text content with retry logic.
+    /// </summary>
+    public async Task<string> GetTextWithRetryAsync(CancellationToken cancellationToken = default)
     {
         for (int attempt = 0; attempt < MaxRetryAttempts; attempt++)
         {
-            await Task.Delay(RetryDelayMs);
+            await Task.Delay(RetryDelayMs, cancellationToken);
 
             string text = GetText();
             if (!string.IsNullOrWhiteSpace(text))
@@ -50,7 +65,10 @@ public class ClipboardManager
         return string.Empty;
     }
 
-    public void RestoreText(string text)
+    /// <summary>
+    /// Restores the clipboard to a previous state.
+    /// </summary>
+    public void RestoreText(string? text)
     {
         if (string.IsNullOrWhiteSpace(text))
         {

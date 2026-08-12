@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using WrongKeyboardFixer.Core.Contracts;
 using WrongKeyboardFixer.Core.Model;
 
 namespace WrongKeyboardFixer.Core.Services;
@@ -11,15 +12,26 @@ namespace WrongKeyboardFixer.Core.Services;
 /// </summary>
 public sealed class TextConversionService
 {
-    private readonly ClipboardManager _clipboard;
+    private readonly IClipboardService _clipboard;
     private readonly AppSettings _settings;
+    private readonly ITextConverter _converter;
+    private readonly IKeyboardSimulator _keyboardSimulator;
 
-    public TextConversionService(ClipboardManager clipboard, AppSettings settings)
+    public TextConversionService(
+        IClipboardService clipboard,
+        AppSettings settings,
+        ITextConverter? converter = null,
+        IKeyboardSimulator? keyboardSimulator = null)
     {
-        _clipboard = clipboard;
-        _settings = settings;
+        _clipboard = clipboard ?? throw new ArgumentNullException(nameof(clipboard));
+        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _converter = converter ?? new KeyboardConverter();
+        _keyboardSimulator = keyboardSimulator ?? new KeyboardSimulator();
     }
 
+    /// <summary>
+    /// Converts the currently selected text by copying, converting, and pasting back.
+    /// </summary>
     public async Task ConvertSelectedTextAsync()
     {
         string previousClipboard = _clipboard.GetText();
@@ -28,7 +40,7 @@ public sealed class TextConversionService
         {
             Debug.WriteLine("🔄 Starting text conversion...");
 
-            KeyboardSimulator.SendCtrlC();
+            _keyboardSimulator.SendCtrlC();
             await Task.Delay(300);
 
             string originalText = await _clipboard.GetTextWithRetryAsync();
@@ -38,15 +50,15 @@ public sealed class TextConversionService
                 return;
             }
 
-            bool toPersian = KeyboardConverter.ShouldConvertToPersian(originalText);
+            bool toPersian = _converter.ShouldConvertToPersian(originalText);
 
             string convertedText = toPersian
-                ? KeyboardConverter.ConvertEnglishToPersian(originalText, _settings.EnglishToPersianMap)
-                : KeyboardConverter.ConvertPersianToEnglish(originalText, _settings.PersianToEnglishMap);
+                ? _converter.ConvertEnglishToPersian(originalText, _settings.EnglishToPersianMap)
+                : _converter.ConvertPersianToEnglish(originalText, _settings.PersianToEnglishMap);
 
             _clipboard.SetText(convertedText);
             await Task.Delay(200);
-            KeyboardSimulator.SendCtrlV();
+            _keyboardSimulator.SendCtrlV();
             await Task.Delay(200);
 
             _clipboard.RestoreText(previousClipboard);

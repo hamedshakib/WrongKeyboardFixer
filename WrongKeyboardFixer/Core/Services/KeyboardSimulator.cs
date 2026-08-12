@@ -4,7 +4,10 @@ using System.Threading;
 
 namespace WrongKeyboardFixer.Core.Services;
 
-public static partial class KeyboardSimulator
+/// <summary>
+/// Simulates keyboard input for copy/paste operations.
+/// </summary>
+public static partial class KeyboardSimulator : IKeyboardSimulator
 {
     [LibraryImport("user32.dll")]
     private static partial void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
@@ -17,6 +20,9 @@ public static partial class KeyboardSimulator
     private const byte VK_MENU = 0x12; // Alt
     private const int KeyReleaseDelayMs = 30;
 
+    /// <summary>
+    /// Simulates pressing Ctrl+C to copy selected text.
+    /// </summary>
     public static void SendCtrlC()
     {
         ReleaseModifierKeys();
@@ -25,6 +31,9 @@ public static partial class KeyboardSimulator
         SendKeyCombination(VK_CONTROL, VK_C);
     }
 
+    /// <summary>
+    /// Simulates pressing Ctrl+V to paste text.
+    /// </summary>
     public static void SendCtrlV()
     {
         ReleaseModifierKeys();

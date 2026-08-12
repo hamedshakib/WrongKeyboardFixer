@@ -2,63 +2,79 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Contracts;
 using WrongKeyboardFixer.Core.Helpers;
 using WrongKeyboardFixer.Core.Model;
 
 namespace WrongKeyboardFixer.Core.Services;
 
-public static class SettingsManager
+/// <summary>
+/// Manages application settings persistence and startup configuration.
+/// </summary>
+public sealed class SettingsManager : ISettingsService
 {
-    private static readonly string SettingsPath = Path.Combine(
-        Application.CommonAppDataPath,
-        "WrongKeyboardFixer",
-        "settings.json"
-    );
+    private readonly string _settingsPath;
 
-    public static WrongKeyboardFixer.Core.Model.AppSettings Load()
+    public SettingsManager()
+    {
+        _settingsPath = Path.Combine(
+            Application.CommonAppDataPath,
+            "WrongKeyboardFixer",
+            "settings.json"
+        );
+    }
+
+    /// <summary>
+    /// Loads application settings from storage.
+    /// </summary>
+    public AppSettings Load()
     {
         try
         {
-            if (!File.Exists(SettingsPath))
-                return new WrongKeyboardFixer.Core.Model.AppSettings();
+            if (!File.Exists(_settingsPath))
+                return new AppSettings();
 
-            string json = File.ReadAllText(SettingsPath);
-            var settings = JsonSerializer.Deserialize(json, AppSettingsJsonContext.Default.AppSettings);
-            var result = settings;
-            if (result == null) result = new WrongKeyboardFixer.Core.Model.AppSettings();
+            string json = File.ReadAllText(_settingsPath);
+            var settings = JsonSerializer.Deserialize(json, AppSettingsJsonContext.Default.AppSettings) 
+                ?? new AppSettings();
 
             // Initialize custom mappings from defaults if empty
-            if (result.PersianToEnglishMap == null || result.PersianToEnglishMap.Count == 0)
+            if (settings.PersianToEnglishMap.Count == 0)
             {
-                result.PersianToEnglishMap = MappingDefaults.GetDefaultPersianToEnglishMap();
+                settings.PersianToEnglishMap = MappingDefaults.GetDefaultPersianToEnglishMap();
             }
 
-            if (result.EnglishToPersianMap == null || result.EnglishToPersianMap.Count == 0)
+            if (settings.EnglishToPersianMap.Count == 0)
             {
-                result.EnglishToPersianMap = MappingDefaults.GetDefaultEnglishToPersianMap();
+                settings.EnglishToPersianMap = MappingDefaults.GetDefaultEnglishToPersianMap();
             }
 
-            return result;
+            return settings;
         }
         catch
         {
-            // در صورت خطا، تنظیمات پیش‌فرض بازنشانی می‌شود
-            return new WrongKeyboardFixer.Core.Model.AppSettings();
+            // In case of error, return default settings
+            return new AppSettings();
         }
     }
 
-    public static void Save(WrongKeyboardFixer.Core.Model.AppSettings settings)
+    /// <summary>
+    /// Saves application settings to storage.
+    /// </summary>
+    public void Save(AppSettings settings)
     {
+        if (settings == null) throw new ArgumentNullException(nameof(settings));
+
         try
         {
-            // ایجاد پوشه اگر وجود نداشته باشد
-            string directory = Path.GetDirectoryName(SettingsPath)!;
-            if (!Directory.Exists(directory))
+            string? directory = Path.GetDirectoryName(_settingsPath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
             string json = JsonSerializer.Serialize(settings, AppSettingsJsonContext.Default.AppSettings);
-            File.WriteAllText(SettingsPath, json);
+            File.WriteAllText(_settingsPath, json);
         }
         catch (Exception ex)
         {
@@ -71,7 +87,10 @@ public static class SettingsManager
         }
     }
 
-    public static void AddToStartup(bool enable)
+    /// <summary>
+    /// Configures the application to run on system startup.
+    /// </summary>
+    public void ConfigureStartup(bool enable)
     {
         try
         {

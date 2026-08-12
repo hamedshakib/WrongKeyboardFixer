@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using WrongKeyboardFixer.Core.Contracts;
 using WrongKeyboardFixer.Core.Model;
 
 namespace WrongKeyboardFixer.Core.Services;
@@ -9,18 +10,19 @@ namespace WrongKeyboardFixer.Core.Services;
 /// Converts characters between Persian and English based on user-defined mappings.
 /// Supports bidirectional conversion for clipboard text.
 /// </summary>
-public static class KeyboardConverter
+public sealed class KeyboardConverter : ITextConverter
 {
     // Default maps are built once and reused (avoid rebuilding them for every character).
     private static readonly IReadOnlyDictionary<char, char> DefaultEnglishToPersianMap =
         MappingDefaults.GetDefaultEnglishToPersianMap();
+    
     private static readonly IReadOnlyDictionary<char, char> DefaultMiddlePositionEnglishToPersianMap =
         MappingDefaults.GetDefaultMiddlePositionEnglishToPersianMap();
 
     /// <summary>
-    /// Convert Persian character to English character using custom mappings.
+    /// Convert a single Persian character to English character using custom mappings.
     /// </summary>
-    public static char? ConvertPersianToEnglish(char persianChar, Dictionary<char, char>? customMappings = null)
+    public char? ConvertPersianToEnglish(char persianChar, IReadOnlyDictionary<char, char>? customMappings = null)
     {
         // Check custom mapping first
         if (customMappings != null && customMappings.TryGetValue(persianChar, out var englishChar))
@@ -33,9 +35,9 @@ public static class KeyboardConverter
     }
 
     /// <summary>
-    /// Convert English character to Persian character using custom mappings.
+    /// Convert a single English character to Persian character using custom mappings.
     /// </summary>
-    public static char? ConvertEnglishToPersian(char englishChar, Dictionary<char, char>? customMappings = null)
+    public char? ConvertEnglishToPersian(char englishChar, IReadOnlyDictionary<char, char>? customMappings = null)
     {
         // Check custom mapping first
         if (customMappings != null && customMappings.TryGetValue(englishChar, out var persianChar))
@@ -50,7 +52,7 @@ public static class KeyboardConverter
     /// <summary>
     /// Convert text from Persian to English.
     /// </summary>
-    public static string ConvertPersianToEnglish(string text, Dictionary<char, char>? customMappings = null)
+    public string ConvertPersianToEnglish(string text, IReadOnlyDictionary<char, char>? customMappings = null)
     {
         if (string.IsNullOrEmpty(text)) return text;
 
@@ -78,9 +80,9 @@ public static class KeyboardConverter
     /// <summary>
     /// Convert text from English to Persian.
     /// </summary>
-    public static string ConvertEnglishToPersian(
+    public string ConvertEnglishToPersian(
         string text,
-        Dictionary<char, char>? customMappings = null)
+        IReadOnlyDictionary<char, char>? customMappings = null)
     {
         if (string.IsNullOrEmpty(text))
             return text;
@@ -91,7 +93,7 @@ public static class KeyboardConverter
         {
             char c = text[i];
 
-            // مشخص می‌کند حرف در ابتدای کلمه است یا خیر
+            // Determine if the character is at the start of a word
             bool isWordStart =
                 i == 0 ||
                 !char.IsLetterOrDigit(text[i - 1]);
@@ -107,8 +109,7 @@ public static class KeyboardConverter
                 continue;
             }
 
-            // برای حروفی که mapping مستقیم ندارند،
-            // lowercase آن‌ها را نیز امتحان می‌کنیم.
+            // For characters without direct mapping, try lowercase
             char lowerChar = char.ToLowerInvariant(c);
 
             mapped = ConvertEnglishToPersian(
@@ -128,27 +129,26 @@ public static class KeyboardConverter
         return sb.ToString();
     }
 
-    private static char? ConvertEnglishToPersian(
+    private char? ConvertEnglishToPersian(
         char c,
-        Dictionary<char, char>? customMappings,
+        IReadOnlyDictionary<char, char>? customMappings,
         bool isWordStart)
     {
-        // 1. Mapping اختصاصی کاربر همیشه اولویت دارد
+        // 1. User custom mapping always has priority
         if (customMappings != null &&
             customMappings.TryGetValue(c, out var customMapped))
         {
             return customMapped;
         }
 
-        // 2. اگر حرف بزرگ انگلیسی است و وسط کلمه قرار دارد،
-        // mapping مخصوص آن را بررسی کن.
+        // 2. If uppercase English letter and in middle of word, check special mapping
         if (char.IsUpper(c) && !isWordStart &&
             DefaultMiddlePositionEnglishToPersianMap.TryGetValue(c, out var middleMapped))
         {
             return middleMapped;
         }
 
-        // 3. Mapping عادی
+        // 3. Normal mapping
         if (DefaultEnglishToPersianMap.TryGetValue(c, out var mapped))
         {
             return mapped;
@@ -160,7 +160,7 @@ public static class KeyboardConverter
     /// <summary>
     /// Detect if text is mostly English or Persian to determine conversion direction.
     /// </summary>
-    public static bool ShouldConvertToPersian(string text)
+    public bool ShouldConvertToPersian(string text)
     {
         if (string.IsNullOrEmpty(text)) return false;
 
