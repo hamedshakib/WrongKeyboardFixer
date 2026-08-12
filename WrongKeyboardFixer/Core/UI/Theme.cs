@@ -153,7 +153,6 @@ public static class Theme
 
     public static void StyleGrid(DataGridView grid)
     {
-        EnableDoubleBuffered(grid);
         grid.AutoGenerateColumns = false;
         grid.BorderStyle = BorderStyle.None;
         grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
@@ -207,16 +206,6 @@ public static class Theme
         foreach (var f in new[] { TitleFont, SubtitleFont, SectionFont, BodyFont,
                      BodyBoldFont, SmallFont, ButtonFont, GridFont })
             TextRenderer.MeasureText(sample, f);
-    }
-
-    // ── کمکی جدید: فعال‌سازی DoubleBuffered مخفی برای کنترل‌هایی مثل DataGridView ──
-    public static void EnableDoubleBuffered(Control control)
-    {
-        if (control is null) return;
-        typeof(Control)
-            .GetProperty("DoubleBuffered",
-                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?
-            .SetValue(control, true, null);
     }
 
     /// <summary>

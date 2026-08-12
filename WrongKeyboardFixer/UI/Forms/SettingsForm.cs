@@ -134,9 +134,12 @@ public partial class SettingsForm : Form, ICloseRequestHandler
         tglRunOnStartup = new ToggleSwitch
         {
             Text = Localization.Get("RunOnStartup"),
-            Height = 30
+            Height = 30,
+            AutoSize = false,
+            Width = 220,
         };
-        AddControlRow(tglRunOnStartup, fillWidth: true, topGap: RowGap);
+
+        AddControlRow(tglRunOnStartup, fillWidth: false, topGap: RowGap);
 
         AddDividerRow();
 

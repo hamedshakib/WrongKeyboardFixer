@@ -298,9 +298,8 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
 
     private DataGridView CreateMappingGrid(bool isPersianToEnglish)
     {
-        var grid = new DataGridView();
+        var grid = new ModernDataGridView();
         Theme.StyleGrid(grid);
-        Theme.EnableDoubleBuffered(grid);
 
         // حاشیه‌های پیش‌فرض بدنه حذف می‌شوند؛ خطوط را خودمان یکنواخت می‌کشیم
         grid.CellBorderStyle = DataGridViewCellBorderStyle.None;
@@ -509,16 +508,21 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
     // ── بارگذاری: با SuspendLayout و بدون انتخاب اضافی ──
     private void LoadMappings()
     {
-        _dataGridViewPersianToEnglish.ClearSelection();
-        _dataGridViewPersianToEnglish.CurrentCell = null;
-        _dataGridViewEnglishToPersian.ClearSelection();
-        _dataGridViewEnglishToPersian.CurrentCell = null;
+        if (_dataGridViewPersianToEnglish is { } p2eGrid)
+        {
+            p2eGrid.ClearSelection();
+            p2eGrid.CurrentCell = null;
+            FillGrid(p2eGrid, _p2e);
+            _lblCountPersianToEnglish!.Text = Localization.Format("MappingsCount", _p2e.Count);
+        }
 
-        FillGrid(_dataGridViewPersianToEnglish!, _p2e);
-        FillGrid(_dataGridViewEnglishToPersian!, _e2p);
-
-        _lblCountPersianToEnglish!.Text = Localization.Format("MappingsCount", _p2e.Count);
-        _lblCountEnglishToPersian!.Text = Localization.Format("MappingsCount", _e2p.Count);
+        if (_dataGridViewEnglishToPersian is { } e2pGrid)
+        {
+            e2pGrid.ClearSelection();
+            e2pGrid.CurrentCell = null;
+            FillGrid(e2pGrid, _e2p);
+            _lblCountEnglishToPersian!.Text = Localization.Format("MappingsCount", _e2p.Count);
+        }
     }
 
     private static void FillGrid(DataGridView grid, Dictionary<char, char> map)

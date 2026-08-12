@@ -21,7 +21,7 @@ public static class SettingsManager
         try
         {
             if (!File.Exists(SettingsPath))
-            return new WrongKeyboardFixer.Core.Model.AppSettings();
+                return new WrongKeyboardFixer.Core.Model.AppSettings();
 
             string json = File.ReadAllText(SettingsPath);
             var settings = JsonSerializer.Deserialize(json, AppSettingsJsonContext.Default.AppSettings);
