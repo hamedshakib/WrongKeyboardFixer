@@ -7,8 +7,9 @@ using System.Windows.Forms;
 namespace WrongKeyboardFixer.Core.UI;
 
 /// <summary>
-/// A custom title bar with a rounded top border, drag support and the
-/// standard minimize / close buttons.
+/// A custom title bar with drag support and the standard minimize / close buttons.
+/// The bar is flush with the top edge of the form (no gap, no floating rounded
+/// card), so the window buttons hang from the very top like a native title bar.
 /// </summary>
 public class ModernTitleBar : Control
 {
@@ -122,18 +123,11 @@ public class ModernTitleBar : Control
     protected override void OnPaint(PaintEventArgs e)
     {
         var g = e.Graphics;
-        g.SmoothingMode = SmoothingMode.AntiAlias;
-        g.Clear(Parent?.BackColor ?? Theme.Background);
 
-        var top = Scaled(8);
-        var r = new Rectangle(0, top, Width - 1, Height - top - 1);
-        using var path = Theme.RoundRect(r, Scaled(12));
-        using (var brush = new SolidBrush(Theme.Surface))
-            g.FillPath(brush, path);
-
-        // ── مهم: برش همهٔ رسم‌های بعدی (به‌ویژه hover قرمز دکمهٔ بستن)
-        //    به مسیر گردِ نوار تا گوشهٔ مربعی بیرون نزند ──
-        g.SetClip(path);
+        // ── نوار سفید، چسبیده به لبهٔ بالای فرم؛ بدون فاصلهٔ ۸پیکسلی و بدون
+        //    گوشه‌های گردِ کارت‌مانند → دیگر هیچ «کادر» اضافه‌ای دیده نمی‌شود ──
+        using (var bg = new SolidBrush(Theme.Surface))
+            g.FillRectangle(bg, 0, 0, Width, Height);
 
         int textStart = Scaled(34);
         int availW = Width - CtrlW - textStart;
@@ -143,7 +137,7 @@ public class ModernTitleBar : Control
         if (string.IsNullOrEmpty(Subtitle))
         {
             titleH = TextRenderer.MeasureText(Text, Font).Height;
-            startY = top + Math.Max(0, (Height - top - titleH) / 2);
+            startY = Math.Max(0, (Height - titleH) / 2);
             TextRenderer.DrawText(g, Text, Font,
                 new Rectangle(textStart, startY, availW, titleH), TitleColor, Flags(Text));
         }
@@ -152,8 +146,7 @@ public class ModernTitleBar : Control
             int tH = TextRenderer.MeasureText(Text, Font).Height;
             int sH = TextRenderer.MeasureText(Subtitle, Theme.SmallFont).Height;
             int gap = Scaled(3);
-            int blockH = tH + gap + sH;
-            startY = top + Math.Max(0, (Height - top - blockH) / 2);
+            startY = Math.Max(0, (Height - (tH + gap + sH)) / 2);
             titleH = tH;
 
             TextRenderer.DrawText(g, Text, Font,
@@ -164,38 +157,46 @@ public class ModernTitleBar : Control
 
         // ── نقطهٔ برند، هم‌تراز با خط عنوان ──
         int dotSize = Scaled(10);
+        g.SmoothingMode = SmoothingMode.AntiAlias;
         using (var dot = new SolidBrush(IconColor))
-            g.FillEllipse(dot, Scaled(16), startY + titleH / 2f - dotSize / 2f, dotSize, dotSize);
+            g.FillEllipse(dot, Scaled(16), startY + titleH / 2 - dotSize / 2, dotSize, dotSize);
 
-        // ── دکمه‌ها (حالا داخل clip امن‌اند) ──
-        DrawWindowButton(g, Width - (BtnW * 2), top, _hoveredMin, _pressedMin, isClose: false);
-        DrawWindowButton(g, Width - BtnW, top, _hoveredClose, _pressedClose, isClose: true);
-
-        g.ResetClip();
+        // ── دکمه‌ها از y=0 شروع می‌شوند و تا انتهای نوار ادامه دارند؛
+        //    hover قرمز دقیقاً گوشهٔ بالای پنجره را پر می‌کند (بدون منحنی جدا) ──
+        DrawWindowButton(g, Width - (BtnW * 2), _hoveredMin, _pressedMin, isClose: false);
+        DrawWindowButton(g, Width - BtnW, _hoveredClose, _pressedClose, isClose: true);
     }
 
-    private void DrawWindowButton(Graphics g, int x, int top, bool hover, bool pressed, bool isClose)
+    private void DrawWindowButton(Graphics g, int x, bool hover, bool pressed, bool isClose)
     {
-        var rect = new Rectangle(x, top, BtnW, Height - top);
-        Color bg = pressed ? Theme.SurfaceMuted : hover && !isClose ? Theme.SurfaceAlt : hover ? Theme.Danger : Theme.Surface;
-        using var brush = new SolidBrush(bg);
-        g.FillRectangle(brush, rect);
+        var rect = new Rectangle(x, 0, BtnW, Height);
 
+        // پس‌زمینه فقط در hover/press رنگ می‌گیرد
+        if (hover || pressed)
+        {
+            Color bg = pressed ? Theme.SurfaceMuted
+                : isClose ? Theme.Danger
+                : Theme.SurfaceAlt;
+            using var brush = new SolidBrush(bg);
+            g.FillRectangle(brush, rect);
+        }
+
+        // ── آیکون‌ها همیشه رسم می‌شوند (نه فقط در hover) ──
         int cx = rect.X + rect.Width / 2;
         int cy = rect.Y + rect.Height / 2;
 
         if (isClose)
         {
-            using var pen = new Pen(hover ? Theme.TextOnAccent : Theme.TextSecondary, 1.4f);
+            using var pen = new Pen(hover || pressed ? Theme.TextOnAccent : Theme.TextSecondary, 1.4f);
             int s = Scaled(8);
             g.DrawLine(pen, cx - s, cy - s, cx + s, cy + s);
             g.DrawLine(pen, cx + s, cy - s, cx - s, cy + s);
         }
         else
         {
+            // خط تیرهٔ استانداردِ کوچک‌نمایی (مثل ویندوز)
             using var pen = new Pen(Theme.TextSecondary, 1.4f);
-            g.DrawLine(pen, cx - Scaled(8), cy + Scaled(5), cx + Scaled(8), cy + Scaled(5));
-            g.DrawLine(pen, cx - Scaled(5), cy, cx + Scaled(5), cy);
+            g.DrawLine(pen, cx - Scaled(8), cy, cx + Scaled(8), cy);
         }
     }
 

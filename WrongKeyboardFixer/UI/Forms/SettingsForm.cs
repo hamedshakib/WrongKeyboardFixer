@@ -78,10 +78,11 @@ public partial class SettingsForm : Form, ICloseRequestHandler
     private const int RowGap = 14;
     private const int SectionGap = 22;
     private TableLayoutPanel _layout = null!;
+    private RoundedPanel _panel = null!;
 
     private void InitializeControls()
     {
-        var panel = new RoundedPanel
+        _panel = new RoundedPanel
         {
             CornerRadius = 14,
             BackColor = Theme.Surface,
@@ -90,9 +91,9 @@ public partial class SettingsForm : Form, ICloseRequestHandler
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
             AutoScroll = true
         };
-        panel.Size = new Size(this.ClientSize.Width - 28,
+        _panel.Size = new Size(this.ClientSize.Width - 28,
             this.ClientSize.Height - ModernTitleBar.TitleBarHeight - 24);
-        this.Controls.Add(panel);
+        this.Controls.Add(_panel);
 
         // Single vertical TableLayoutPanel that owns the whole layout.
         // No absolute coordinates anywhere below: rows auto-size, spacing is
@@ -109,7 +110,7 @@ public partial class SettingsForm : Form, ICloseRequestHandler
             BackColor = Theme.Surface
         };
         _layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-        panel.Controls.Add(_layout);
+        _panel.Controls.Add(_layout);
 
         // ── Language section ──────────────────────────────
         AddHeaderRow(Localization.Get("Language"), topGap: 0);
@@ -223,11 +224,28 @@ public partial class SettingsForm : Form, ICloseRequestHandler
         AddFooterRow();
 
         // Size the form to the actual content height (structural, no hardcoded Y).
-        var prefSize = _layout.GetPreferredSize(new Size(panel.ClientSize.Width, 0));
-        int panelHeight = panel.Padding.Top + prefSize.Height + panel.Padding.Bottom;
-        panel.Height = panelHeight;
-        this.ClientSize = new Size(this.ClientSize.Width, panel.Location.Y + panelHeight + 14);
+        var prefSize = _layout.GetPreferredSize(new Size(_panel.ClientSize.Width, 0));
+        int panelHeight = _panel.Padding.Top + prefSize.Height + _panel.Padding.Bottom;
+        _panel.Height = panelHeight;
+        this.ClientSize = new Size(this.ClientSize.Width, _panel.Location.Y + panelHeight + 14);
         this.MinimumSize = this.ClientSize;
+    }
+
+    private void FitFormToContent()
+    {
+        _layout.PerformLayout();
+        int contentH = _layout.Height;                      // ارتفاع واقعی پس از چیدمان نهایی
+        int panelHeight = _panel.Padding.Vertical + contentH;
+        _panel.Height = panelHeight;
+        this.ClientSize = new Size(this.ClientSize.Width,
+            _panel.Location.Y + panelHeight + 14);
+        this.MinimumSize = this.ClientSize;
+    }
+
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+        FitFormToContent();   // تصحیح نهایی پس از layout واقعی → حذف کادر خالی پایین
     }
 
     private void AddRow(Control control)
@@ -304,7 +322,7 @@ public partial class SettingsForm : Form, ICloseRequestHandler
             Height = StdHeight + 2,
             ColumnCount = 3,
             RowCount = 1,
-            Margin = new Padding(0, SectionGap, 0, 0),
+            Margin = new Padding(0, 12, 0, 0),   // قبلاً SectionGap(22) → فاصلهٔ مضاعف و حس «کادر خالی»
             Padding = Padding.Empty,
             BackColor = Theme.Surface
         };
@@ -575,9 +593,41 @@ public partial class SettingsForm : Form, ICloseRequestHandler
     private async Task BtnCheckUpdate_Click()
     {
         btnCheckUpdate.Enabled = false;
-        var progressForm = new Form { /* ... همان تنظیمات قبلی ... */ };
-        var lblMessage = new Label { /* ... */ };
-        var progressBar = new ProgressBar { /* ... */ };
+
+        // ایجاد فرم Progress با تنظیمات کامل (مشابه MainForm)
+        var progressForm = new Form
+        {
+            Text = Localization.Get("CheckingUpdate"),
+            Size = new Size(400, 120),
+            FormBorderStyle = FormBorderStyle.FixedDialog,
+            StartPosition = FormStartPosition.CenterScreen,
+            MaximizeBox = false,
+            MinimizeBox = false,
+            RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No,
+            RightToLeftLayout = true,
+            ControlBox = false,
+            AutoScaleDimensions = new SizeF(96F, 96F),
+            AutoScaleMode = AutoScaleMode.Dpi
+        };
+
+        var lblMessage = new Label
+        {
+            Text = Localization.Get("CheckingProgress"),
+            Dock = DockStyle.Top,
+            Height = 30,
+            TextAlign = ContentAlignment.MiddleCenter,
+            Font = new Font("Tahoma", 9)
+        };
+
+        var progressBar = new ProgressBar
+        {
+            Dock = DockStyle.Bottom,
+            Height = 25,
+            Minimum = 0,
+            Maximum = 100,
+            Value = 0
+        };
+
         progressForm.Controls.Add(lblMessage);
         progressForm.Controls.Add(progressBar);
         progressForm.Show(this);
@@ -587,6 +637,7 @@ public partial class SettingsForm : Form, ICloseRequestHandler
             progressBar.Value = Math.Min(update.percent, 100);
             lblMessage.Text = update.message;
         });
+
         try
         {
             var status = await AutoUpdater.CheckForUpdatesAsync(progress, silent: true);
