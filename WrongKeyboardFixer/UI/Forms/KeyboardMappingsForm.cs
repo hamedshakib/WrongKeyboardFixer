@@ -42,13 +42,22 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
 
         Localization.SetLanguage(_settings.Language);
 
-        this.DoubleBuffered = true;          // ضدفلیکر برای فرم
-
         this.SuspendLayout();
         InitializeControls();
         this.ResumeLayout(false);
 
         LoadMappings();
+    }
+
+    protected override CreateParams CreateParams
+    {
+        get
+        {
+            var cp = base.CreateParams;
+            cp.Style |= 0x02000000;   // WS_CLIPCHILDREN  → پس‌زمینهٔ فرم زیر بچه‌ها repaint نمی‌شود
+            cp.Style |= 0x04000000;   // WS_CLIPSIBLINGS → کنترل‌ها روی هم overwrite نمی‌کنند
+            return cp;
+        }
     }
 
     private void InitializeControls()
@@ -129,7 +138,7 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
             Text = Localization.Get("ResetAll"),               // گلیف ↻ حذف شد
             ButtonVariant = ModernButton.Variant.Ghost,
             Location = new Point(14 + 160 + 10, 46),
-            Size = new Size(140, 38)
+            Size = new Size(170, 38)
         };
         resetP2E.Click += BtnResetAllPersianToEnglish_Click;
         card1.Controls.Add(resetP2E);
@@ -177,7 +186,7 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
             Text = Localization.Get("ResetAll"),
             ButtonVariant = ModernButton.Variant.Ghost,
             Location = new Point(14 + 160 + 10, 46),
-            Size = new Size(140, 38)
+            Size = new Size(170, 38)
         };
         resetE2P.Click += BtnResetAllEnglishToPersian_Click;
         card2.Controls.Add(resetE2P);

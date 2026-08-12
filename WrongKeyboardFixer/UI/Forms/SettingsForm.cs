@@ -41,7 +41,6 @@ public partial class SettingsForm : Form, ICloseRequestHandler
         _hotkeyManager = hotkeyManager;
         Localization.SetLanguage(_settings.Language);
         this.RightToLeftLayout = true;
-        this.DoubleBuffered = true;          // ← جدید
 
         this.SuspendLayout();                // ← جدید
         InitializeForm();
@@ -49,6 +48,17 @@ public partial class SettingsForm : Form, ICloseRequestHandler
         this.ResumeLayout(false);            // ← جدید
 
         LoadSettings();
+    }
+
+    protected override CreateParams CreateParams
+    {
+        get
+        {
+            var cp = base.CreateParams;
+            cp.Style |= 0x02000000;   // WS_CLIPCHILDREN  → پس‌زمینهٔ فرم زیر بچه‌ها repaint نمی‌شود
+            cp.Style |= 0x04000000;   // WS_CLIPSIBLINGS → کنترل‌ها روی هم overwrite نمی‌کنند
+            return cp;
+        }
     }
 
     private void InitializeForm()
