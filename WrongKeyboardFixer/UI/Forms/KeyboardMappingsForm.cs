@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -20,19 +20,19 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     private Dictionary<char, char> _persianToEnglish;
     private Dictionary<char, char> _englishToPersian;
 
-    private DataGridView? _dataGridViewPersianToEnglish;
-    private DataGridView? _dataGridViewEnglishToPersian;
-    private ModernButton? _btnSave;
-    private ModernButton? _btnCancel;
-    private Label? _lblCountPersianToEnglish;
-    private Label? _lblCountEnglishToPersian;
+    private DataGridView? _persianToEnglishGrid;
+    private DataGridView? _englishToPersianGrid;
+    private ModernButton? _saveButton;
+    private ModernButton? _cancelButton;
+    private Label? _persianToEnglishCountLabel;
+    private Label? _englishToPersianCountLabel;
 
     private const int FormWidth = 920;
     private const int FormHeight = 600;
 
     // براش‌های ایستا: به‌جای ساخت Brush برای هر سلول در هر Paint
-    private static readonly SolidBrush DeleteBgBrush = new(Theme.DangerSoft);
-    private static readonly SolidBrush ResetBgBrush = new(Theme.WarningSoft);
+    private static readonly SolidBrush DeleteButtonBrush = new(Theme.DangerSoft);
+    private static readonly SolidBrush ResetButtonBrush = new(Theme.WarningSoft);
 
     public KeyboardMappingsForm(AppSettings settings)
     {
@@ -84,31 +84,31 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         const int gridHeight = 306;
 
         // ── کارت فارسی → انگلیسی ──────────────────────────
-        _lblCountPersianToEnglish = Theme.BodyLabel("", Theme.TextSecondary, Theme.SmallFont);
-        _dataGridViewPersianToEnglish = CreateMappingGrid(true);
+        _persianToEnglishCountLabel = Theme.BodyLabel("", Theme.TextSecondary, Theme.SmallFont);
+        _persianToEnglishGrid = CreateMappingGrid(true);
         panel.Controls.Add(BuildMappingCard(
             left, cardWidth, cardY, gridHeight,
             "PersianToEnglish",
-            _lblCountPersianToEnglish,
-            _dataGridViewPersianToEnglish,
-            BtnAddPersianToEnglish_Click,
-            BtnResetAllPersianToEnglish_Click));
+            _persianToEnglishCountLabel,
+            _persianToEnglishGrid,
+            AddPersianToEnglishButton_Click,
+            ResetAllPersianToEnglishButton_Click));
 
         // ── کارت انگلیسی → فارسی ──────────────────────────
-        _lblCountEnglishToPersian = Theme.BodyLabel("", Theme.TextSecondary, Theme.SmallFont);
-        _dataGridViewEnglishToPersian = CreateMappingGrid(false);
+        _englishToPersianCountLabel = Theme.BodyLabel("", Theme.TextSecondary, Theme.SmallFont);
+        _englishToPersianGrid = CreateMappingGrid(false);
         panel.Controls.Add(BuildMappingCard(
             left + cardWidth + cardGap, cardWidth, cardY, gridHeight,
             "EnglishToPersian",
-            _lblCountEnglishToPersian,
-            _dataGridViewEnglishToPersian,
-            BtnAddEnglishToPersian_Click,
-            BtnResetAllEnglishToPersian_Click));
+            _englishToPersianCountLabel,
+            _englishToPersianGrid,
+            AddEnglishToPersianButton_Click,
+            ResetAllEnglishToPersianButton_Click));
 
         // ── فوتر ──────────────────────────────────────────
         int footerY = panel.Height - panel.Padding.Bottom - 42;
 
-        _btnCancel = new ModernButton
+        _cancelButton = new ModernButton
         {
             Text = Localization.Get("Cancel"),
             ButtonVariant = ModernButton.Variant.Secondary,
@@ -116,10 +116,10 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             Size = new Size(112, 38),
             Anchor = AnchorStyles.Right | AnchorStyles.Bottom
         };
-        _btnCancel.Click += BtnCancel_Click;
-        panel.Controls.Add(_btnCancel);
+        _cancelButton.Click += CancelButton_Click;
+        panel.Controls.Add(_cancelButton);
 
-        _btnSave = new ModernButton
+        _saveButton = new ModernButton
         {
             Text = Localization.Get("Save"),
             ButtonVariant = ModernButton.Variant.Primary,
@@ -127,8 +127,8 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             Size = new Size(112, 38),
             Anchor = AnchorStyles.Right | AnchorStyles.Bottom
         };
-        _btnSave.Click += BtnSave_Click;
-        panel.Controls.Add(_btnSave);
+        _saveButton.Click += SaveButton_Click;
+        panel.Controls.Add(_saveButton);
 
         var footerDivider = new RoundedPanel
         {
@@ -341,15 +341,15 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 
         if (isPersianToEnglish)
         {
-            grid.CellContentClick += DataGridViewPersianToEnglish_CellContentClick;
-            grid.CellValidating += DataGridViewPersianToEnglish_CellValidating;
-            grid.CellValueChanged += DataGridViewPersianToEnglish_CellValueChanged;
+            grid.CellContentClick += PersianToEnglishGrid_CellContentClick;
+            grid.CellValidating += PersianToEnglishGrid_CellValidating;
+            grid.CellValueChanged += PersianToEnglishGrid_CellValueChanged;
         }
         else
         {
-            grid.CellContentClick += DataGridViewEnglishToPersian_CellContentClick;
-            grid.CellValidating += DataGridViewEnglishToPersian_CellValidating;
-            grid.CellValueChanged += DataGridViewEnglishToPersian_CellValueChanged;
+            grid.CellContentClick += EnglishToPersianGrid_CellContentClick;
+            grid.CellValidating += EnglishToPersianGrid_CellValidating;
+            grid.CellValueChanged += EnglishToPersianGrid_CellValueChanged;
         }
 
         grid.Tag = new HoverState();
@@ -476,20 +476,20 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     // ── بارگذاری: با SuspendLayout و بدون انتخاب اضافی ──
     private void LoadMappings()
     {
-        if (_dataGridViewPersianToEnglish is { } p2eGrid)
+        if (_persianToEnglishGrid is { } p2eGrid)
         {
             p2eGrid.ClearSelection();
             p2eGrid.CurrentCell = null;
             FillGrid(p2eGrid, _persianToEnglish);
-            _lblCountPersianToEnglish!.Text = Localization.Format("MappingsCount", _persianToEnglish.Count);
+            _persianToEnglishCountLabel!.Text = Localization.Format("MappingsCount", _persianToEnglish.Count);
         }
 
-        if (_dataGridViewEnglishToPersian is { } e2pGrid)
+        if (_englishToPersianGrid is { } e2pGrid)
         {
             e2pGrid.ClearSelection();
             e2pGrid.CurrentCell = null;
             FillGrid(e2pGrid, _englishToPersian);
-            _lblCountEnglishToPersian!.Text = Localization.Format("MappingsCount", _englishToPersian.Count);
+            _englishToPersianCountLabel!.Text = Localization.Format("MappingsCount", _englishToPersian.Count);
         }
     }
 
@@ -506,10 +506,10 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     }
 
     // ── ویرایش سلول → فقط کپی محلی ──
-    private void DataGridViewPersianToEnglish_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
+    private void PersianToEnglishGrid_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0 || e.ColumnIndex != 1) return;
-        var row = _dataGridViewPersianToEnglish!.Rows[e.RowIndex];
+        var row = _persianToEnglishGrid!.Rows[e.RowIndex];
         row.ErrorText = string.Empty;
         if (row.Cells[0].Value is string pStr && pStr.Length == 1 &&
             row.Cells[1].Value is string eStr && eStr.Length == 1)
@@ -518,10 +518,10 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         }
     }
 
-    private void DataGridViewEnglishToPersian_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
+    private void EnglishToPersianGrid_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0 || e.ColumnIndex != 1) return;
-        var row = _dataGridViewEnglishToPersian!.Rows[e.RowIndex];
+        var row = _englishToPersianGrid!.Rows[e.RowIndex];
         row.ErrorText = string.Empty;
         if (row.Cells[0].Value is string eStr && eStr.Length == 1 &&
             row.Cells[1].Value is string pStr && pStr.Length == 1)
@@ -530,7 +530,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         }
     }
 
-    private void DataGridViewPersianToEnglish_CellContentClick(object? sender, DataGridViewCellEventArgs e)
+    private void PersianToEnglishGrid_CellContentClick(object? sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
         var dataGridView = (DataGridView)sender!;
@@ -543,7 +543,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             ResetPersianCharMapping(charStr[0]);
     }
 
-    private void DataGridViewEnglishToPersian_CellContentClick(object? sender, DataGridViewCellEventArgs e)
+    private void EnglishToPersianGrid_CellContentClick(object? sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
         var dataGridView = (DataGridView)sender!;
@@ -556,24 +556,24 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             ResetEnglishCharMapping(charStr[0]);
     }
 
-    private void BtnAddPersianToEnglish_Click(object? sender, EventArgs e) => AddPersianToEnglishMapping();
-    private void BtnAddEnglishToPersian_Click(object? sender, EventArgs e) => AddEnglishToPersianMapping();
+    private void AddPersianToEnglishButton_Click(object? sender, EventArgs e) => AddPersianToEnglishMapping();
+    private void AddEnglishToPersianButton_Click(object? sender, EventArgs e) => AddEnglishToPersianMapping();
 
-    private void BtnResetAllPersianToEnglish_Click(object? sender, EventArgs e)
+    private void ResetAllPersianToEnglishButton_Click(object? sender, EventArgs e)
     {
         if (ConfirmReset() != DialogResult.Yes) return;
         _persianToEnglish = MappingDefaults.GetDefaultPersianToEnglishMap();
         LoadMappings();
     }
 
-    private void BtnResetAllEnglishToPersian_Click(object? sender, EventArgs e)
+    private void ResetAllEnglishToPersianButton_Click(object? sender, EventArgs e)
     {
         if (ConfirmReset() != DialogResult.Yes) return;
         _englishToPersian = MappingDefaults.GetDefaultEnglishToPersianMap();
         LoadMappings();
     }
 
-    private void BtnSave_Click(object? sender, EventArgs e)
+    private void SaveButton_Click(object? sender, EventArgs e)
     {
         // فقط حالا تغییرات روی تنظیمات اصلی اعمال می‌شود
         _settings.PersianToEnglishMap = new Dictionary<char, char>(_persianToEnglish);
@@ -583,13 +583,13 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         Close();
     }
 
-    private void BtnCancel_Click(object? sender, EventArgs e)
+    private void CancelButton_Click(object? sender, EventArgs e)
     {
         DialogResult = DialogResult.Cancel;
         Close();
     }
 
-    public void RequestClose() => BtnCancel_Click(this, EventArgs.Empty);
+    public void RequestClose() => CancelButton_Click(this, EventArgs.Empty);
 
     // ── افزودن نگاشت: فقط یک دیالوگ (به‌جای دو InputBox پشت‌سرهم) ──
     private void AddPersianToEnglishMapping()
@@ -644,19 +644,19 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 
     private void ResetPersianCharMapping(char persianChar)
     {
-        if (_persianToEnglish.ContainsKey(persianChar)) { _persianToEnglish[persianChar] = persianChar; LoadMappings(); }
+        if (_persianToEnglish.Remove(persianChar)) LoadMappings();
     }
 
     private void ResetEnglishCharMapping(char englishChar)
     {
-        if (_englishToPersian.ContainsKey(englishChar)) { _englishToPersian[englishChar] = englishChar; LoadMappings(); }
+        if (_englishToPersian.Remove(englishChar)) LoadMappings();
     }
 
     // ── اعتبارسنجی: بدون MessageBox؛ خطا روی خود ردیف نمایش داده می‌شود ──
-    private void DataGridViewPersianToEnglish_CellValidating(object? sender, DataGridViewCellValidatingEventArgs e)
+    private void PersianToEnglishGrid_CellValidating(object? sender, DataGridViewCellValidatingEventArgs e)
     {
         if (e.RowIndex < 0 || e.ColumnIndex != 1) return;   // ستون صفر فقط‌خواندنی است
-        var row = _dataGridViewPersianToEnglish!.Rows[e.RowIndex];
+        var row = _persianToEnglishGrid!.Rows[e.RowIndex];
 
         string? value = e.FormattedValue?.ToString();
         if (string.IsNullOrEmpty(value) || value.Length != 1 || value[0] < 32 || value[0] > 126)
@@ -666,10 +666,10 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         }
     }
 
-    private void DataGridViewEnglishToPersian_CellValidating(object? sender, DataGridViewCellValidatingEventArgs e)
+    private void EnglishToPersianGrid_CellValidating(object? sender, DataGridViewCellValidatingEventArgs e)
     {
         if (e.RowIndex < 0 || e.ColumnIndex != 1) return;
-        var row = _dataGridViewEnglishToPersian!.Rows[e.RowIndex];
+        var row = _englishToPersianGrid!.Rows[e.RowIndex];
 
         string? value = e.FormattedValue?.ToString();
         if (string.IsNullOrEmpty(value) || value.Length != 1)
@@ -690,102 +690,4 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         Localization.Get("Error"),
         MessageBoxButtons.OK,
         MessageBoxIcon.Error);
-}
-
-/// <summary>
-/// دیالوگ واحد برای گرفتن دو کاراکتر (جایگزین دو InputBox متوالی).
-/// </summary>
-public static class MappingInputBox
-{
-    public static (string first, string second)? Show(string title, string prompt1, string prompt2)
-    {
-        using var form = new Form
-        {
-            Text = title,
-            FormBorderStyle = FormBorderStyle.FixedDialog,
-            MaximizeBox = false,
-            MinimizeBox = false,
-            StartPosition = FormStartPosition.CenterParent,
-            Size = new Size(380, 250),
-            BackColor = Theme.Surface,
-            Font = Theme.BodyFont,
-            RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No,
-            RightToLeftLayout = true,
-            AutoScaleDimensions = new SizeF(96F, 96F),
-            AutoScaleMode = AutoScaleMode.Dpi
-        };
-
-        var lbl1 = new Label
-        {
-            Text = prompt1,
-            AutoSize = true,
-            Location = new Point(24, 18),
-            ForeColor = Theme.TextPrimary
-        };
-        form.Controls.Add(lbl1);
-
-        var txt1 = new TextBox
-        {
-            Location = new Point(24, 44),
-            Size = new Size(316, 30),
-            MaxLength = 1,
-            TextAlign = HorizontalAlignment.Center,
-            Font = Theme.TitleFont,
-            BorderStyle = BorderStyle.FixedSingle,
-            ForeColor = Theme.TextPrimary,
-            BackColor = Theme.SurfaceAlt
-        };
-        form.Controls.Add(txt1);
-
-        var lbl2 = new Label
-        {
-            Text = prompt2,
-            AutoSize = true,
-            Location = new Point(24, 92),
-            ForeColor = Theme.TextPrimary
-        };
-        form.Controls.Add(lbl2);
-
-        var txt2 = new TextBox
-        {
-            Location = new Point(24, 118),
-            Size = new Size(316, 30),
-            MaxLength = 1,
-            TextAlign = HorizontalAlignment.Center,
-            Font = Theme.TitleFont,
-            BorderStyle = BorderStyle.FixedSingle,
-            ForeColor = Theme.TextPrimary,
-            BackColor = Theme.SurfaceAlt
-        };
-        form.Controls.Add(txt2);
-
-        var okButton = new ModernButton
-        {
-            Text = Localization.Get("OK"),
-            ButtonVariant = ModernButton.Variant.Primary,
-            DialogResult = DialogResult.OK,
-            Location = new Point(124, 166),
-            Size = new Size(100, 38)
-        };
-        form.Controls.Add(okButton);
-
-        var cancelButton = new ModernButton
-        {
-            Text = Localization.Get("Cancel"),
-            ButtonVariant = ModernButton.Variant.Secondary,
-            DialogResult = DialogResult.Cancel,
-            Location = new Point(240, 166),
-            Size = new Size(100, 38)
-        };
-        form.Controls.Add(cancelButton);
-
-        form.Icon = IconLoader.GetIcon();                     // آیکون برنامه برای دیالوگ
-        form.Shown += (_, _) => { txt1.Focus(); txt1.SelectAll(); };   // به‌جای فقط Focus
-
-        form.AcceptButton = okButton;
-        form.CancelButton = cancelButton;
-        form.Shown += (_, _) => txt1.Focus();
-
-        return form.ShowDialog() == DialogResult.OK ? (txt1.Text, txt2.Text) : null;
-    }
 }

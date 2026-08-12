@@ -14,6 +14,10 @@ public sealed class TextConversionService
     private readonly ClipboardManager _clipboard;
     private readonly AppSettings _settings;
 
+    // Timing constants (milliseconds)
+    private const int ClipboardReadDelayMs = 300;
+    private const int ClipboardWriteDelayMs = 200;
+
     public TextConversionService(ClipboardManager clipboard, AppSettings settings)
     {
         _clipboard = clipboard;

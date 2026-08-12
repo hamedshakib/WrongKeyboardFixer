@@ -57,7 +57,7 @@ public class MainForm : Form
         // ثبت کلید ترکیبی از تنظیمات
         RegisterHotkeyFromSettings();
 
-        CheckForUpdatesAsync();
+        _ = CheckForUpdatesAsync();
         Task.Run(Theme.WarmUpFonts);
     }
 
@@ -227,7 +227,7 @@ public class MainForm : Form
     /// <summary>
     /// بررسی خودکار بروزرسانی در استارتاپ (silent - بدون نمایش پیام "بروزرسانی موجود نیست")
     /// </summary>
-    private async void CheckForUpdatesAsync()
+    private async Task CheckForUpdatesAsync()
     {
         try
         {

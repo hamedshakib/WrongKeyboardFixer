@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Helpers;
+using WrongKeyboardFixer.Core.Services;
 
 namespace WrongKeyboardFixer;
 
@@ -20,12 +22,12 @@ internal static class Program
 
         if (!createdNew)
         {
-            // زبان ذخیره‌شده را بارگذاری کن تا پیام به زبان درست نمایش داده شود
-            Core.Helpers.Localization.SetLanguage(Core.Services.SettingsManager.Load().Language);
+            // Load the saved language so the message displays in the correct locale
+            Localization.SetLanguage(SettingsManager.Load().Language);
 
             MessageBox.Show(
-                Core.Helpers.Localization.Get("AlreadyRunning"),
-                Core.Helpers.Localization.Get("Attention"),
+                Localization.Get("AlreadyRunning"),
+                Localization.Get("Attention"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning
             );

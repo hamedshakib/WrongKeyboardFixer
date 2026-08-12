@@ -9,27 +9,27 @@ using WrongKeyboardFixer.Core.UI;
 
 namespace WrongKeyboardFixer.UI.Forms;
 
-public partial class SettingsForm : ModernForm, ICloseRequestHandler
+public class SettingsForm : ModernForm, ICloseRequestHandler
 {
-    private uint lastHotkeyModifier;
-    private Keys lastHotkeyKey;
+    private uint _lastHotkeyModifier;
+    private Keys _lastHotkeyKey;
 
     private readonly AppSettings _settings;
     private readonly HotkeyManager _hotkeyManager;
     private bool _isHotkeyRegistered;
 
     // Controls
-    private ToggleSwitch tglRunOnStartup = null!;
-    private ComboBox cmbLanguage = null!;
-    private ComboBox cmbHotkeyModifier = null!;
-    private ComboBox cmbHotkeyKey = null!;
-    private ModernButton btnRegisterHotkey = null!;
-    private StatusChip lblStatus = null!;
-    private Label lblVersionValue = null!;
-    private ModernButton btnCheckUpdate = null!;
-    private ModernButton btnSave = null!;
-    private ModernButton btnCancel = null!;
-    private ModernButton btnKeyboardMappings = null!;
+    private ToggleSwitch _runOnStartupToggle = null!;
+    private ComboBox _languageComboBox = null!;
+    private ComboBox _hotkeyModifierComboBox = null!;
+    private ComboBox _hotkeyKeyComboBox = null!;
+    private ModernButton _registerHotkeyButton = null!;
+    private StatusChip _statusChip = null!;
+    private Label _versionLabel = null!;
+    private ModernButton _checkUpdateButton = null!;
+    private ModernButton _saveButton = null!;
+    private ModernButton _cancelButton = null!;
+    private ModernButton _keyboardMappingsButton = null!;
 
     private enum StatusState { Checking, Registered, NotRegistered, RegisterSuccess, RegisterFailed }
     private StatusState _statusState = StatusState.Checking;
@@ -41,10 +41,10 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
         Localization.SetLanguage(_settings.Language);
         this.RightToLeftLayout = true;
 
-        this.SuspendLayout();                // ← جدید
+        this.SuspendLayout();
         InitializeForm();
         InitializeControls();
-        this.ResumeLayout(false);            // ← جدید
+        this.ResumeLayout(false);
 
         LoadSettings();
     }
@@ -107,13 +107,13 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
         // ── Language section ──────────────────────────────
         AddHeaderRow(Localization.Get("Language"), topGap: 0);
 
-        cmbLanguage = Theme.CreateCombo(
+        _languageComboBox = Theme.CreateCombo(
             Localization.Get("LanguageEnglish"),
             Localization.Get("LanguagePersian"));
-        cmbLanguage.SelectedIndexChanged += CmbLanguage_SelectedIndexChanged;
-        AddControlRow(cmbLanguage, width: 170, topGap: 10);
+        _languageComboBox.SelectedIndexChanged += LanguageComboBox_SelectedIndexChanged;
+        AddControlRow(_languageComboBox, width: 170, topGap: 10);
 
-        tglRunOnStartup = new ToggleSwitch
+        _runOnStartupToggle = new ToggleSwitch
         {
             Text = Localization.Get("RunOnStartup"),
             Height = 30,
@@ -121,7 +121,7 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
             Width = 220,
         };
 
-        AddControlRow(tglRunOnStartup, fillWidth: false, topGap: RowGap);
+        AddControlRow(_runOnStartupToggle, fillWidth: false, topGap: RowGap);
 
         AddDividerRow();
 
@@ -131,10 +131,10 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
         var modifierItems = new string[HotkeyOptions.ModifierCount];
         for (int i = 0; i < HotkeyOptions.ModifierCount; i++)
             modifierItems[i] = HotkeyOptions.ModifierText(i);
-        cmbHotkeyModifier = Theme.CreateCombo(modifierItems);
-        cmbHotkeyModifier.Width = 160;
-        cmbHotkeyModifier.SelectedIndex = 0;
-        cmbHotkeyModifier.SelectedIndexChanged += CmbHotkeyModifier_SelectedIndexChanged;
+        _hotkeyModifierComboBox = Theme.CreateCombo(modifierItems);
+        _hotkeyModifierComboBox.Width = 160;
+        _hotkeyModifierComboBox.SelectedIndex = 0;
+        _hotkeyModifierComboBox.SelectedIndexChanged += HotkeyModifierComboBox_SelectedIndexChanged;
 
         var lblPlus = Theme.BodyLabel("+", Theme.TextSecondary, Theme.BodyBoldFont);
         lblPlus.TextAlign = ContentAlignment.MiddleCenter;
@@ -143,53 +143,53 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
         var keyItems = new string[HotkeyOptions.KeyCount];
         for (int i = 0; i < HotkeyOptions.KeyCount; i++)
             keyItems[i] = HotkeyOptions.KeyText(i);
-        cmbHotkeyKey = Theme.CreateCombo(keyItems);
-        cmbHotkeyKey.Width = 130;
-        cmbHotkeyKey.SelectedIndex = 0;
-        cmbHotkeyKey.SelectedIndexChanged += CmbHotkeyKey_SelectedIndexChanged;
-        AddColumnsRow(topGap: 10, (cmbHotkeyModifier, 160), (lblPlus, 24), (cmbHotkeyKey, 130));
+        _hotkeyKeyComboBox = Theme.CreateCombo(keyItems);
+        _hotkeyKeyComboBox.Width = 130;
+        _hotkeyKeyComboBox.SelectedIndex = 0;
+        _hotkeyKeyComboBox.SelectedIndexChanged += HotkeyKeyComboBox_SelectedIndexChanged;
+        AddColumnsRow(topGap: 10, (_hotkeyModifierComboBox, 160), (lblPlus, 24), (_hotkeyKeyComboBox, 130));
 
-        btnRegisterHotkey = new ModernButton
+        _registerHotkeyButton = new ModernButton
         {
             Text = Localization.Get("ApplyHotkey"),
             ButtonVariant = ModernButton.Variant.Primary,
             Width = 150
         };
-        btnRegisterHotkey.Click += BtnRegisterHotkey_Click;
-        btnRegisterHotkey.Enabled = false;
+        _registerHotkeyButton.Click += RegisterHotkeyButton_Click;
+        _registerHotkeyButton.Enabled = false;
 
-        lblStatus = new StatusChip(Localization.Get("StatusChecking"), Theme.Info, Theme.InfoSoft);
-        AddColumnsRow(topGap: RowGap, (btnRegisterHotkey, 150), (lblStatus, null));
+        _statusChip = new StatusChip(Localization.Get("StatusChecking"), Theme.Info, Theme.InfoSoft);
+        AddColumnsRow(topGap: RowGap, (_registerHotkeyButton, 150), (_statusChip, null));
 
         AddDividerRow();
 
         // ── Keyboard section ──────────────────────────────
         AddHeaderRow(Localization.Get("KeyboardMappings"));
 
-        btnKeyboardMappings = new ModernButton
+        _keyboardMappingsButton = new ModernButton
         {
             Text = Localization.Get("KeyboardMappings"),
             ButtonVariant = ModernButton.Variant.Secondary,
             Width = 240
         };
-        btnKeyboardMappings.Click += BtnKeyboardMappings_Click;
-        AddControlRow(btnKeyboardMappings, width: 240, topGap: 10);
+        _keyboardMappingsButton.Click += KeyboardMappingsButton_Click;
+        AddControlRow(_keyboardMappingsButton, width: 240, topGap: 10);
 
         AddDividerRow();
 
         // ── Current version section ───────────────────────
         AddHeaderRow(Localization.Get("CurrentVersion"));
 
-        lblVersionValue = Theme.BodyLabel(AutoUpdater.GetCurrentVersionString(), Theme.Accent, Theme.BodyBoldFont);
-        lblVersionValue.Width = 140;
-        btnCheckUpdate = new ModernButton
+        _versionLabel = Theme.BodyLabel(AutoUpdater.GetCurrentVersionString(), Theme.Accent, Theme.BodyBoldFont);
+        _versionLabel.Width = 140;
+        _checkUpdateButton = new ModernButton
         {
             Text = Localization.Get("CheckUpdate"),
             ButtonVariant = ModernButton.Variant.Secondary,
             Width = 170
         };
-        btnCheckUpdate.Click += async (_, _) => await BtnCheckUpdate_Click();
-        AddColumnsRow(topGap: 10, (lblVersionValue, 140), (btnCheckUpdate, 170));
+        _checkUpdateButton.Click += async (_, _) => await CheckUpdateButton_Click();
+        AddColumnsRow(topGap: 10, (_versionLabel, 140), (_checkUpdateButton, 170));
 
         AddDividerRow();
 
@@ -296,7 +296,7 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
             Height = StdHeight + 2,
             ColumnCount = 3,
             RowCount = 1,
-            Margin = new Padding(0, 12, 0, 0),   // قبلاً SectionGap(22) → فاصلهٔ مضاعف و حس «کادر خالی»
+            Margin = new Padding(0, 12, 0, 0),
             Padding = Padding.Empty,
             BackColor = Theme.Surface
         };
@@ -305,23 +305,23 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
         footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 112));
         footer.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-        btnCancel = new ModernButton
+        _cancelButton = new ModernButton
         {
             Text = Localization.Get("Cancel"),
             ButtonVariant = ModernButton.Variant.Secondary,
             Dock = DockStyle.Fill
         };
-        btnCancel.Click += BtnCancel_Click;
-        footer.Controls.Add(btnCancel, 2, 0);
+        _cancelButton.Click += CancelButton_Click;
+        footer.Controls.Add(_cancelButton, 2, 0);
 
-        btnSave = new ModernButton
+        _saveButton = new ModernButton
         {
             Text = Localization.Get("Save"),
             ButtonVariant = ModernButton.Variant.Primary,
             Dock = DockStyle.Fill
         };
-        btnSave.Click += BtnSave_Click;
-        footer.Controls.Add(btnSave, 1, 0);
+        _saveButton.Click += SaveButton_Click;
+        footer.Controls.Add(_saveButton, 1, 0);
 
         AddRow(footer);
     }
@@ -330,16 +330,16 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
     {
         RedrawLock.Suspend(this);
         base.OnHandleCreated(e);
-        lblStatus?.UpdateSize();
+        _statusChip?.UpdateSize();
     }
 
     protected override void OnDpiChanged(DpiChangedEventArgs e)
     {
         base.OnDpiChanged(e);
-        lblStatus?.UpdateSize();
+        _statusChip?.UpdateSize();
     }
 
-    private void CmbLanguage_SelectedIndexChanged(object? sender, EventArgs e)
+    private void LanguageComboBox_SelectedIndexChanged(object? sender, EventArgs e)
     {
         string lang = GetSelectedLanguage();
         if (Localization.CurrentLanguage != lang)
@@ -348,7 +348,7 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
 
     private string GetSelectedLanguage()
     {
-        return cmbLanguage.SelectedIndex switch
+        return _languageComboBox.SelectedIndex switch
         {
             0 => Localization.Languages.English,
             1 => Localization.Languages.Persian,
@@ -356,14 +356,14 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
         };
     }
 
-    private void CmbHotkeyModifier_SelectedIndexChanged(object? sender, EventArgs e) => UpdateStatus();
-    private void CmbHotkeyKey_SelectedIndexChanged(object? sender, EventArgs e) => UpdateStatus();
+    private void HotkeyModifierComboBox_SelectedIndexChanged(object? sender, EventArgs e) => UpdateStatus();
+    private void HotkeyKeyComboBox_SelectedIndexChanged(object? sender, EventArgs e) => UpdateStatus();
 
     private void LoadSettings()
     {
-        tglRunOnStartup.Checked = _settings.RunOnStartup;
+        _runOnStartupToggle.Checked = _settings.RunOnStartup;
 
-        cmbLanguage.SelectedIndex = _settings.Language switch
+        _languageComboBox.SelectedIndex = _settings.Language switch
         {
             Localization.Languages.English => 0,
             _ => 1
@@ -375,14 +375,14 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
 
     private void LoadHotkeyFromSettings()
     {
-        cmbHotkeyModifier.SelectedIndex = HotkeyOptions.IndexOfModifier((uint)_settings.HotkeyModifier);
-        cmbHotkeyKey.SelectedIndex = HotkeyOptions.IndexOfKey(_settings.HotkeyKey);
+        _hotkeyModifierComboBox.SelectedIndex = HotkeyOptions.IndexOfModifier((uint)_settings.HotkeyModifier);
+        _hotkeyKeyComboBox.SelectedIndex = HotkeyOptions.IndexOfKey(_settings.HotkeyKey);
 
-        lastHotkeyModifier = (uint)_settings.HotkeyModifier;
-        lastHotkeyKey = _settings.HotkeyKey;
+        _lastHotkeyModifier = (uint)_settings.HotkeyModifier;
+        _lastHotkeyKey = _settings.HotkeyKey;
     }
 
-    private void BtnRegisterHotkey_Click(object? sender, EventArgs e)
+    private void RegisterHotkeyButton_Click(object? sender, EventArgs e)
     {
         try
         {
@@ -399,9 +399,9 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
 
                 _settings.HotkeyModifier = (int)modifier;
                 _settings.HotkeyKey = key;
-                lastHotkeyKey = key;
-                lastHotkeyModifier = modifier;
-                btnRegisterHotkey.Enabled = false;
+                _lastHotkeyKey = key;
+                _lastHotkeyModifier = modifier;
+                _registerHotkeyButton.Enabled = false;
                 MessageBox.Show(Localization.Get("HotkeyRegisterSuccess"), Localization.Get("Success"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
@@ -418,26 +418,26 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
 
     private (uint modifier, Keys key) GetSelectedHotkey()
     {
-        uint modifier = HotkeyOptions.ModifierValue(cmbHotkeyModifier.SelectedIndex);
-        Keys key = HotkeyOptions.KeyValue(cmbHotkeyKey.SelectedIndex);
+        uint modifier = HotkeyOptions.ModifierValue(_hotkeyModifierComboBox.SelectedIndex);
+        Keys key = HotkeyOptions.KeyValue(_hotkeyKeyComboBox.SelectedIndex);
         return (modifier, key);
     }
 
     private void UpdateStatus()
     {
         var hotkey = GetSelectedHotkey();
-        var hasChanged = (lastHotkeyKey != hotkey.key || lastHotkeyModifier != hotkey.modifier);
+        var hasChanged = (_lastHotkeyKey != hotkey.key || _lastHotkeyModifier != hotkey.modifier);
 
         _isHotkeyRegistered = !hasChanged;
         _statusState = _isHotkeyRegistered ? StatusState.Registered : StatusState.NotRegistered;
 
         UpdateStatusLabel();
-        btnRegisterHotkey.Enabled = !_isHotkeyRegistered;
+        _registerHotkeyButton.Enabled = !_isHotkeyRegistered;
     }
 
     private void UpdateStatusLabel()
     {
-        lblStatus.Text = _statusState switch
+        _statusChip.Text = _statusState switch
         {
             StatusState.Registered => Localization.Get("StatusRegistered"),
             StatusState.NotRegistered => Localization.Get("StatusNotRegistered"),
@@ -446,8 +446,8 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
             _ => Localization.Get("StatusChecking")
         };
 
-        // ← به‌جای BackColor، در Tag ذخیره می‌شود
-        (lblStatus.ForeColor, lblStatus.Tag) = _statusState switch
+        // The chip reads its background from Tag when painting (BackColor is unused).
+        (_statusChip.ForeColor, _statusChip.Tag) = _statusState switch
         {
             StatusState.Registered or StatusState.RegisterSuccess => (Theme.Success, (object)Theme.SuccessSoft),
             StatusState.NotRegistered => (Theme.Warning, (object)Theme.WarningSoft),
@@ -455,20 +455,20 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
             _ => (Theme.Info, (object)Theme.InfoSoft)
         };
 
-        lblStatus.UpdateSize();
-        lblStatus.Invalidate();
+        _statusChip.UpdateSize();
+        _statusChip.Invalidate();
     }
 
-    private void BtnCancel_Click(object? sender, EventArgs e)
+    private void CancelButton_Click(object? sender, EventArgs e)
     {
         Localization.SetLanguage(_settings.Language);
         DialogResult = DialogResult.Cancel;
         Close();
     }
 
-    private async Task BtnCheckUpdate_Click()
+    private async Task CheckUpdateButton_Click()
     {
-        btnCheckUpdate.Enabled = false;
+        _checkUpdateButton.Enabled = false;
 
         using var progress = new UpdateProgressDialog(this);
         try
@@ -489,15 +489,15 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
         finally
         {
             progress.Close();
-            btnCheckUpdate.Enabled = true;
+            _checkUpdateButton.Enabled = true;
         }
     }
 
-    private void BtnSave_Click(object? sender, EventArgs e)
+    private void SaveButton_Click(object? sender, EventArgs e)
     {
         try
         {
-            _settings.RunOnStartup = tglRunOnStartup.Checked;
+            _settings.RunOnStartup = _runOnStartupToggle.Checked;
             _settings.Language = GetSelectedLanguage();
 
             if (!_isHotkeyRegistered)
@@ -510,10 +510,10 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
             SettingsManager.AddToStartup(_settings.RunOnStartup);
             SettingsManager.Save(_settings);
 
+            MessageBox.Show(Localization.Get("SettingsSaved"), Localization.Get("Success"), MessageBoxButtons.OK, MessageBoxIcon.Information);
+
             DialogResult = DialogResult.OK;
             Close();
-
-            MessageBox.Show(Localization.Get("SettingsSaved"), Localization.Get("Success"), MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex)
         {
@@ -521,13 +521,15 @@ public partial class SettingsForm : ModernForm, ICloseRequestHandler
         }
     }
 
-    private void BtnKeyboardMappings_Click(object? sender, EventArgs e)
+    private void KeyboardMappingsButton_Click(object? sender, EventArgs e)
     {
         FormSingleton.ShowDialog(() => new KeyboardMappingsForm(_settings), this);
     }
 
     public void RequestClose()
     {
-        BtnCancel_Click(this, EventArgs.Empty);
+        CancelButton_Click(this, EventArgs.Empty);
     }
 }
+
+

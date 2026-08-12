@@ -1,13 +1,18 @@
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Windows.Forms;
+using Microsoft.Win32;
 using WrongKeyboardFixer.Core.Helpers;
 using WrongKeyboardFixer.Core.Model;
 
 namespace WrongKeyboardFixer.Core.Services;
 
+/// <summary>
+/// Loads and saves application settings to a JSON file, and manages
+/// the Windows auto-start registry entry.
+/// </summary>
 public static class SettingsManager
 {
     private static readonly string SettingsPath = Path.Combine(
@@ -16,45 +21,46 @@ public static class SettingsManager
         "settings.json"
     );
 
-    public static WrongKeyboardFixer.Core.Model.AppSettings Load()
+    private static readonly RegistryManager RegistryManager = new();
+
+    public static AppSettings Load()
     {
         try
         {
             if (!File.Exists(SettingsPath))
-                return new WrongKeyboardFixer.Core.Model.AppSettings();
+                return CreateDefaultSettings();
 
             string json = File.ReadAllText(SettingsPath);
             var settings = JsonSerializer.Deserialize(json, AppSettingsJsonContext.Default.AppSettings);
-            var result = settings;
-            if (result == null) result = new WrongKeyboardFixer.Core.Model.AppSettings();
+
+            if (settings == null)
+                return CreateDefaultSettings();
 
             // Initialize custom mappings from defaults if empty
-            if (result.PersianToEnglishMap == null || result.PersianToEnglishMap.Count == 0)
-            {
-                result.PersianToEnglishMap = MappingDefaults.GetDefaultPersianToEnglishMap();
-            }
+            if (settings.PersianToEnglishMap is null || settings.PersianToEnglishMap.Count == 0)
+                settings.PersianToEnglishMap = MappingDefaults.GetDefaultPersianToEnglishMap();
 
-            if (result.EnglishToPersianMap == null || result.EnglishToPersianMap.Count == 0)
-            {
-                result.EnglishToPersianMap = MappingDefaults.GetDefaultEnglishToPersianMap();
-            }
+            if (settings.EnglishToPersianMap is null || settings.EnglishToPersianMap.Count == 0)
+                settings.EnglishToPersianMap = MappingDefaults.GetDefaultEnglishToPersianMap();
 
-            return result;
+            return settings;
         }
-        catch
+        catch (Exception ex)
         {
-            // در صورت خطا، تنظیمات پیش‌فرض بازنشانی می‌شود
-            return new WrongKeyboardFixer.Core.Model.AppSettings();
+            // On any failure, return fresh default settings
+            Debug.WriteLine($"⚠️ Failed to load settings: {ex.Message}");
+            return CreateDefaultSettings();
         }
     }
 
-    public static void Save(WrongKeyboardFixer.Core.Model.AppSettings settings)
+    private static AppSettings CreateDefaultSettings() => new();
+
+    public static void Save(AppSettings settings)
     {
         try
         {
-            // ایجاد پوشه اگر وجود نداشته باشد
-            string directory = Path.GetDirectoryName(SettingsPath)!;
-            if (!Directory.Exists(directory))
+            string? directory = Path.GetDirectoryName(SettingsPath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
             string json = JsonSerializer.Serialize(settings, AppSettingsJsonContext.Default.AppSettings);
@@ -73,26 +79,33 @@ public static class SettingsManager
 
     public static void AddToStartup(bool enable)
     {
+        RegistryManager.SetAutoStart(enable);
+    }
+}
+
+/// <summary>
+/// Thin wrapper around the Windows registry <c>Run</c> key that controls
+/// whether the application starts when Windows boots.
+/// </summary>
+internal sealed class RegistryManager
+{
+    private const string AutoStartKeyName = "WrongKeyboardFixer";
+    private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
+
+    private static readonly string ExecutablePath = Application.ExecutablePath;
+
+    public void SetAutoStart(bool enable)
+    {
         try
         {
-            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
-                @"Software\Microsoft\Windows\CurrentVersion\Run",
-                true
-            );
-
+            using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, true);
             if (key == null)
                 return;
 
             if (enable)
-            {
-                string appPath = Application.ExecutablePath;
-                key.SetValue("WrongKeyboardFixer", $"\"{appPath}\"");
-            }
-            else
-            {
-                if (key.GetValue("WrongKeyboardFixer") != null)
-                    key.DeleteValue("WrongKeyboardFixer");
-            }
+                key.SetValue(AutoStartKeyName, $"\"{ExecutablePath}\"");
+            else if (key.GetValue(AutoStartKeyName) is not null)
+                key.DeleteValue(AutoStartKeyName);
         }
         catch (Exception ex)
         {
