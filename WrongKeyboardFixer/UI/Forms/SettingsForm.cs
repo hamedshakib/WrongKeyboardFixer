@@ -705,8 +705,7 @@ public partial class SettingsForm : Form, ICloseRequestHandler
 
     private void BtnKeyboardMappings_Click(object? sender, EventArgs e)
     {
-        using var mappingsForm = new KeyboardMappingsForm(_settings);
-        mappingsForm.ShowDialog(this);
+        FormSingleton.ShowDialog(() => new KeyboardMappingsForm(_settings), this);
     }
 
     public void RequestClose()

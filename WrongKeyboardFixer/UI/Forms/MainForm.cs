@@ -167,8 +167,7 @@ public class MainForm : Form
         if (_hotkeyManager == null)
             return;
 
-        using var settingsForm = new SettingsForm(_settings, _hotkeyManager);
-        if (settingsForm.ShowDialog() == DialogResult.OK)
+        if (FormSingleton.ShowDialog(() => new SettingsForm(_settings, _hotkeyManager)) == DialogResult.OK)
         {
             // بارگذاری مجدد تنظیمات
             _settings = SettingsManager.Load();
