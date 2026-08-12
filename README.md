@@ -16,11 +16,14 @@ Sometimes while typing, you realize your keyboard is in the wrong layout (Persia
 
 - ✅ **Automatic text conversion** between Persian and English
 - ✅ **Configurable hotkey** (default: `Ctrl + Alt + Add(+)`)
+- ✅ **Editable keyboard mapping** — customize the Persian↔English character map
 - ✅ **Runs at Windows startup** (optional)
 - ✅ **System tray icon** (next to the clock)
 - ✅ **Bilingual UI** — Persian (RTL) and English
 - ✅ **Settings saved** to a JSON file
+- ✅ **Automatic updates** — checks GitHub Releases and self-installs new versions
 - ✅ **Prevents multiple instances** of the app
+- ✅ **Only one instance per window** — a single Settings / Mapping window at a time
 - ✅ **Built with .NET 10 and Native AOT** — no runtime required
 
 ---
@@ -29,6 +32,9 @@ Sometimes while typing, you realize your keyboard is in the wrong layout (Persia
 
 ### Settings Window
 ![Settings Window](ScreenShots/settings-window-En.png)
+
+### Keyboard Mapping Window
+![Keyboard Mapping Window](ScreenShots/keyboard-mapping-window-En.png)
 
 ---
 
@@ -54,16 +60,18 @@ Sometimes while typing, you realize your keyboard is in the wrong layout (Persia
 |---------|-------------|
 | **Language** | Choose the UI language: English or فارسی |
 | **Run on Windows startup** | Launch the app automatically when Windows starts |
-| **Hotkey** | Set a custom key combination |
+| **Hotkey** | Set a custom key combination and register it with **Apply Hotkey** |
+| **Keyboard mappings** | Edit the Persian↔English character mapping |
+| **Check for update** | Compare with the latest GitHub release and self-install |
 
 ### Available Hotkey Combinations
 
-| Modifier | Key |
-|----------|-----|
-| `Ctrl + Alt` | `Add (+)`, `Subtract (-)`, `Multiply (*)` |
-| `Ctrl + Shift` | `F1` – `F12` |
-| `Alt + Shift` | `Insert`, `Home`, `PageUp`, `PageDown`, `End`, `Delete`, `Space` |
-| `Ctrl`, `Alt`, `Shift` | — |
+Every **modifier** below can be combined with every **key**:
+
+| Modifiers | Keys |
+|-----------|------|
+| `Ctrl + Alt`, `Ctrl + Shift`, `Alt + Shift` | `Add (+)`, `Subtract (-)`, `Multiply (*)`, `F1` – `F12`, `Insert`, `Home`, `PageUp`, `PageDown`, `End`, `Delete`, `Space` |
+| `Ctrl`, `Alt`, `Shift` | (same keys as above) |
 
 > 💡 After selecting a combination, click **Apply Hotkey** to register it. A status message confirms whether the hotkey was registered successfully.
 
@@ -114,11 +122,11 @@ dotnet run
 To produce a standalone executable with Native AOT (no .NET Runtime needed):
 
 ```bash
-# Publish with Native AOT
-dotnet publish -c Release
+# Publish with Native AOT (the runtime identifier is required for AOT)
+dotnet publish -c Release -r win-x64 --self-contained true
 
-# The executable is generated at:
-# bin/Release/net10.0-windows/publish/WrongKeyboardFixer.exe
+# The standalone executable is generated at:
+# bin/Release/net10.0-windows/win-x64/publish/WrongKeyboardFixer.exe
 ```
 
 > ⚠️ Building with AOT requires **C++ Build Tools** or **Visual Studio with the Desktop development workload**.
