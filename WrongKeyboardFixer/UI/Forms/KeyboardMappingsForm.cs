@@ -239,6 +239,63 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
 
     private static int BuildCardHeight(int gridHeight) => 14 + 26 + 6 + 38 + 10 + gridHeight + 14;
 
+    private static bool IsButtonColumn(DataGridView grid, int col) =>
+        col >= 0 && col < grid.Columns.Count && grid.Columns[col] is DataGridViewButtonColumn;
+
+    private void Grid_MouseMove(object? sender, MouseEventArgs e)
+    {
+        var grid = (DataGridView)sender!;
+        var st = (HoverState)grid.Tag!;
+        var hit = grid.HitTest(e.X, e.Y);
+
+        grid.Cursor = hit.RowIndex >= 0 && IsButtonColumn(grid, hit.ColumnIndex)
+            ? Cursors.Hand : Cursors.Default;
+
+        if (hit.RowIndex != st.Row || hit.ColumnIndex != st.Column)
+        {
+            int oldRow = st.Row;
+            st.Row = hit.RowIndex;
+            st.Column = hit.ColumnIndex;
+            // بازترسیم کل ردیف قدیم و جدید → حاشیه‌ها هرگز نصفه نمی‌مانند
+            if (oldRow >= 0 && oldRow < grid.Rows.Count) grid.InvalidateRow(oldRow);
+            if (st.Row >= 0) grid.InvalidateRow(st.Row);
+        }
+    }
+
+    private void Grid_MouseLeave(object? sender, EventArgs e)
+    {
+        var grid = (DataGridView)sender!;
+        var st = (HoverState)grid.Tag!;
+        int oldRow = st.Row;
+        st.Row = st.Column = -1;
+        st.Pressed = false;
+        grid.Cursor = Cursors.Default;
+        if (oldRow >= 0 && oldRow < grid.Rows.Count) grid.InvalidateRow(oldRow);
+    }
+
+    private void Grid_MouseDown(object? sender, MouseEventArgs e)
+    {
+        var grid = (DataGridView)sender!;
+        var st = (HoverState)grid.Tag!;
+        var hit = grid.HitTest(e.X, e.Y);
+        if (hit.RowIndex >= 0 && IsButtonColumn(grid, hit.ColumnIndex))
+        {
+            st.Pressed = true;
+            grid.InvalidateRow(hit.RowIndex);
+        }
+    }
+
+    private void Grid_MouseUp(object? sender, MouseEventArgs e)
+    {
+        var grid = (DataGridView)sender!;
+        var st = (HoverState)grid.Tag!;
+        if (st.Pressed)
+        {
+            st.Pressed = false;
+            if (st.Row >= 0 && st.Row < grid.Rows.Count) grid.InvalidateRow(st.Row);
+        }
+    }
+
     private DataGridView CreateMappingGrid(bool isPersianToEnglish)
     {
         var grid = new DataGridView();
@@ -327,51 +384,83 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
             grid.CellValidating += DataGridViewEnglishToPersian_CellValidating;
             grid.CellValueChanged += DataGridViewEnglishToPersian_CellValueChanged;
         }
+
+        grid.Tag = new HoverState();
+        grid.ShowCellToolTips = false;      // حذف یک invalidate اضافی روی هاور
+        grid.MouseMove += Grid_MouseMove;
+        grid.MouseLeave += Grid_MouseLeave;
+        grid.MouseDown += Grid_MouseDown;
+        grid.MouseUp += Grid_MouseUp;
         return grid;
     }
 
-    // ── رسم دکمه‌های سلول: بدون ساخت Brush تکراری، متن با GDI ──
+    private sealed class HoverState
+    {
+        public int Row = -1;
+        public int Column = -1;
+        public bool Pressed;
+    }
+
     private void Grid_CellPainting(object? sender, DataGridViewCellPaintingEventArgs e)
     {
         if (sender is not DataGridView grid) return;
         if (e.RowIndex < 0 || e.ColumnIndex < 0) return;   // هدر: رسم پیش‌فرض
 
         var bounds = e.CellBounds;
+        var st = (HoverState)grid.Tag!;
         var colStyle = grid.Columns[e.ColumnIndex].DefaultCellStyle;
+        bool isButton = grid.Columns[e.ColumnIndex] is DataGridViewButtonColumn;
         bool selected = (e.State & DataGridViewElementStates.Selected) != 0;
+        bool rowHover = st.Row == e.RowIndex;
+        bool cellHover = rowHover && st.Column == e.ColumnIndex && isButton;
 
-        // ── ) پس‌زمینهٔ یکپارچه برای همهٔ ستون‌ها ──
-        Color bg = selected
-            ? Theme.AccentSoft
-            : colStyle.BackColor != Color.Empty
-                ? colStyle.BackColor                                        // ستون اول: خاکستری ملایم
-                : (e.RowIndex % 2 == 1 ? Color.FromArgb(250, 251, 253)      // ردیف زوج
-                                       : Theme.Surface);                    // ردیف فرد
+        Color hoverColor = Color.FromArgb(232, 238, 246);
+        Color bg = selected ? Theme.AccentSoft
+            : rowHover ? hoverColor
+            : colStyle.BackColor != Color.Empty ? colStyle.BackColor
+            : e.RowIndex % 2 == 1 ? Color.FromArgb(250, 251, 253)
+            : Theme.Surface;
+
+        // کاهش ۱ پیکسلی ارتفاع باعث می‌شود پس‌زمینه هرگز روی خط حاشیه رسم نشود
+        var bgBounds = new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height - 1);
         using (var bgBrush = new SolidBrush(bg))
-            e.Graphics!.FillRectangle(bgBrush, bounds);
+            e.Graphics!.FillRectangle(bgBrush, bgBounds);
 
-        // ── ۲) محتوا ──
-        if (grid.Columns[e.ColumnIndex] is DataGridViewButtonColumn)
+        // ── ۲. رسم محتوای داخلی سلول ──
+        if (isButton)
         {
             bool isDelete = e.ColumnIndex == 2;
             var rect = bounds;
             rect.Inflate(-Theme.DpiScale(8, grid.DeviceDpi), -Theme.DpiScale(6, grid.DeviceDpi));
-
             if (rect.Width > 20 && rect.Height > 10)
             {
+                Color pillBg = isDelete ? Theme.DangerSoft : Theme.WarningSoft;
+                Color pillFg = isDelete ? Theme.Danger : Theme.Warning;
+                if (cellHover)
+                {
+                    pillBg = isDelete ? Theme.Danger : Theme.Warning;
+                    pillFg = Theme.TextOnAccent;
+                    if (st.Pressed) pillBg = ControlPaint.Dark(pillBg, 0.12f);
+                }
+
+                // ذخیره وضعیت گرافیک برای جلوگیری از نشت AntiAlias به سایر سلول‌ها
+                var prevSmoothing = e.Graphics.SmoothingMode;
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
                 using var path = Theme.RoundRect(
                     new Rectangle(rect.X, rect.Y, rect.Width - 1, rect.Height - 1),
                     Theme.DpiScale(7, grid.DeviceDpi));
-                e.Graphics.FillPath(isDelete ? DeleteBgBrush : ResetBgBrush, path);
+                using (var pill = new SolidBrush(pillBg))
+                    e.Graphics.FillPath(pill, path);
+
+                // برگرداندن وضعیت به حالت قبل
+                e.Graphics.SmoothingMode = prevSmoothing;
 
                 string text = e.FormattedValue?.ToString() ?? "";
                 var flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
                             TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding;
                 if (Theme.IsRtlText(text)) flags |= TextFormatFlags.RightToLeft;
-
-                TextRenderer.DrawText(e.Graphics, text, Theme.BodyBoldFont, rect,
-                    isDelete ? Theme.Danger : Theme.Warning, flags);
+                TextRenderer.DrawText(e.Graphics, text, Theme.BodyBoldFont, rect, pillFg, flags);
             }
         }
         else
@@ -382,18 +471,24 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
                 var flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
                             TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding;
                 if (Theme.IsRtlText(text)) flags |= TextFormatFlags.RightToLeft;
-
-                Color fore = selected ? Theme.TextPrimary
+                Color fore = selected || rowHover ? Theme.TextPrimary
                     : colStyle.ForeColor != Color.Empty ? colStyle.ForeColor : Theme.TextPrimary;
-
                 TextRenderer.DrawText(e.Graphics, text, colStyle.Font ?? grid.Font, bounds, fore, flags);
             }
         }
 
-        // ── ۳) خط مویی یکنواخت زیر همهٔ سلول‌های هر ردیف (در همهٔ ستون‌ها) ──
+        // ── ۳. خط مویی یکنواخت زیر کل ردیف ──
+        var oldSmoothingForLine = e.Graphics.SmoothingMode;
+        // اجبار به خاموش بودن AntiAlias برای رسم خطوط صاف و شارپ
+        e.Graphics.SmoothingMode = SmoothingMode.None;
         using (var linePen = new Pen(grid.GridColor))
-            e.Graphics.DrawLine(linePen, bounds.Left, bounds.Bottom - 1, bounds.Right - 1, bounds.Bottom - 1);
+        {
+            // استفاده از bounds.Right (بدون منفی یک) برای اتصال کامل خطوط ستون‌ها به هم
+            e.Graphics.DrawLine(linePen, bounds.Left, bounds.Bottom - 1, bounds.Right, bounds.Bottom - 1);
+        }
+        e.Graphics.SmoothingMode = oldSmoothingForLine;
 
+        // ── ۴. حلقهٔ فوکوس کیبورد ──
         if ((e.State & DataGridViewElementStates.Selected) != 0)
         {
             using var focusPen = new Pen(Theme.AccentBorder);
@@ -401,9 +496,9 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
                 bounds.X + 1, bounds.Y + 1, bounds.Width - 3, bounds.Height - 3);
         }
 
-        // هیچ رسم پیش‌فرضی انجام نشود → هیچ خط سیاه/حاشیهٔ اضافه‌ای باقی نمی‌ماند
         e.Handled = true;
     }
+
 
     private static void Grid_CellValidated(object? sender, DataGridViewCellEventArgs e)
     {
@@ -428,12 +523,14 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
 
     private static void FillGrid(DataGridView grid, Dictionary<char, char> map)
     {
+        if (grid.Tag is HoverState st) { st.Row = st.Column = -1; st.Pressed = false; }
         grid.SuspendLayout();
         grid.Rows.Clear();
         foreach (var key in map.Keys.OrderBy(c => c))
             grid.Rows.Add(key.ToString(), map[key].ToString());
         grid.ResumeLayout();
         grid.ClearSelection();
+        grid.CurrentCell = null;
     }
 
     // ── ویرایش سلول → فقط کپی محلی ──
