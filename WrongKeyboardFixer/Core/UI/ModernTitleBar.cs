@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace WrongKeyboardFixer.Core.UI;
@@ -11,7 +12,7 @@ namespace WrongKeyboardFixer.Core.UI;
 /// The bar is flush with the top edge of the form (no gap, no floating rounded
 /// card), so the window buttons hang from the very top like a native title bar.
 /// </summary>
-public class ModernTitleBar : Control
+public partial class ModernTitleBar : Control
 {
     private bool _hoveredMin;
     private bool _hoveredClose;
@@ -200,8 +201,10 @@ public class ModernTitleBar : Control
         }
     }
 
-    [System.Runtime.InteropServices.DllImport("user32.dll")]
-    private static extern bool ReleaseCapture();
-    [System.Runtime.InteropServices.DllImport("user32.dll")]
-    private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool ReleaseCapture();
+
+    [LibraryImport("user32.dll", EntryPoint = "SendMessageW")]
+    private static partial int SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 }

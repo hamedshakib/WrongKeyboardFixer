@@ -11,7 +11,7 @@ using WrongKeyboardFixer.Core.UI;
 
 namespace WrongKeyboardFixer.UI.Forms;
 
-public class KeyboardMappingsForm : Form, ICloseRequestHandler
+public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 {
     private readonly AppSettings _settings;
 
@@ -49,17 +49,6 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
         LoadMappings();
     }
 
-    protected override CreateParams CreateParams
-    {
-        get
-        {
-            var cp = base.CreateParams;
-            cp.Style |= 0x02000000;   // WS_CLIPCHILDREN  → پس‌زمینهٔ فرم زیر بچه‌ها repaint نمی‌شود
-            cp.Style |= 0x04000000;   // WS_CLIPSIBLINGS → کنترل‌ها روی هم overwrite نمی‌کنند
-            return cp;
-        }
-    }
-
     private void InitializeControls()
     {
         this.Text = Localization.Get("KeyboardMappingsTitle");
@@ -74,13 +63,7 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
         this.RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No;
         this.RightToLeftLayout = Localization.IsRtl;
 
-        var titleBar = new ModernTitleBar
-        {
-            Dock = DockStyle.Top,
-            Text = Localization.Get("KeyboardMappingsTitle"),
-            Subtitle = Localization.Get("KeyboardMappingsSubtitle")
-        };
-        this.Controls.Add(titleBar);
+        AddTitleBar("KeyboardMappingsTitle", "KeyboardMappingsSubtitle");
 
         var panel = new RoundedPanel
         {

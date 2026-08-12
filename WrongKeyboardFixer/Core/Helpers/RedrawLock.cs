@@ -1,15 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace WrongKeyboardFixer.Core.Helpers;
 
-internal static class RedrawLock
+internal static partial class RedrawLock
 {
-    [System.Runtime.InteropServices.DllImport("user32.dll")]
-    private static extern int SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+    private const int WmSetRedraw = 0x000B;
 
-    public static void Suspend(Control c) => SendMessage(c.Handle, 0x000B, IntPtr.Zero, IntPtr.Zero);   // WM_SETREDRAW off
-    public static void Resume(Control c) { SendMessage(c.Handle, 0x000B, new IntPtr(1), IntPtr.Zero); c.Refresh(); }
+    // اضافه کردن EntryPoint = "SendMessageW" برای مشخص کردن نام دقیق در DLL
+    [LibraryImport("user32.dll", EntryPoint = "SendMessageW")]
+    private static partial int SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+    public static void Suspend(Control c) =>
+        SendMessage(c.Handle, WmSetRedraw, IntPtr.Zero, IntPtr.Zero);   // WM_SETREDRAW off
+
+    public static void Resume(Control c)
+    {
+        SendMessage(c.Handle, WmSetRedraw, new IntPtr(1), IntPtr.Zero);
+        c.Refresh();
+    }
 }
+

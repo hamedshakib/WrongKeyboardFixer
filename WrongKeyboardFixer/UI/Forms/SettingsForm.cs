@@ -1,6 +1,5 @@
 using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Helpers;
@@ -10,7 +9,7 @@ using WrongKeyboardFixer.Core.UI;
 
 namespace WrongKeyboardFixer.UI.Forms;
 
-public partial class SettingsForm : Form, ICloseRequestHandler
+public partial class SettingsForm : ModernForm, ICloseRequestHandler
 {
     private uint lastHotkeyModifier;
     private Keys lastHotkeyKey;
@@ -25,7 +24,7 @@ public partial class SettingsForm : Form, ICloseRequestHandler
     private ComboBox cmbHotkeyModifier = null!;
     private ComboBox cmbHotkeyKey = null!;
     private ModernButton btnRegisterHotkey = null!;
-    private Label lblStatus = null!;
+    private StatusChip lblStatus = null!;
     private Label lblVersionValue = null!;
     private ModernButton btnCheckUpdate = null!;
     private ModernButton btnSave = null!;
@@ -50,17 +49,6 @@ public partial class SettingsForm : Form, ICloseRequestHandler
         LoadSettings();
     }
 
-    protected override CreateParams CreateParams
-    {
-        get
-        {
-            var cp = base.CreateParams;
-            cp.Style |= 0x02000000;   // WS_CLIPCHILDREN  → پس‌زمینهٔ فرم زیر بچه‌ها repaint نمی‌شود
-            cp.Style |= 0x04000000;   // WS_CLIPSIBLINGS → کنترل‌ها روی هم overwrite نمی‌کنند
-            return cp;
-        }
-    }
-
     private void InitializeForm()
     {
         this.Text = Localization.Get("Settings");
@@ -75,13 +63,7 @@ public partial class SettingsForm : Form, ICloseRequestHandler
         this.Icon = IconLoader.GetIcon();
         this.RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No;
 
-        var titleBar = new ModernTitleBar
-        {
-            Dock = DockStyle.Top,
-            Text = Localization.Get("SettingsTitle"),
-            Subtitle = Localization.Get("SettingsSubtitle")
-        };
-        this.Controls.Add(titleBar);
+        AddTitleBar("SettingsTitle", "SettingsSubtitle");
     }
 
     private const int StdHeight = 36;
@@ -146,13 +128,10 @@ public partial class SettingsForm : Form, ICloseRequestHandler
         // ── Hotkey section ────────────────────────────────
         AddHeaderRow(Localization.Get("HotkeyGroup"));
 
-        cmbHotkeyModifier = Theme.CreateCombo(
-            Localization.Get("HotkeyModifierCtrlAlt"),
-            Localization.Get("HotkeyModifierCtrlShift"),
-            Localization.Get("HotkeyModifierAltShift"),
-            Localization.Get("HotkeyModifierCtrl"),
-            Localization.Get("HotkeyModifierAlt"),
-            Localization.Get("HotkeyModifierShift"));
+        var modifierItems = new string[HotkeyOptions.ModifierCount];
+        for (int i = 0; i < HotkeyOptions.ModifierCount; i++)
+            modifierItems[i] = HotkeyOptions.ModifierText(i);
+        cmbHotkeyModifier = Theme.CreateCombo(modifierItems);
         cmbHotkeyModifier.Width = 160;
         cmbHotkeyModifier.SelectedIndex = 0;
         cmbHotkeyModifier.SelectedIndexChanged += CmbHotkeyModifier_SelectedIndexChanged;
@@ -161,29 +140,10 @@ public partial class SettingsForm : Form, ICloseRequestHandler
         lblPlus.TextAlign = ContentAlignment.MiddleCenter;
         lblPlus.Width = 24;
 
-        cmbHotkeyKey = Theme.CreateCombo(
-            Localization.Get("HotkeyKeyAdd"),
-            Localization.Get("HotkeyKeySubtract"),
-            Localization.Get("HotkeyKeyMultiply"),
-            Localization.Get("HotkeyKeyF1"),
-            Localization.Get("HotkeyKeyF2"),
-            Localization.Get("HotkeyKeyF3"),
-            Localization.Get("HotkeyKeyF4"),
-            Localization.Get("HotkeyKeyF5"),
-            Localization.Get("HotkeyKeyF6"),
-            Localization.Get("HotkeyKeyF7"),
-            Localization.Get("HotkeyKeyF8"),
-            Localization.Get("HotkeyKeyF9"),
-            Localization.Get("HotkeyKeyF10"),
-            Localization.Get("HotkeyKeyF11"),
-            Localization.Get("HotkeyKeyF12"),
-            Localization.Get("HotkeyKeyInsert"),
-            Localization.Get("HotkeyKeyHome"),
-            Localization.Get("HotkeyKeyPageUp"),
-            Localization.Get("HotkeyKeyPageDown"),
-            Localization.Get("HotkeyKeyEnd"),
-            Localization.Get("HotkeyKeyDelete"),
-            Localization.Get("HotkeyKeySpace"));
+        var keyItems = new string[HotkeyOptions.KeyCount];
+        for (int i = 0; i < HotkeyOptions.KeyCount; i++)
+            keyItems[i] = HotkeyOptions.KeyText(i);
+        cmbHotkeyKey = Theme.CreateCombo(keyItems);
         cmbHotkeyKey.Width = 130;
         cmbHotkeyKey.SelectedIndex = 0;
         cmbHotkeyKey.SelectedIndexChanged += CmbHotkeyKey_SelectedIndexChanged;
@@ -198,7 +158,7 @@ public partial class SettingsForm : Form, ICloseRequestHandler
         btnRegisterHotkey.Click += BtnRegisterHotkey_Click;
         btnRegisterHotkey.Enabled = false;
 
-        lblStatus = CreateStatusChip(Localization.Get("StatusChecking"), Theme.Info, Theme.InfoSoft);
+        lblStatus = new StatusChip(Localization.Get("StatusChecking"), Theme.Info, Theme.InfoSoft);
         AddColumnsRow(topGap: RowGap, (btnRegisterHotkey, 150), (lblStatus, null));
 
         AddDividerRow();
@@ -366,60 +326,17 @@ public partial class SettingsForm : Form, ICloseRequestHandler
         AddRow(footer);
     }
 
-    private Label CreateStatusChip(string text, Color fore, Color back)
-    {
-        var chip = new Label
-        {
-            Text = text,
-            Font = Theme.BodyBoldFont,
-            ForeColor = fore,
-            AutoSize = false,
-            Height = StdHeight,
-            TextAlign = ContentAlignment.MiddleLeft,
-            Padding = new Padding(12, 0, 12, 0),
-            BackColor = Theme.Surface,   // همیشه هم‌رنگ پنل → گوشه‌های مربعی نامرئی
-            Tag = back                   // رنگ وضعیت در Tag
-        };
-        chip.Paint += (s, e) =>
-        {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var bounds = new Rectangle(0, 0, chip.Width - 1, chip.Height - 1);
-            using var path = Theme.RoundRect(bounds, Theme.DpiScale(8, chip.DeviceDpi));
-            using var brush = new SolidBrush(chip.Tag is Color c ? c : Theme.Surface);
-            g.FillPath(brush, path);
-
-            int pad = Theme.DpiScale(12, chip.DeviceDpi);
-            var textRect = new Rectangle(pad, 0, chip.Width - pad * 2, chip.Height);
-            var flags = TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix;
-            if (Localization.IsRtl) flags |= TextFormatFlags.RightToLeft;
-            TextRenderer.DrawText(g, chip.Text, chip.Font, textRect, chip.ForeColor, flags);
-        };
-        UpdateChipSize(chip);
-        return chip;
-    }
-
-    /// <summary>
-    /// Sizes the status chip to its content so it never stretches across the row.
-    /// </summary>
-    private static void UpdateChipSize(Label chip)
-    {
-        if (chip is null) return;
-        int textWidth = TextRenderer.MeasureText(chip.Text, chip.Font).Width;
-        chip.Width = textWidth + Theme.DpiScale(24, chip.DeviceDpi);
-    }
-
     protected override void OnHandleCreated(EventArgs e)
     {
         RedrawLock.Suspend(this);
         base.OnHandleCreated(e);
-        UpdateChipSize(lblStatus);
+        lblStatus?.UpdateSize();
     }
 
     protected override void OnDpiChanged(DpiChangedEventArgs e)
     {
         base.OnDpiChanged(e);
-        UpdateChipSize(lblStatus);
+        lblStatus?.UpdateSize();
     }
 
     private void CmbLanguage_SelectedIndexChanged(object? sender, EventArgs e)
@@ -458,34 +375,11 @@ public partial class SettingsForm : Form, ICloseRequestHandler
 
     private void LoadHotkeyFromSettings()
     {
-        var modifier = (HotkeyModifiers)_settings.HotkeyModifier;
-        if (modifier.HasFlag(HotkeyModifiers.Control) && modifier.HasFlag(HotkeyModifiers.Alt))
-            cmbHotkeyModifier.SelectedIndex = 0;
-        else if (modifier.HasFlag(HotkeyModifiers.Control) && modifier.HasFlag(HotkeyModifiers.Shift))
-            cmbHotkeyModifier.SelectedIndex = 1;
-        else if (modifier.HasFlag(HotkeyModifiers.Alt) && modifier.HasFlag(HotkeyModifiers.Shift))
-            cmbHotkeyModifier.SelectedIndex = 2;
-        else if (modifier.HasFlag(HotkeyModifiers.Control))
-            cmbHotkeyModifier.SelectedIndex = 3;
-        else if (modifier.HasFlag(HotkeyModifiers.Alt))
-            cmbHotkeyModifier.SelectedIndex = 4;
-        else if (modifier.HasFlag(HotkeyModifiers.Shift))
-            cmbHotkeyModifier.SelectedIndex = 5;
-
-        var key = _settings.HotkeyKey;
-        string keyName = key.ToString();
-        for (int i = 0; i < cmbHotkeyKey.Items.Count; i++)
-        {
-            string? item = cmbHotkeyKey.Items[i]?.ToString();
-            if (item is not null && (item.StartsWith(keyName) || item.Contains(keyName)))
-            {
-                cmbHotkeyKey.SelectedIndex = i;
-                break;
-            }
-        }
+        cmbHotkeyModifier.SelectedIndex = HotkeyOptions.IndexOfModifier((uint)_settings.HotkeyModifier);
+        cmbHotkeyKey.SelectedIndex = HotkeyOptions.IndexOfKey(_settings.HotkeyKey);
 
         lastHotkeyModifier = (uint)_settings.HotkeyModifier;
-        lastHotkeyKey = key;
+        lastHotkeyKey = _settings.HotkeyKey;
     }
 
     private void BtnRegisterHotkey_Click(object? sender, EventArgs e)
@@ -524,42 +418,9 @@ public partial class SettingsForm : Form, ICloseRequestHandler
 
     private (uint modifier, Keys key) GetSelectedHotkey()
     {
-        uint modifier = 0;
-
-        switch (cmbHotkeyModifier.SelectedIndex)
-        {
-            case 0: modifier = (uint)(HotkeyModifiers.Control | HotkeyModifiers.Alt); break;
-            case 1: modifier = (uint)(HotkeyModifiers.Control | HotkeyModifiers.Shift); break;
-            case 2: modifier = (uint)(HotkeyModifiers.Alt | HotkeyModifiers.Shift); break;
-            case 3: modifier = (uint)HotkeyModifiers.Control; break;
-            case 4: modifier = (uint)HotkeyModifiers.Alt; break;
-            case 5: modifier = (uint)HotkeyModifiers.Shift; break;
-            default: modifier = (uint)(HotkeyModifiers.Control | HotkeyModifiers.Alt); break;
-        }
-
-        string keyText = cmbHotkeyKey.SelectedItem?.ToString() ?? "Add";
-        Keys key = ParseKeyText(keyText);
-
+        uint modifier = HotkeyOptions.ModifierValue(cmbHotkeyModifier.SelectedIndex);
+        Keys key = HotkeyOptions.KeyValue(cmbHotkeyKey.SelectedIndex);
         return (modifier, key);
-    }
-
-    private Keys ParseKeyText(string keyText)
-    {
-        if (keyText == Localization.Get("HotkeyKeyAdd")) return Keys.Add;
-        if (keyText == Localization.Get("HotkeyKeySubtract")) return Keys.Subtract;
-        if (keyText == Localization.Get("HotkeyKeyMultiply")) return Keys.Multiply;
-        if (keyText == Localization.Get("HotkeyKeyInsert")) return Keys.Insert;
-        if (keyText == Localization.Get("HotkeyKeyHome")) return Keys.Home;
-        if (keyText == Localization.Get("HotkeyKeyPageUp")) return Keys.PageUp;
-        if (keyText == Localization.Get("HotkeyKeyPageDown")) return Keys.PageDown;
-        if (keyText == Localization.Get("HotkeyKeyEnd")) return Keys.End;
-        if (keyText == Localization.Get("HotkeyKeyDelete")) return Keys.Delete;
-        if (keyText == Localization.Get("HotkeyKeySpace")) return Keys.Space;
-
-        if (keyText.StartsWith("F") && int.TryParse(keyText[1..], out int fNum))
-            return (Keys)((int)Keys.F1 + fNum - 1);
-
-        return Keys.Add;
     }
 
     private void UpdateStatus()
@@ -594,7 +455,7 @@ public partial class SettingsForm : Form, ICloseRequestHandler
             _ => (Theme.Info, (object)Theme.InfoSoft)
         };
 
-        UpdateChipSize(lblStatus);
+        lblStatus.UpdateSize();
         lblStatus.Invalidate();
     }
 
