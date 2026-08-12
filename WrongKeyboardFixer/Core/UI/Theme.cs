@@ -201,6 +201,14 @@ public static class Theme
         };
     }
 
+    public static void WarmUpFonts()
+    {
+        const string sample = "تنظیم نگاشت کیبورد برنامه ABC abc 123 +";
+        foreach (var f in new[] { TitleFont, SubtitleFont, SectionFont, BodyFont,
+                     BodyBoldFont, SmallFont, ButtonFont, GridFont })
+            TextRenderer.MeasureText(sample, f);
+    }
+
     // ── کمکی جدید: فعال‌سازی DoubleBuffered مخفی برای کنترل‌هایی مثل DataGridView ──
     public static void EnableDoubleBuffered(Control control)
     {

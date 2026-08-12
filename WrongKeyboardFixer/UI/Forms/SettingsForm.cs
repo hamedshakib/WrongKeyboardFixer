@@ -256,6 +256,7 @@ public partial class SettingsForm : Form, ICloseRequestHandler
     {
         base.OnShown(e);
         FitFormToContent();   // تصحیح نهایی پس از layout واقعی → حذف کادر خالی پایین
+        RedrawLock.Resume(this);
     }
 
     private void AddRow(Control control)
@@ -407,6 +408,7 @@ public partial class SettingsForm : Form, ICloseRequestHandler
 
     protected override void OnHandleCreated(EventArgs e)
     {
+        RedrawLock.Suspend(this);
         base.OnHandleCreated(e);
         UpdateChipSize(lblStatus);
     }

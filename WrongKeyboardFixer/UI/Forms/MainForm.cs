@@ -56,6 +56,7 @@ public class MainForm : Form
         RegisterHotkeyFromSettings();
 
         CheckForUpdatesAsync();
+        Task.Run(Theme.WarmUpFonts);
     }
 
     private void RegisterHotkeyFromSettings()
