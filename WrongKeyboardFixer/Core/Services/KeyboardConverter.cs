@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using WrongKeyboardFixer.Core.Model;
 
 namespace WrongKeyboardFixer.Core.Services;
 
@@ -11,6 +11,12 @@ namespace WrongKeyboardFixer.Core.Services;
 /// </summary>
 public static class KeyboardConverter
 {
+    // Default maps are built once and reused (avoid rebuilding them for every character).
+    private static readonly IReadOnlyDictionary<char, char> DefaultEnglishToPersianMap =
+        MappingDefaults.GetDefaultEnglishToPersianMap();
+    private static readonly IReadOnlyDictionary<char, char> DefaultMiddlePositionEnglishToPersianMap =
+        MappingDefaults.GetDefaultMiddlePositionEnglishToPersianMap();
+
     /// <summary>
     /// Convert Persian character to English character using custom mappings.
     /// </summary>
@@ -136,16 +142,14 @@ public static class KeyboardConverter
 
         // 2. اگر حرف بزرگ انگلیسی است و وسط کلمه قرار دارد،
         // mapping مخصوص آن را بررسی کن.
-        if (char.IsUpper(c) && !isWordStart)
+        if (char.IsUpper(c) && !isWordStart &&
+            DefaultMiddlePositionEnglishToPersianMap.TryGetValue(c, out var middleMapped))
         {
-            if (Core.Model.MappingDefaults.GetDefaultMiddlePositionEnglishToPersianMap().TryGetValue(c, out var middleMapped))
-            {
-                return middleMapped;
-            }
+            return middleMapped;
         }
 
         // 3. Mapping عادی
-        if (Core.Model.MappingDefaults.GetDefaultEnglishToPersianMap().TryGetValue(c, out var mapped))
+        if (DefaultEnglishToPersianMap.TryGetValue(c, out var mapped))
         {
             return mapped;
         }

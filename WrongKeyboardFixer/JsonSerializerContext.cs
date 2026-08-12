@@ -14,7 +14,6 @@ namespace WrongKeyboardFixer;
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(AppSettings))]
-[JsonSerializable(typeof(KeyboardMapping))]
 [JsonSerializable(typeof(Keys))] // ← بسیار مهم برای AOT
 [JsonSerializable(typeof(HotkeyModifiers))]
 [JsonSerializable(typeof(Dictionary<char, char>))]

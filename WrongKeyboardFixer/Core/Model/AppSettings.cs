@@ -12,11 +12,6 @@ public class AppSettings
     public int HotkeyModifier { get; set; } = (int)(HotkeyModifiers.Control | HotkeyModifiers.Alt);
     public Keys HotkeyKey { get; set; } = Keys.Add;
 
-    // تنظیمات پیشرفته
-    public int ClipboardRetryDelay { get; set; } = 150;
-    public int ClipboardMaxRetries { get; set; } = 8;
-    public int KeySimulationDelay { get; set; } = 30;
-
     // تنظیمات نگاشت فارسی به انگلیسی
     public Dictionary<char, char> PersianToEnglishMap { get; set; } = MappingDefaults.GetDefaultPersianToEnglishMap();
 

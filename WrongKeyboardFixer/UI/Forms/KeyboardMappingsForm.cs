@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -17,8 +17,8 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
 
     // کپی محلی نگاشت‌ها: فقط هنگام فشردن «ذخیره» روی تنظیمات اصلی اعمال می‌شوند.
     // (قبلاً ویرایش سلول مستقیماً _settings را تغییر می‌داد و «انصراف» بی‌اثر بود)
-    private Dictionary<char, char> _p2e;
-    private Dictionary<char, char> _e2p;
+    private Dictionary<char, char> _persianToEnglish;
+    private Dictionary<char, char> _englishToPersian;
 
     private DataGridView? _dataGridViewPersianToEnglish;
     private DataGridView? _dataGridViewEnglishToPersian;
@@ -37,8 +37,8 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
     public KeyboardMappingsForm(AppSettings settings)
     {
         _settings = settings ?? new AppSettings();
-        _p2e = new Dictionary<char, char>(_settings.PersianToEnglishMap ?? new Dictionary<char, char>());
-        _e2p = new Dictionary<char, char>(_settings.EnglishToPersianMap ?? new Dictionary<char, char>());
+        _persianToEnglish = new Dictionary<char, char>(_settings.PersianToEnglishMap ?? new Dictionary<char, char>());
+        _englishToPersian = new Dictionary<char, char>(_settings.EnglishToPersianMap ?? new Dictionary<char, char>());
 
         Localization.SetLanguage(_settings.Language);
 
@@ -101,100 +101,26 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
         const int gridHeight = 306;
 
         // ── کارت فارسی → انگلیسی ──────────────────────────
-        var card1 = new RoundedPanel
-        {
-            CornerRadius = 12,
-            BackColor = Theme.SurfaceAlt,
-            BorderColor = Theme.Border,
-            BorderWidth = 1,
-            Padding = new Padding(14),
-            Location = new Point(left, cardY),
-            Size = new Size(cardWidth, BuildCardHeight(gridHeight))
-        };
-        panel.Controls.Add(card1);
-
-        card1.Controls.Add(Theme.SectionLabel(Localization.Get("PersianToEnglish"))
-            .Then(l => l.Location = new Point(14, 12)));
-
         _lblCountPersianToEnglish = Theme.BodyLabel("", Theme.TextSecondary, Theme.SmallFont);
-        _lblCountPersianToEnglish.Location = new Point(cardWidth - 14 - 130, 14);
-        _lblCountPersianToEnglish.Size = new Size(130, 22);
-        _lblCountPersianToEnglish.TextAlign = ContentAlignment.MiddleRight;
-        _lblCountPersianToEnglish.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        card1.Controls.Add(_lblCountPersianToEnglish);
-
-        var addP2E = new ModernButton
-        {
-            Text = "+ " + Localization.Get("AddNewMapping"),   // گلیف ＋ حذف شد (در Segoe UI نبود)
-            ButtonVariant = ModernButton.Variant.Primary,
-            Location = new Point(14, 46),
-            Size = new Size(160, 38)
-        };
-        addP2E.Click += BtnAddPersianToEnglish_Click;
-        card1.Controls.Add(addP2E);
-
-        var resetP2E = new ModernButton
-        {
-            Text = Localization.Get("ResetAll"),               // گلیف ↻ حذف شد
-            ButtonVariant = ModernButton.Variant.Ghost,
-            Location = new Point(14 + 160 + 10, 46),
-            Size = new Size(170, 38)
-        };
-        resetP2E.Click += BtnResetAllPersianToEnglish_Click;
-        card1.Controls.Add(resetP2E);
-
         _dataGridViewPersianToEnglish = CreateMappingGrid(true);
-        _dataGridViewPersianToEnglish.Location = new Point(14, 94);
-        _dataGridViewPersianToEnglish.Size = new Size(cardWidth - 28, gridHeight);
-        card1.Controls.Add(_dataGridViewPersianToEnglish);
+        panel.Controls.Add(BuildMappingCard(
+            left, cardWidth, cardY, gridHeight,
+            "PersianToEnglish",
+            _lblCountPersianToEnglish,
+            _dataGridViewPersianToEnglish,
+            BtnAddPersianToEnglish_Click,
+            BtnResetAllPersianToEnglish_Click));
 
         // ── کارت انگلیسی → فارسی ──────────────────────────
-        var card2 = new RoundedPanel
-        {
-            CornerRadius = 12,
-            BackColor = Theme.SurfaceAlt,
-            BorderColor = Theme.Border,
-            BorderWidth = 1,
-            Padding = new Padding(14),
-            Location = new Point(left + cardWidth + cardGap, cardY),
-            Size = new Size(cardWidth, BuildCardHeight(gridHeight))
-        };
-        panel.Controls.Add(card2);
-
-        card2.Controls.Add(Theme.SectionLabel(Localization.Get("EnglishToPersian"))
-            .Then(l => l.Location = new Point(14, 12)));
-
         _lblCountEnglishToPersian = Theme.BodyLabel("", Theme.TextSecondary, Theme.SmallFont);
-        _lblCountEnglishToPersian.Location = new Point(cardWidth - 14 - 130, 14);
-        _lblCountEnglishToPersian.Size = new Size(130, 22);
-        _lblCountEnglishToPersian.TextAlign = ContentAlignment.MiddleRight;
-        _lblCountEnglishToPersian.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        card2.Controls.Add(_lblCountEnglishToPersian);
-
-        var addE2P = new ModernButton
-        {
-            Text = "+ " + Localization.Get("AddNewMapping"),
-            ButtonVariant = ModernButton.Variant.Primary,
-            Location = new Point(14, 46),
-            Size = new Size(160, 38)
-        };
-        addE2P.Click += BtnAddEnglishToPersian_Click;
-        card2.Controls.Add(addE2P);
-
-        var resetE2P = new ModernButton
-        {
-            Text = Localization.Get("ResetAll"),
-            ButtonVariant = ModernButton.Variant.Ghost,
-            Location = new Point(14 + 160 + 10, 46),
-            Size = new Size(170, 38)
-        };
-        resetE2P.Click += BtnResetAllEnglishToPersian_Click;
-        card2.Controls.Add(resetE2P);
-
         _dataGridViewEnglishToPersian = CreateMappingGrid(false);
-        _dataGridViewEnglishToPersian.Location = new Point(14, 94);
-        _dataGridViewEnglishToPersian.Size = new Size(cardWidth - 28, gridHeight);
-        card2.Controls.Add(_dataGridViewEnglishToPersian);
+        panel.Controls.Add(BuildMappingCard(
+            left + cardWidth + cardGap, cardWidth, cardY, gridHeight,
+            "EnglishToPersian",
+            _lblCountEnglishToPersian,
+            _dataGridViewEnglishToPersian,
+            BtnAddEnglishToPersian_Click,
+            BtnResetAllEnglishToPersian_Click));
 
         // ── فوتر ──────────────────────────────────────────
         int footerY = panel.Height - panel.Padding.Bottom - 42;
@@ -238,6 +164,65 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
     }
 
     private static int BuildCardHeight(int gridHeight) => 14 + 26 + 6 + 38 + 10 + gridHeight + 14;
+
+    /// <summary>
+    /// Builds one mapping card (title, count label, add/reset buttons and the mapping grid).
+    /// Shared by the Persian→English and English→Persian cards to avoid duplicated layout code.
+    /// </summary>
+    private RoundedPanel BuildMappingCard(
+        int left, int cardWidth, int cardY, int gridHeight,
+        string titleKey,
+        Label countLabel,
+        DataGridView grid,
+        EventHandler addClick,
+        EventHandler resetClick)
+    {
+        var card = new RoundedPanel
+        {
+            CornerRadius = 12,
+            BackColor = Theme.SurfaceAlt,
+            BorderColor = Theme.Border,
+            BorderWidth = 1,
+            Padding = new Padding(14),
+            Location = new Point(left, cardY),
+            Size = new Size(cardWidth, BuildCardHeight(gridHeight))
+        };
+
+        card.Controls.Add(Theme.SectionLabel(Localization.Get(titleKey))
+            .Then(l => l.Location = new Point(14, 12)));
+
+        countLabel.Location = new Point(cardWidth - 14 - 130, 14);
+        countLabel.Size = new Size(130, 22);
+        countLabel.TextAlign = ContentAlignment.MiddleRight;
+        countLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        card.Controls.Add(countLabel);
+
+        var addButton = new ModernButton
+        {
+            Text = "+ " + Localization.Get("AddNewMapping"),
+            ButtonVariant = ModernButton.Variant.Primary,
+            Location = new Point(14, 46),
+            Size = new Size(160, 38)
+        };
+        addButton.Click += addClick;
+        card.Controls.Add(addButton);
+
+        var resetButton = new ModernButton
+        {
+            Text = Localization.Get("ResetAll"),
+            ButtonVariant = ModernButton.Variant.Ghost,
+            Location = new Point(14 + 160 + 10, 46),
+            Size = new Size(170, 38)
+        };
+        resetButton.Click += resetClick;
+        card.Controls.Add(resetButton);
+
+        grid.Location = new Point(14, 94);
+        grid.Size = new Size(cardWidth - 28, gridHeight);
+        card.Controls.Add(grid);
+
+        return card;
+    }
 
     private static bool IsButtonColumn(DataGridView grid, int col) =>
         col >= 0 && col < grid.Columns.Count && grid.Columns[col] is DataGridViewButtonColumn;
@@ -512,16 +497,16 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
         {
             p2eGrid.ClearSelection();
             p2eGrid.CurrentCell = null;
-            FillGrid(p2eGrid, _p2e);
-            _lblCountPersianToEnglish!.Text = Localization.Format("MappingsCount", _p2e.Count);
+            FillGrid(p2eGrid, _persianToEnglish);
+            _lblCountPersianToEnglish!.Text = Localization.Format("MappingsCount", _persianToEnglish.Count);
         }
 
         if (_dataGridViewEnglishToPersian is { } e2pGrid)
         {
             e2pGrid.ClearSelection();
             e2pGrid.CurrentCell = null;
-            FillGrid(e2pGrid, _e2p);
-            _lblCountEnglishToPersian!.Text = Localization.Format("MappingsCount", _e2p.Count);
+            FillGrid(e2pGrid, _englishToPersian);
+            _lblCountEnglishToPersian!.Text = Localization.Format("MappingsCount", _englishToPersian.Count);
         }
     }
 
@@ -546,7 +531,7 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
         if (row.Cells[0].Value is string pStr && pStr.Length == 1 &&
             row.Cells[1].Value is string eStr && eStr.Length == 1)
         {
-            _p2e[pStr[0]] = eStr[0];
+            _persianToEnglish[pStr[0]] = eStr[0];
         }
     }
 
@@ -558,7 +543,7 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
         if (row.Cells[0].Value is string eStr && eStr.Length == 1 &&
             row.Cells[1].Value is string pStr && pStr.Length == 1)
         {
-            _e2p[eStr[0]] = pStr[0];
+            _englishToPersian[eStr[0]] = pStr[0];
         }
     }
 
@@ -594,22 +579,22 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
     private void BtnResetAllPersianToEnglish_Click(object? sender, EventArgs e)
     {
         if (ConfirmReset() != DialogResult.Yes) return;
-        _p2e = MappingDefaults.GetDefaultPersianToEnglishMap();
+        _persianToEnglish = MappingDefaults.GetDefaultPersianToEnglishMap();
         LoadMappings();
     }
 
     private void BtnResetAllEnglishToPersian_Click(object? sender, EventArgs e)
     {
         if (ConfirmReset() != DialogResult.Yes) return;
-        _e2p = MappingDefaults.GetDefaultEnglishToPersianMap();
+        _englishToPersian = MappingDefaults.GetDefaultEnglishToPersianMap();
         LoadMappings();
     }
 
     private void BtnSave_Click(object? sender, EventArgs e)
     {
         // فقط حالا تغییرات روی تنظیمات اصلی اعمال می‌شود
-        _settings.PersianToEnglishMap = new Dictionary<char, char>(_p2e);
-        _settings.EnglishToPersianMap = new Dictionary<char, char>(_e2p);
+        _settings.PersianToEnglishMap = new Dictionary<char, char>(_persianToEnglish);
+        _settings.EnglishToPersianMap = new Dictionary<char, char>(_englishToPersian);
         SettingsManager.Save(_settings);
         DialogResult = DialogResult.OK;
         Close();
@@ -639,8 +624,8 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
         if (english.Length != 1 || english[0] < 32 || english[0] > 126) { ShowError("InvalidEnglishChar"); return; }
 
         char p = persian[0], en = english[0];
-        _e2p.Remove(en);
-        _p2e[p] = en;
+        _englishToPersian.Remove(en);
+        _persianToEnglish[p] = en;
         LoadMappings();
     }
 
@@ -659,29 +644,29 @@ public class KeyboardMappingsForm : Form, ICloseRequestHandler
         if (persian.Length != 1) { ShowError("InvalidPersianChar"); return; }
 
         char en = english[0], p = persian[0];
-        _p2e.Remove(p);
-        _e2p[en] = p;
+        _persianToEnglish.Remove(p);
+        _englishToPersian[en] = p;
         LoadMappings();
     }
 
     private void DeletePersianMapping(char persianChar)
     {
-        if (_p2e.Remove(persianChar)) LoadMappings();
+        if (_persianToEnglish.Remove(persianChar)) LoadMappings();
     }
 
     private void DeleteEnglishMapping(char englishChar)
     {
-        if (_e2p.Remove(englishChar)) LoadMappings();
+        if (_englishToPersian.Remove(englishChar)) LoadMappings();
     }
 
     private void ResetPersianCharMapping(char persianChar)
     {
-        if (_p2e.ContainsKey(persianChar)) { _p2e[persianChar] = persianChar; LoadMappings(); }
+        if (_persianToEnglish.ContainsKey(persianChar)) { _persianToEnglish[persianChar] = persianChar; LoadMappings(); }
     }
 
     private void ResetEnglishCharMapping(char englishChar)
     {
-        if (_e2p.ContainsKey(englishChar)) { _e2p[englishChar] = englishChar; LoadMappings(); }
+        if (_englishToPersian.ContainsKey(englishChar)) { _englishToPersian[englishChar] = englishChar; LoadMappings(); }
     }
 
     // ── اعتبارسنجی: بدون MessageBox؛ خطا روی خود ردیف نمایش داده می‌شود ──

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace WrongKeyboardFixer.Core.Helpers;
@@ -33,10 +33,8 @@ public static class Localization
         ["Language"] = "زبان:",
         ["LanguagePersian"] = "فارسی",
         ["LanguageEnglish"] = "English",
-        ["LanguageFrench"] = "Français",
         ["RunOnStartup"] = "اجرای خودکار با ویندوز",
         ["HotkeyGroup"] = "تنظیمات کلید میانبر",
-        ["HotkeyLabel"] = "کلید ترکیبی:",
         ["ApplyHotkey"] = "اعمال کلید ترکیبی",
         ["StatusChecking"] = "وضعیت: بررسی...",
         ["StatusRegistered"] = "✅ کلید ترکیبی اعمال شده است",
@@ -56,7 +54,6 @@ public static class Localization
 
         // Tray menu
         ["TraySettings"] = "تنظیمات",
-        ["TrayCheckUpdate"] = "بررسی بروزرسانی",
         ["TrayExit"] = "خروج",
         ["TrayText"] = "Wrong Keyboard Fixer",
 
@@ -113,7 +110,7 @@ public static class Localization
         ["ResetAllConfirm"] = "آیا مطمئن هستید که می‌خواهید تمام نگاشت‌های سفارشی را حذف کنید؟",
         ["ResetKeyConfirm"] = "آیا مطمئن هستید که می‌خواهید نگاشت سفارشی این کلید را حذف کنید؟",
         ["ResetSuccess"] = "نگاشت با موفقیت بازنشانی شد.",
-         
+
         // Add mapping
         ["AddMapping"] = "افزودن نگاشت",
         ["EnterPersianChar"] = "کارکتر فارسی را وارد کنید:",
@@ -124,7 +121,7 @@ public static class Localization
         ["OK"] = "تأیید",
         ["Delete"] = "حذف",
          ["DeleteMappingConfirm"] = "آیا مطمئن هستید که می‌خواهید این نگاشت را حذف کنید؟",
-          
+
          // Hotkey settings
          ["HotkeyModifierCtrlAlt"] = "Ctrl + Alt",
          ["HotkeyModifierCtrlShift"] = "Ctrl + Shift",
@@ -154,13 +151,8 @@ public static class Localization
          ["HotkeyKeyEnd"] = "End",
          ["HotkeyKeyDelete"] = "Delete",
          ["HotkeyKeySpace"] = "Space",
-          
-         // Keyboard mappings form column headers
-         ["GridColumnPersianCharReadOnly"] = "🔒 Persian Char (Read-only)",
-         ["GridColumnEnglishCharEditable"] = "✎ English Char (Editable)",
-         ["GridColumnEnglishCharReadOnly"] = "🔒 English Char (Read-only)",
-         ["GridColumnPersianCharEditable"] = "✎ Persian Char (Editable)",
-          
+
+
          // Clipboard
          ["ClipboardSetTextError"] = "Failed to set clipboard text",
         };
@@ -181,10 +173,8 @@ public static class Localization
         ["Language"] = "Language:",
         ["LanguagePersian"] = "فارسی",
         ["LanguageEnglish"] = "English",
-        ["LanguageFrench"] = "Français",
         ["RunOnStartup"] = "Run on Windows startup",
         ["HotkeyGroup"] = "Hotkey Settings",
-        ["HotkeyLabel"] = "Hotkey:",
         ["ApplyHotkey"] = "Apply Hotkey",
         ["StatusChecking"] = "Status: Checking...",
         ["StatusRegistered"] = "✅ Hotkey is applied",
@@ -204,7 +194,6 @@ public static class Localization
 
         // Tray menu
         ["TraySettings"] = "Settings",
-        ["TrayCheckUpdate"] = "Check for Updates",
         ["TrayExit"] = "Exit",
         ["TrayText"] = "Wrong Keyboard Fixer",
 
@@ -261,7 +250,7 @@ public static class Localization
         ["ResetAllConfirm"] = "Are you sure you want to reset all custom mappings?",
         ["ResetKeyConfirm"] = "Are you sure you want to reset the custom mapping for this key?",
         ["ResetSuccess"] = "Mapping reset successfully.",
-         
+
          // Add mapping
         ["AddMapping"] = "Add Mapping",
         ["EnterPersianChar"] = "Enter Persian character:",
@@ -272,7 +261,7 @@ public static class Localization
         ["OK"] = "OK",
         ["Delete"] = "Delete",
          ["DeleteMappingConfirm"] = "Are you sure you want to delete this mapping?",
-          
+
          // Hotkey settings
          ["HotkeyModifierCtrlAlt"] = "Ctrl + Alt",
          ["HotkeyModifierCtrlShift"] = "Ctrl + Shift",
@@ -302,13 +291,8 @@ public static class Localization
          ["HotkeyKeyEnd"] = "End",
          ["HotkeyKeyDelete"] = "Delete",
          ["HotkeyKeySpace"] = "Space",
-          
-         // Keyboard mappings form column headers
-         ["GridColumnPersianCharReadOnly"] = "🔒 Persian Char (Read-only)",
-         ["GridColumnEnglishCharEditable"] = "✎ English Char (Editable)",
-         ["GridColumnEnglishCharReadOnly"] = "🔒 English Char (Read-only)",
-         ["GridColumnPersianCharEditable"] = "✎ Persian Char (Editable)",
-          
+
+
          // Clipboard
          ["ClipboardSetTextError"] = "Failed to set clipboard text",
        };

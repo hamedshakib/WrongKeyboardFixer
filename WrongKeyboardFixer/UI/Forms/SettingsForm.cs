@@ -609,53 +609,10 @@ public partial class SettingsForm : Form, ICloseRequestHandler
     {
         btnCheckUpdate.Enabled = false;
 
-        // ایجاد فرم Progress با تنظیمات کامل (مشابه MainForm)
-        var progressForm = new Form
-        {
-            Text = Localization.Get("CheckingUpdate"),
-            Size = new Size(400, 120),
-            FormBorderStyle = FormBorderStyle.FixedDialog,
-            StartPosition = FormStartPosition.CenterScreen,
-            MaximizeBox = false,
-            MinimizeBox = false,
-            RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No,
-            RightToLeftLayout = true,
-            ControlBox = false,
-            AutoScaleDimensions = new SizeF(96F, 96F),
-            AutoScaleMode = AutoScaleMode.Dpi
-        };
-
-        var lblMessage = new Label
-        {
-            Text = Localization.Get("CheckingProgress"),
-            Dock = DockStyle.Top,
-            Height = 30,
-            TextAlign = ContentAlignment.MiddleCenter,
-            Font = new Font("Tahoma", 9)
-        };
-
-        var progressBar = new ProgressBar
-        {
-            Dock = DockStyle.Bottom,
-            Height = 25,
-            Minimum = 0,
-            Maximum = 100,
-            Value = 0
-        };
-
-        progressForm.Controls.Add(lblMessage);
-        progressForm.Controls.Add(progressBar);
-        progressForm.Show(this);
-
-        var progress = new Progress<(int percent, string message)>(update =>
-        {
-            progressBar.Value = Math.Min(update.percent, 100);
-            lblMessage.Text = update.message;
-        });
-
+        using var progress = new UpdateProgressDialog(this);
         try
         {
-            var status = await AutoUpdater.CheckForUpdatesAsync(progress, silent: true);
+            var status = await AutoUpdater.CheckForUpdatesAsync(progress.Progress, silent: true);
             if (status == AutoUpdater.UpdateStatus.NoUpdate)
                 MessageBox.Show(Localization.Format("UpdNoUpdate", AutoUpdater.GetCurrentVersionString()),
                     Localization.Get("Update"), MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -670,7 +627,7 @@ public partial class SettingsForm : Form, ICloseRequestHandler
         }
         finally
         {
-            progressForm.Close();
+            progress.Close();
             btnCheckUpdate.Enabled = true;
         }
     }

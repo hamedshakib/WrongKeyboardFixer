@@ -4,15 +4,6 @@ using System.Windows.Forms;
 
 namespace WrongKeyboardFixer.Core.Services;
 
-public static class HotkeyModifier
-{
-    public const uint Alt = 0x0001;
-    public const uint Control = 0x0002;
-    public const uint Shift = 0x0004;
-    public const uint Windows = 0x0008;
-    public const uint ControlAlt = Control | Alt;
-}
-
 public partial class HotkeyManager : IDisposable
 {
     private readonly IntPtr _windowHandle;
