@@ -38,16 +38,16 @@ public class ClipboardManager
 
     public async Task<string> GetTextWithRetryAsync()
     {
-        for (int attempt = 0; attempt < MaxRetryAttempts; attempt++)
+        // Read immediately first: the caller already waits after sending Ctrl+C,
+        // so sleeping before the first attempt only adds needless latency.
+        string text = GetText();
+        for (int attempt = 0; string.IsNullOrWhiteSpace(text) && attempt < MaxRetryAttempts; attempt++)
         {
             await Task.Delay(RetryDelayMs);
-
-            string text = GetText();
-            if (!string.IsNullOrWhiteSpace(text))
-                return text;
+            text = GetText();
         }
 
-        return string.Empty;
+        return text;
     }
 
     public void RestoreText(string text)

@@ -201,7 +201,6 @@ public class MainForm : Form
     {
         if (_hotkeyManager != null && _hotkeyManager.HandleHotkeyMessage(ref message))
         {
-            Debug.WriteLine("🔥 Hotkey detected!");
             _ = ConvertSelectedTextAsync();
         }
 

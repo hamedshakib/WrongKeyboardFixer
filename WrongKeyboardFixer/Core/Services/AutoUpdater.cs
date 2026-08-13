@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -14,6 +15,17 @@ namespace WrongKeyboardFixer.Core.Services;
 public static class AutoUpdater
 {
     private const string GitHubApiUrl = "https://api.github.com/repos/hamedshakib/WrongKeyboardFixer/releases/latest";
+
+    // One shared client for all requests (connection reuse, no per-call setup).
+    private static readonly HttpClient Http = CreateHttpClient();
+    private static Version? _cachedCurrentVersion;
+
+    private static HttpClient CreateHttpClient()
+    {
+        var client = new HttpClient();
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("WrongKeyboardFixer-AutoUpdater");
+        return client;
+    }
 
     public enum UpdateStatus
     {
@@ -101,11 +113,17 @@ public static class AutoUpdater
 
     private static Version GetCurrentVersion()
     {
+        // The assembly version never changes at runtime, so read it once
+        // instead of hitting reflection on every call.
+        if (_cachedCurrentVersion != null)
+            return _cachedCurrentVersion;
+
         var assembly = Assembly.GetExecutingAssembly();
         var versionAttribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-        if (versionAttribute != null && Version.TryParse(versionAttribute.InformationalVersion, out var version))
-            return version;
-        return assembly.GetName().Version ?? new Version(1, 0, 0);
+        _cachedCurrentVersion = versionAttribute != null && Version.TryParse(versionAttribute.InformationalVersion, out var version)
+            ? version
+            : assembly.GetName().Version ?? new Version(1, 0, 0);
+        return _cachedCurrentVersion;
     }
 
     public static string GetCurrentVersionString()
@@ -115,11 +133,9 @@ public static class AutoUpdater
 
     private static async Task<ReleaseInfo?> GetLatestReleaseInfoAsync()
     {
-        using var httpClient = new HttpClient();
-        httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("WrongKeyboardFixer-AutoUpdater");
         try
         {
-            var response = await httpClient.GetAsync(GitHubApiUrl);
+            var response = await Http.GetAsync(GitHubApiUrl);
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             using var releaseData = JsonDocument.Parse(json);
@@ -181,37 +197,41 @@ public static class AutoUpdater
             bool isZip = downloadUrl.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
             string downloadedFile = Path.Combine(tempDir, isZip ? "update.zip" : "update.exe");
 
-            // Download with progress
-            using var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("WrongKeyboardFixer-AutoUpdater");
-
             progress?.Report((20, Localization.Get("UpdDownloading")));
 
-            using var response = await httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
+            using var response = await Http.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();
 
             var totalBytes = response.Content.Headers.ContentLength ?? -1;
             using var contentStream = await response.Content.ReadAsStreamAsync();
 
-            // Use a using block (not using var) so the file is closed before extraction
-            using (var fileStream = new FileStream(downloadedFile, FileMode.Create, FileAccess.Write, FileShare.None))
+            // Rent a reusable buffer instead of allocating a fresh one per download.
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(8192);
+            try
             {
-                var buffer = new byte[8192];
-                int bytesRead;
-                long totalRead = 0;
-
-                while ((bytesRead = await contentStream.ReadAsync(buffer)) > 0)
+                // Use a using block (not using var) so the file is closed before extraction
+                using (var fileStream = new FileStream(downloadedFile, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
-                    await fileStream.WriteAsync(buffer, 0, bytesRead);
-                    totalRead += bytesRead;
+                    int bytesRead;
+                    long totalRead = 0;
 
-                    if (totalBytes > 0)
+                    while ((bytesRead = await contentStream.ReadAsync(buffer)) > 0)
                     {
-                        int percent = (int)(20 + (totalRead * 70.0 / totalBytes));
-                        progress?.Report((Math.Min(percent, 90), Localization.Format("UpdDownloadPercent", percent)));
+                        await fileStream.WriteAsync(buffer, 0, bytesRead);
+                        totalRead += bytesRead;
+
+                        if (totalBytes > 0)
+                        {
+                            int percent = (int)(20 + (totalRead * 70.0 / totalBytes));
+                            progress?.Report((Math.Min(percent, 90), Localization.Format("UpdDownloadPercent", percent)));
+                        }
                     }
-                }
-            } // fileStream is disposed here — file is no longer locked
+                } // fileStream is disposed here — file is no longer locked
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
 
             progress?.Report((90, Localization.Get("UpdPreparing")));
 

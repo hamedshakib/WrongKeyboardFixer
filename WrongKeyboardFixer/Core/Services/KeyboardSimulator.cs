@@ -49,7 +49,11 @@ public static partial class KeyboardSimulator
     /// </summary>
     private static void ReleaseModifierKeys()
     {
-        SendInput(2, CreateKeyUpInputs(VkMenu, VkControl), InputSize);
+        Span<Input> keyUps = stackalloc Input[2];
+        keyUps[0] = KeyboardInput(VkMenu, KeyEventFKeyUp);
+        keyUps[1] = KeyboardInput(VkControl, KeyEventFKeyUp);
+
+        SendInput(2, keyUps, InputSize);
     }
 
     /// <summary>
@@ -65,17 +69,6 @@ public static partial class KeyboardSimulator
         inputs[3] = KeyboardInput(modifier, KeyEventFKeyUp);  // Release modifier
 
         SendInput(4, inputs, InputSize);
-    }
-
-    /// <summary>
-    /// Creates an array of key-up INPUT records for the given virtual keys.
-    /// </summary>
-    private static Input[] CreateKeyUpInputs(params byte[] virtualKeys)
-    {
-        var inputs = new Input[virtualKeys.Length];
-        for (int i = 0; i < virtualKeys.Length; i++)
-            inputs[i] = KeyboardInput(virtualKeys[i], KeyEventFKeyUp);
-        return inputs;
     }
 
     private static Input KeyboardInput(byte virtualKey, uint flags)

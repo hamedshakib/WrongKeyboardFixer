@@ -30,10 +30,6 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     private const int FormWidth = 920;
     private const int FormHeight = 600;
 
-    // براش‌های ایستا: به‌جای ساخت Brush برای هر سلول در هر Paint
-    private static readonly SolidBrush DeleteButtonBrush = new(Theme.DangerSoft);
-    private static readonly SolidBrush ResetButtonBrush = new(Theme.WarningSoft);
-
     public KeyboardMappingsForm(AppSettings settings)
     {
         _settings = settings ?? new AppSettings();

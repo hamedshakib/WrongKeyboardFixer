@@ -86,12 +86,18 @@ public static class KeyboardConverter
                 continue;
             }
 
-            char lowerChar = char.ToLowerInvariant(c);
-            mapped = ConvertEnglishToPersianChar(lowerChar, customMappings, isWordStart);
-            if (mapped.HasValue)
+            // Only uppercase letters have a lowercase equivalent in the maps;
+            // skipping this lookup for digits/punctuation/Persian chars avoids
+            // a redundant dictionary probe per character.
+            if (char.IsUpper(c))
             {
-                sb.Append(mapped.Value);
-                continue;
+                char lowerChar = char.ToLowerInvariant(c);
+                mapped = ConvertEnglishToPersianChar(lowerChar, customMappings, isWordStart);
+                if (mapped.HasValue)
+                {
+                    sb.Append(mapped.Value);
+                    continue;
+                }
             }
 
             sb.Append(c);
