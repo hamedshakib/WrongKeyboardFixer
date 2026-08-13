@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Helpers;
-using WrongKeyboardFixer.Core.UI;
+using WrongKeyboardFixer.UI.Components;
 
 namespace WrongKeyboardFixer.UI.Forms;
 

@@ -1,32 +1,19 @@
 using System;
-using System.Buffers;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
-using System.Net.Http;
-using System.Reflection;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Helpers;
+using WrongKeyboardFixer.Core.Services.Update;
 
 namespace WrongKeyboardFixer.Core.Services;
 
+/// <summary>
+/// Orchestrates the update workflow: fetch the latest release, compare versions,
+/// ask the user, and hand the download/install work to the update services.
+/// Owns all user-facing messaging for the flow.
+/// </summary>
 public static class AutoUpdater
 {
-    private const string GitHubApiUrl = "https://api.github.com/repos/hamedshakib/WrongKeyboardFixer/releases/latest";
-
-    // One shared client for all requests (connection reuse, no per-call setup).
-    private static readonly HttpClient Http = CreateHttpClient();
-    private static Version? _cachedCurrentVersion;
-
-    private static HttpClient CreateHttpClient()
-    {
-        var client = new HttpClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("WrongKeyboardFixer-AutoUpdater");
-        return client;
-    }
-
     public enum UpdateStatus
     {
         NoUpdate,
@@ -35,6 +22,9 @@ public static class AutoUpdater
         UserDeclined,
         Error
     }
+
+    // One shared client for all requests (connection reuse, no per-call setup).
+    private static readonly GitHubReleaseClient Client = new();
 
     /// <summary>
     /// Checks for updates from GitHub releases.
@@ -49,40 +39,31 @@ public static class AutoUpdater
         try
         {
             progress?.Report((0, Localization.Get("UpdCheckingCurrent")));
-            var currentVersion = GetCurrentVersion();
+            var currentVersion = VersionInfo.Current;
 
             progress?.Report((10, Localization.Get("UpdFetchingRelease")));
-            var latestRelease = await GetLatestReleaseInfoAsync();
+            var latestRelease = await Client.GetLatestReleaseAsync();
             if (latestRelease == null)
             {
                 if (!silent)
-                {
-                    MessageBox.Show(
-                        Localization.Get("UpdFetchError"),
-                        Localization.Get("Error"),
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                }
+                    ShowMessage(Localization.Get("UpdFetchError"), Localization.Get("Error"), MessageBoxIcon.Error);
                 return UpdateStatus.Error;
             }
 
-            var latestVersion = ParseVersion(latestRelease.TagName);
+            var latestVersion = VersionInfo.ParseTag(latestRelease.TagName);
 
             if (latestVersion <= currentVersion)
             {
                 if (!silent)
-                {
-                    MessageBox.Show(
+                    ShowMessage(
                         Localization.Format("UpdNoUpdate", currentVersion),
                         Localization.Get("Update"),
-                        MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
-                }
                 progress?.Report((100, Localization.Get("UpdNoUpdateShort")));
                 return UpdateStatus.NoUpdate;
             }
 
-            // Show update available dialog
+            // Ask the user whether to download the new version.
             progress?.Report((15, Localization.Format("UpdFound", latestVersion)));
             var result = MessageBox.Show(
                 Localization.Format("UpdAvailablePrompt", latestVersion, currentVersion),
@@ -93,375 +74,35 @@ public static class AutoUpdater
             if (result != DialogResult.Yes)
                 return UpdateStatus.UserDeclined;
 
-            return await DownloadAndInstallUpdateAsync(latestRelease, latestVersion, progress);
+            var installer = new UpdateInstaller(Client);
+            bool restartScheduled = await installer.InstallAsync(latestRelease, latestVersion, progress);
+            if (restartScheduled)
+            {
+                // Exit so the replacement script can swap the running exe.
+                Application.Exit();
+                return UpdateStatus.DownloadedAndInstalling;
+            }
+
+            return UpdateStatus.Error;
+        }
+        catch (UpdateInstallException ex)
+        {
+            Debug.WriteLine($"❌ Update install failed: {ex.Message}");
+            progress?.Report((100, ex.Message));
+            if (!silent)
+                ShowMessage(ex.Message, Localization.Get("Error"), ex.IsWarning ? MessageBoxIcon.Warning : MessageBoxIcon.Error);
+            return UpdateStatus.Error;
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"❌ Update check failed: {ex.Message}");
             progress?.Report((100, Localization.Format("UpdCheckError", ex.Message)));
             if (!silent)
-            {
-                MessageBox.Show(
-                    Localization.Format("UpdCheckError", ex.Message),
-                    Localization.Get("Error"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
+                ShowMessage(Localization.Format("UpdCheckError", ex.Message), Localization.Get("Error"), MessageBoxIcon.Error);
             return UpdateStatus.Error;
         }
     }
 
-    private static Version GetCurrentVersion()
-    {
-        // The assembly version never changes at runtime, so read it once
-        // instead of hitting reflection on every call.
-        if (_cachedCurrentVersion != null)
-            return _cachedCurrentVersion;
-
-        var assembly = Assembly.GetExecutingAssembly();
-        var versionAttribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-        _cachedCurrentVersion = versionAttribute != null && Version.TryParse(versionAttribute.InformationalVersion, out var version)
-            ? version
-            : assembly.GetName().Version ?? new Version(1, 0, 0);
-        return _cachedCurrentVersion;
-    }
-
-    public static string GetCurrentVersionString()
-    {
-        return GetCurrentVersion().ToString();
-    }
-
-    private static async Task<ReleaseInfo?> GetLatestReleaseInfoAsync()
-    {
-        try
-        {
-            var response = await Http.GetAsync(GitHubApiUrl);
-            response.EnsureSuccessStatusCode();
-            var json = await response.Content.ReadAsStringAsync();
-            using var releaseData = JsonDocument.Parse(json);
-            if (releaseData.RootElement.TryGetProperty("tag_name", out var tagNameElement) &&
-                releaseData.RootElement.TryGetProperty("assets", out var assetsElement))
-            {
-                string? downloadUrl = null;
-                foreach (var asset in assetsElement.EnumerateArray())
-                {
-                    if (asset.TryGetProperty("browser_download_url", out var urlElement) &&
-                        asset.TryGetProperty("name", out var nameElement))
-                    {
-                        string name = nameElement.GetString() ?? "";
-                        if (name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ||
-                            name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                        {
-                            downloadUrl = urlElement.GetString();
-                            break;
-                        }
-                    }
-                }
-                if (downloadUrl != null)
-                {
-                    return new ReleaseInfo
-                    {
-                        TagName = tagNameElement.GetString() ?? "",
-                        DownloadUrl = downloadUrl
-                    };
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"❌ Failed to get latest release: {ex.Message}");
-        }
-        return null;
-    }
-
-    private static Version ParseVersion(string tagName)
-    {
-        // Remove 'v' prefix if present
-        string versionString = tagName.TrimStart('v');
-        if (Version.TryParse(versionString, out var version))
-            return version;
-        return new Version(1, 0, 0);
-    }
-
-    private static async Task<UpdateStatus> DownloadAndInstallUpdateAsync(
-        ReleaseInfo release,
-        Version latestVersion,
-        IProgress<(int percent, string message)>? progress)
-    {
-        try
-        {
-            string tempDir = Path.Combine(Path.GetTempPath(), $"WrongKeyboardFixer_Update_{Guid.NewGuid():N}");
-            Directory.CreateDirectory(tempDir);
-
-            string downloadUrl = release.DownloadUrl;
-            bool isZip = downloadUrl.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
-            string downloadedFile = Path.Combine(tempDir, isZip ? "update.zip" : "update.exe");
-
-            progress?.Report((20, Localization.Get("UpdDownloading")));
-
-            using var response = await Http.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
-            response.EnsureSuccessStatusCode();
-
-            var totalBytes = response.Content.Headers.ContentLength ?? -1;
-            using var contentStream = await response.Content.ReadAsStreamAsync();
-
-            // Rent a reusable buffer instead of allocating a fresh one per download.
-            byte[] buffer = ArrayPool<byte>.Shared.Rent(8192);
-            try
-            {
-                // Use a using block (not using var) so the file is closed before extraction
-                using (var fileStream = new FileStream(downloadedFile, FileMode.Create, FileAccess.Write, FileShare.None))
-                {
-                    int bytesRead;
-                    long totalRead = 0;
-
-                    while ((bytesRead = await contentStream.ReadAsync(buffer)) > 0)
-                    {
-                        await fileStream.WriteAsync(buffer, 0, bytesRead);
-                        totalRead += bytesRead;
-
-                        if (totalBytes > 0)
-                        {
-                            int percent = (int)(20 + (totalRead * 70.0 / totalBytes));
-                            progress?.Report((Math.Min(percent, 90), Localization.Format("UpdDownloadPercent", percent)));
-                        }
-                    }
-                } // fileStream is disposed here — file is no longer locked
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(buffer);
-            }
-
-            progress?.Report((90, Localization.Get("UpdPreparing")));
-
-            string currentExePath = Application.ExecutablePath;
-            string? newExePath = null;
-
-            if (isZip)
-            {
-                // Extract zip
-                string extractDir = Path.Combine(tempDir, "extracted");
-                Directory.CreateDirectory(extractDir);
-
-                using var archive = new ZipArchive(File.OpenRead(downloadedFile), ZipArchiveMode.Read);
-                foreach (var entry in archive.Entries)
-                {
-                    // Skip directory entries
-                    if (entry.FullName.EndsWith('/') || entry.FullName.EndsWith('\\'))
-                    {
-                        string dirPath = Path.Combine(extractDir, entry.FullName.Replace('/', Path.DirectorySeparatorChar));
-                        Directory.CreateDirectory(dirPath);
-                        continue;
-                    }
-
-                    string destPath = Path.Combine(extractDir, entry.FullName.Replace('/', Path.DirectorySeparatorChar));
-                    string? destDir = Path.GetDirectoryName(destPath);
-                    if (destDir != null)
-                        Directory.CreateDirectory(destDir);
-
-                    // Security check: prevent zip slip (path traversal)
-                    string fullDestPath = Path.GetFullPath(destPath);
-                    string fullExtractDir = Path.GetFullPath(extractDir);
-                    if (!fullDestPath.StartsWith(fullExtractDir, StringComparison.OrdinalIgnoreCase))
-                    {
-                        Debug.WriteLine($"⚠️ Skipping potentially malicious entry: {entry.FullName}");
-                        continue;
-                    }
-
-                    using var entryStream = entry.Open();
-                    using var destFileStream = new FileStream(destPath, FileMode.Create, FileAccess.Write);
-                    await entryStream.CopyToAsync(destFileStream);
-                }
-
-                // Find the exe in extracted files
-                newExePath = FindExecutable(extractDir);
-                if (newExePath == null)
-                {
-                    MessageBox.Show(
-                        Localization.Get("UpdExeNotFound"),
-                        Localization.Get("Error"),
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                    return UpdateStatus.Error;
-                }
-            }
-            else
-            {
-                newExePath = downloadedFile;
-            }
-
-            // Verify the new exe version is actually newer than the current one
-            var newExeVersion = GetFileVersion(newExePath);
-            if (newExeVersion != null && newExeVersion <= GetCurrentVersion())
-            {
-                MessageBox.Show(
-                    Localization.Format("UpdNotNewer", newExeVersion, GetCurrentVersion()),
-                    Localization.Get("Error"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                return UpdateStatus.Error;
-            }
-
-            // Create batch script to replace the running exe
-            string batchPath = Path.Combine(tempDir, "update.bat");
-            string batchContent = GenerateBatchScript(
-                processId: Environment.ProcessId,
-                newExePath: newExePath,
-                currentExePath: currentExePath,
-                tempDir: tempDir);
-            File.WriteAllText(batchPath, batchContent);
-
-            progress?.Report((95, Localization.Get("UpdInstalling")));
-
-            // Start the batch script (hidden window)
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = batchPath,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                UseShellExecute = true
-            });
-
-            progress?.Report((100, Localization.Get("UpdInstallComplete")));
-
-            // Exit current application so the batch script can replace the exe
-            Application.Exit();
-            return UpdateStatus.DownloadedAndInstalling;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"❌ Download/install failed: {ex.Message}");
-            progress?.Report((100, Localization.Format("UpdDownloadInstallError", ex.Message)));
-            MessageBox.Show(
-                Localization.Format("UpdDownloadInstallError", ex.Message),
-                Localization.Get("Error"),
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-            return UpdateStatus.Error;
-        }
-    }
-
-    /// <summary>
-    /// Generates a batch script that waits for the current process to exit,
-    /// replaces the executable with retry logic, and restarts the application.
-    /// </summary>
-    private static string GenerateBatchScript(
-        int processId,
-        string newExePath,
-        string currentExePath,
-        string tempDir)
-    {
-        string logFile = Path.Combine(tempDir, "update.log");
-        return $@"@echo off
-chcp 65001 >nul
-setlocal EnableDelayedExpansion
-
-set ""LOG={logFile}""
-echo [%date% %time%] Update script started > ""!LOG!""
-
-:: Wait for the current application to exit (max 30 seconds)
-set /a waitCount=0
-:waitloop
-tasklist /fi ""PID eq {processId}"" 2>nul | find ""{processId}"" >nul
-if !errorlevel! equ 0 (
-    set /a waitCount+=1
-    if !waitCount! geq 30 (
-        echo [%date% %time%] ERROR: Timed out waiting for process {processId} to exit >> ""!LOG!""
-        goto :error
-    )
-    ping 127.0.0.1 -n 2 >nul
-    goto waitloop
-)
-echo [%date% %time%] Process {processId} exited. Proceeding with update... >> ""!LOG!""
-
-:: Copy the new executable over the old one with retry (max 10 attempts)
-set /a copyAttempt=0
-:copyloop
-set /a copyAttempt+=1
-copy /y ""{newExePath}"" ""{currentExePath}"" >nul 2>&1
-if !errorlevel! equ 0 (
-    echo [%date% %time%] Copy succeeded on attempt !copyAttempt! >> ""!LOG!""
-    goto :copyok
-)
-if !copyAttempt! geq 10 (
-    echo [%date% %time%] ERROR: Copy failed after 10 attempts >> ""!LOG!""
-    goto :error
-)
-echo [%date% %time%] Copy attempt !copyAttempt! failed, retrying... >> ""!LOG!""
-ping 127.0.0.1 -n 2 >nul
-goto copyloop
-
-:copyok
-:: Verify the copy actually worked by checking file size
-for %%A in (""{newExePath}"") do set ""newSize=%%~zA""
-for %%A in (""{currentExePath}"") do set ""curSize=%%~zA""
-if not ""!newSize!""==""!curSize!"" (
-    echo [%date% %time%] ERROR: File size mismatch after copy (new=!newSize!, cur=!curSize!) >> ""!LOG!""
-    goto :error
-)
-echo [%date% %time%] File size verified: !curSize! bytes >> ""!LOG!""
-
-:: Start the updated application
-echo [%date% %time%] Starting updated application... >> ""!LOG!""
-start """" ""{currentExePath}""
-
-:: Wait a moment for the app to start
-ping 127.0.0.1 -n 3 >nul
-
-:: Clean up temp directory
-rd /s /q ""{tempDir}"" 2>nul
-
-:: Delete this batch file
-(goto) 2>nul & del ""%~f0""
-exit /b 0
-
-:error
-echo [%date% %time%] Update failed. See log for details. >> ""!LOG!""
-:: Show error message to user
-msg * ""Update failed. Please check the log file: {logFile}"" >nul 2>&1
-:: Clean up temp directory
-rd /s /q ""{tempDir}"" 2>nul
-:: Delete this batch file
-(goto) 2>nul & del ""%~f0""
-exit /b 1
-";
-    }
-
-    /// <summary>
-    /// Recursively searches for the first .exe file in a directory.
-    /// </summary>
-    private static string? FindExecutable(string directory)
-    {
-        foreach (var file in Directory.EnumerateFiles(directory, "*.exe", SearchOption.AllDirectories))
-        {
-            return file;
-        }
-        return null;
-    }
-
-    /// <summary>
-    /// Reads the file version of an executable file.
-    /// </summary>
-    private static Version? GetFileVersion(string filePath)
-    {
-        try
-        {
-            var versionInfo = FileVersionInfo.GetVersionInfo(filePath);
-            if (versionInfo.FileVersion != null && Version.TryParse(versionInfo.FileVersion, out var version))
-                return version;
-            if (versionInfo.ProductVersion != null && Version.TryParse(versionInfo.ProductVersion, out var productVersion))
-                return productVersion;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"❌ Failed to read file version: {ex.Message}");
-        }
-        return null;
-    }
-
-    private class ReleaseInfo
-    {
-        public string TagName { get; set; } = "";
-        public string DownloadUrl { get; set; } = "";
-    }
+    private static void ShowMessage(string text, string caption, MessageBoxIcon icon) =>
+        MessageBox.Show(text, caption, MessageBoxButtons.OK, icon);
 }

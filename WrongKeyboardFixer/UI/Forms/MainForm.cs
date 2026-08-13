@@ -1,14 +1,12 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Helpers;
-using WrongKeyboardFixer.Core.Model;
+using WrongKeyboardFixer.Core.Models;
 using WrongKeyboardFixer.Core.Services;
-using WrongKeyboardFixer.Core.UI;
+using WrongKeyboardFixer.UI.Components;
 
 namespace WrongKeyboardFixer.UI.Forms;
 
@@ -18,8 +16,7 @@ public class MainForm : Form
     private ClipboardManager _clipboardManager = null!;
     private TextConversionService? _textConversionService;
     private AppSettings _settings = null!;
-    private NotifyIcon? _trayIcon;
-    private ContextMenuStrip? _trayMenu;
+    private TrayIconManager? _trayIcon;
     private bool _isInitialized;
 
     public MainForm()
@@ -90,76 +87,12 @@ public class MainForm : Form
         ShowInTaskbar = false;
         Visible = false;
         FormBorderStyle = FormBorderStyle.None;
-        Size = new System.Drawing.Size(1, 1);
+        Size = new Size(1, 1);
         Icon = IconLoader.GetIcon();
-        CreateTrayIcon();
-    }
 
-    private void CreateTrayIcon()
-    {
-        _trayMenu = BuildTrayMenu();
-
-        _trayIcon = new NotifyIcon
-        {
-            Icon = IconLoader.GetIcon(),
-            Visible = true,
-            ContextMenuStrip = _trayMenu,
-            Text = Localization.Get("TrayText")
-        };
-
-        // دابل کلیک برای باز کردن تنظیمات
-        _trayIcon.DoubleClick += (_, _) => OpenSettings();
-    }
-
-    private ContextMenuStrip BuildTrayMenu()
-    {
-        var menu = new ContextMenuStrip
-        {
-            Renderer = Theme.CreateMenuRenderer(),
-            Font = Theme.BodyFont,
-            BackColor = Theme.Surface,
-            ForeColor = Theme.TextPrimary,
-            ShowImageMargin = true
-        };
-
-        var settingsItem = new ToolStripMenuItem(Localization.Get("TraySettings"));
-        settingsItem.Image = CreateEmojiIcon("⚙️");
-        settingsItem.Click += (_, _) => OpenSettings();
-        menu.Items.Add(settingsItem);
-
-        menu.Items.Add("-"); // جداکننده
-
-        var exitItem = new ToolStripMenuItem(Localization.Get("TrayExit"));
-        exitItem.Image = CreateEmojiIcon("⏻");
-        exitItem.Click += (_, _) => Application.Exit();
-        menu.Items.Add(exitItem);
-
-        return menu;
-    }
-
-    /// <summary>
-    /// تبدیل یک ایموجی به تصویر برای استفاده به عنوان آیکون آیتم منو
-    /// </summary>
-    private static Bitmap CreateEmojiIcon(string emoji)
-    {
-        var bitmap = new Bitmap(16, 16);
-        using var graphics = Graphics.FromImage(bitmap);
-        graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
-
-        using var font = new Font("Segoe UI Emoji", 11f, FontStyle.Regular, GraphicsUnit.Pixel);
-        using var brush = new SolidBrush(Color.Black);
-
-        var format = new StringFormat
-        {
-            Alignment = StringAlignment.Center,
-            LineAlignment = StringAlignment.Center
-        };
-
-        var rect = new RectangleF(0, 0, 16, 16);
-        graphics.DrawString(emoji, font, brush, rect, format);
-
-        return bitmap;
+        _trayIcon = new TrayIconManager();
+        _trayIcon.SettingsRequested += (_, _) => OpenSettings();
+        _trayIcon.ExitRequested += (_, _) => Application.Exit();
     }
 
     private void OpenSettings()
@@ -174,21 +107,11 @@ public class MainForm : Form
 
             // اعمال زبان جدید و بازسازی منوی tray
             Localization.SetLanguage(_settings.Language);
-            RefreshTrayMenu();
+            _trayIcon?.RebuildMenu();
 
             // ثبت مجدد کلید ترکیبی
             RegisterHotkeyFromSettings();
         }
-    }
-
-    private void RefreshTrayMenu()
-    {
-        if (_trayMenu == null || _trayIcon == null)
-            return;
-
-        _trayMenu.Items.Clear();
-        _trayMenu.Items.AddRange(BuildTrayMenu().Items);
-        _trayIcon.Text = Localization.Get("TrayText");
     }
 
     private void ApplyStartupSettings()
@@ -237,5 +160,4 @@ public class MainForm : Form
             Debug.WriteLine($"❌ Update check error: {ex.Message}");
         }
     }
-
 }

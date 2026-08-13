@@ -3,9 +3,10 @@ using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Helpers;
-using WrongKeyboardFixer.Core.Model;
+using WrongKeyboardFixer.Core.Models;
 using WrongKeyboardFixer.Core.Services;
-using WrongKeyboardFixer.Core.UI;
+using WrongKeyboardFixer.Core.Services.Update;
+using WrongKeyboardFixer.UI.Components;
 
 namespace WrongKeyboardFixer.UI.Forms;
 
@@ -180,7 +181,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         // ── Current version section ───────────────────────
         AddHeaderRow(Localization.Get("CurrentVersion"));
 
-        _versionLabel = Theme.BodyLabel(AutoUpdater.GetCurrentVersionString(), Theme.Accent, Theme.BodyBoldFont);
+        _versionLabel = Theme.BodyLabel(VersionInfo.CurrentString, Theme.Accent, Theme.BodyBoldFont);
         _versionLabel.Width = 140;
         _checkUpdateButton = new ModernButton
         {
@@ -475,7 +476,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         {
             var status = await AutoUpdater.CheckForUpdatesAsync(progress.Progress, silent: true);
             if (status == AutoUpdater.UpdateStatus.NoUpdate)
-                MessageBox.Show(Localization.Format("UpdNoUpdate", AutoUpdater.GetCurrentVersionString()),
+                MessageBox.Show(Localization.Format("UpdNoUpdate", VersionInfo.CurrentString),
                     Localization.Get("Update"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             else if (status == AutoUpdater.UpdateStatus.Error)
                 MessageBox.Show(Localization.Get("UpdCheckErrorInternet"),

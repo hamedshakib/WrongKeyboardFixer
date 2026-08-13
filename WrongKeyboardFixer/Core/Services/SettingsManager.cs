@@ -3,9 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Windows.Forms;
-using Microsoft.Win32;
 using WrongKeyboardFixer.Core.Helpers;
-using WrongKeyboardFixer.Core.Model;
+using WrongKeyboardFixer.Core.Models;
+using WrongKeyboardFixer.Core.Persistence;
 
 namespace WrongKeyboardFixer.Core.Services;
 
@@ -80,41 +80,5 @@ public static class SettingsManager
     public static void AddToStartup(bool enable)
     {
         RegistryManager.SetAutoStart(enable);
-    }
-}
-
-/// <summary>
-/// Thin wrapper around the Windows registry <c>Run</c> key that controls
-/// whether the application starts when Windows boots.
-/// </summary>
-internal sealed class RegistryManager
-{
-    private const string AutoStartKeyName = "WrongKeyboardFixer";
-    private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
-
-    private static readonly string ExecutablePath = Application.ExecutablePath;
-
-    public void SetAutoStart(bool enable)
-    {
-        try
-        {
-            using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, true);
-            if (key == null)
-                return;
-
-            if (enable)
-                key.SetValue(AutoStartKeyName, $"\"{ExecutablePath}\"");
-            else if (key.GetValue(AutoStartKeyName) is not null)
-                key.DeleteValue(AutoStartKeyName);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                Localization.Format("StartupSettingsError", ex.Message),
-                Localization.Get("Error"),
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error
-            );
-        }
     }
 }

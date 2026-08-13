@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using WrongKeyboardFixer.Core.Model;
+using WrongKeyboardFixer.Core.Models;
 
 namespace WrongKeyboardFixer.Core.Services;
 
