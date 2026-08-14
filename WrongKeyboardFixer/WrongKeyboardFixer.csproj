@@ -23,6 +23,9 @@
 		<EmbeddedResource Include="Resources\WrongKeyboardFixer.ico">
 			<LogicalName>WrongKeyboardFixer.ico</LogicalName>
 		</EmbeddedResource>
+		<EmbeddedResource Include="Core\Models\word-corrections.txt">
+			<LogicalName>WrongKeyboardFixer.Core.Models.word-corrections.txt</LogicalName>
+		</EmbeddedResource>
 	</ItemGroup>
 	<PropertyGroup>
 		<Version>1.3.0</Version>
