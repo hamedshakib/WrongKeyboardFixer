@@ -68,7 +68,7 @@ public sealed class TextConversionService
             bool toPersian = KeyboardConverter.ShouldConvertToPersian(originalText);
 
             string convertedText = toPersian
-                ? KeyboardConverter.ConvertEnglishToPersian(originalText, _settings.EnglishToPersianMap)
+                ? KeyboardConverter.ConvertEnglishToPersian(originalText, _settings.EnglishToPersianMap, _settings.WordCorrections)
                 : KeyboardConverter.ConvertPersianToEnglish(originalText, _settings.PersianToEnglishMap);
 
             // Nothing changed: leave the selection untouched and give back the

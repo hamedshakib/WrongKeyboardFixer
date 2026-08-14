@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Helpers;
 using WrongKeyboardFixer.Core.Models;
@@ -17,6 +18,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     // (قبلاً ویرایش سلول مستقیماً _settings را تغییر می‌داد و «انصراف» بی‌اثر بود)
     private Dictionary<char, char> _persianToEnglish;
     private Dictionary<char, char> _englishToPersian;
+    private List<string> _wordCorrections;
 
     private MappingGrid? _persianToEnglishGrid;
     private MappingGrid? _englishToPersianGrid;
@@ -24,15 +26,19 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     private ModernButton? _cancelButton;
     private Label? _persianToEnglishCountLabel;
     private Label? _englishToPersianCountLabel;
+    private ListBox? _wordListBox;
+    private TextBox? _wordTextBox;
+    private Label? _wordCountLabel;
 
     private const int FormWidth = 920;
-    private const int FormHeight = 600;
+    private const int FormHeight = 780;
 
     public KeyboardMappingsForm(AppSettings settings)
     {
         _settings = settings ?? new AppSettings();
         _persianToEnglish = new Dictionary<char, char>(_settings.PersianToEnglishMap ?? new Dictionary<char, char>());
         _englishToPersian = new Dictionary<char, char>(_settings.EnglishToPersianMap ?? new Dictionary<char, char>());
+        _wordCorrections = new List<string>(_settings.WordCorrections ?? MappingDefaults.GetDefaultWordCorrections());
 
         Localization.SetLanguage(_settings.Language);
 
@@ -41,6 +47,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         this.ResumeLayout(false);
 
         LoadMappings();
+        LoadWords();
     }
 
     private void InitializeControls()
@@ -75,7 +82,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         const int cardGap = 16;
         int cardWidth = (innerWidth - cardGap) / 2;
         const int cardY = 14;
-        const int gridHeight = 306;
+        const int gridHeight = 270;
 
         // ── کارت فارسی → انگلیسی ──────────────────────────
         _persianToEnglishCountLabel = Theme.BodyLabel("", Theme.TextSecondary, Theme.SmallFont);
@@ -100,6 +107,10 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             _englishToPersianGrid,
             AddEnglishToPersianButton_Click,
             ResetAllEnglishToPersianButton_Click));
+
+        // ── کارت کلمات تصحیح (آ / ژ) ────────────────────────
+        int wordCardY = cardY + BuildCardHeight(gridHeight) + cardGap;
+        panel.Controls.Add(BuildWordCorrectionsCard(left, innerWidth, wordCardY));
 
         // ── فوتر ──────────────────────────────────────────
         int footerY = panel.Height - panel.Padding.Bottom - 42;
@@ -216,6 +227,109 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         return card;
     }
 
+    /// <summary>
+    /// Builds the full-width card that lets the user manage the «آ»/«ژ» word
+    /// correction list. Edits target the local copy until «ذخیره» is pressed.
+    /// </summary>
+    private RoundedPanel BuildWordCorrectionsCard(int left, int cardWidth, int cardY)
+    {
+        var card = new RoundedPanel
+        {
+            CornerRadius = 12,
+            BackColor = Theme.SurfaceAlt,
+            BorderColor = Theme.Border,
+            BorderWidth = 1,
+            Padding = new Padding(14),
+            Location = new Point(left, cardY),
+            Size = new Size(cardWidth, 194)
+        };
+
+        card.Controls.Add(Theme.SectionLabel(Localization.Get("WordCorrections"))
+            .Then(l => l.Location = new Point(14, 12)));
+
+        _wordCountLabel = Theme.BodyLabel("", Theme.TextSecondary, Theme.SmallFont);
+        _wordCountLabel.Location = new Point(cardWidth - 14 - 130, 14);
+        _wordCountLabel.Size = new Size(130, 22);
+        _wordCountLabel.TextAlign = ContentAlignment.MiddleRight;
+        _wordCountLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        card.Controls.Add(_wordCountLabel);
+
+        var hint = Theme.BodyLabel(Localization.Get("WordCorrectionsHint"), Theme.TextSecondary, Theme.SmallFont);
+        hint.Location = new Point(14, 40);
+        hint.Size = new Size(cardWidth - 28, 18);
+        card.Controls.Add(hint);
+
+        const int buttonWidth = 160;
+        int listWidth = cardWidth - 28 - buttonWidth - 10;
+        int buttonX = 14 + listWidth + 10;
+
+        _wordListBox = new ListBox
+        {
+            Location = new Point(14, 64),
+            Size = new Size(listWidth, 78),
+            BorderStyle = BorderStyle.FixedSingle,
+            IntegralHeight = false,
+            BackColor = Theme.Surface,
+            ForeColor = Theme.TextPrimary,
+            Font = Theme.BodyFont
+        };
+        card.Controls.Add(_wordListBox);
+
+        var removeButton = new ModernButton
+        {
+            Text = Localization.Get("RemoveWord"),
+            ButtonVariant = ModernButton.Variant.Ghost,
+            Location = new Point(buttonX, 64),
+            Size = new Size(buttonWidth, 34)
+        };
+        removeButton.Click += RemoveWordButton_Click;
+        card.Controls.Add(removeButton);
+
+        var resetButton = new ModernButton
+        {
+            Text = Localization.Get("ResetWords"),
+            ButtonVariant = ModernButton.Variant.Ghost,
+            Location = new Point(buttonX, 102),
+            Size = new Size(buttonWidth, 34)
+        };
+        resetButton.Click += ResetWordsButton_Click;
+        card.Controls.Add(resetButton);
+
+        _wordTextBox = new TextBox
+        {
+            Location = new Point(14, 150),
+            Size = new Size(listWidth - 126 - 10, 30),
+            Font = Theme.BodyFont,
+            BackColor = Theme.Surface,
+            ForeColor = Theme.TextPrimary,
+            BorderStyle = BorderStyle.FixedSingle
+        };
+        _wordTextBox.KeyDown += WordTextBox_KeyDown;
+        card.Controls.Add(_wordTextBox);
+
+        var addButton = new ModernButton
+        {
+            Text = "+ " + Localization.Get("AddWord"),
+            ButtonVariant = ModernButton.Variant.Primary,
+            Location = new Point(14 + _wordTextBox.Width + 10, 150),
+            Size = new Size(126, 30)
+        };
+        addButton.Click += AddWordButton_Click;
+        card.Controls.Add(addButton);
+
+        return card;
+    }
+
+    private void WordTextBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.KeyCode == Keys.Enter)
+        {
+            AddWordButton_Click(this, EventArgs.Empty);
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+        }
+    }
+
     // ── بارگذاری: با SuspendLayout و بدون انتخاب اضافی ──
     private void LoadMappings()
     {
@@ -230,6 +344,61 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             e2pGrid.Load(_englishToPersian);
             _englishToPersianCountLabel!.Text = Localization.Format("MappingsCount", _englishToPersian.Count);
         }
+    }
+
+    // ── لیست کلمات تصحیح → فقط کپی محلی ──
+    private void LoadWords()
+    {
+        _wordListBox!.BeginUpdate();
+        _wordListBox.Items.Clear();
+        foreach (string word in _wordCorrections.OrderBy(w => w, StringComparer.Ordinal))
+            _wordListBox.Items.Add(word);
+        _wordListBox.EndUpdate();
+        _wordCountLabel!.Text = Localization.Format("WordCount", _wordCorrections.Count);
+    }
+
+    private void AddWordButton_Click(object? sender, EventArgs e)
+    {
+        string word = _wordTextBox!.Text.Trim();
+
+        if (word.Length < 2 || !word.All(char.IsLetter) ||
+            (word[0] != 'آ' && word[0] != 'ژ'))
+        {
+            ShowError("InvalidWord");
+            return;
+        }
+
+        if (_wordCorrections.Contains(word))
+        {
+            ShowError("WordAlreadyExists");
+            return;
+        }
+
+        _wordCorrections.Add(word);
+        _wordTextBox.Clear();
+        LoadWords();
+    }
+
+    private void RemoveWordButton_Click(object? sender, EventArgs e)
+    {
+        if (_wordListBox!.SelectedItem is not string word)
+            return;
+
+        _wordCorrections.Remove(word);
+        LoadWords();
+    }
+
+    private void ResetWordsButton_Click(object? sender, EventArgs e)
+    {
+        if (MessageBox.Show(
+                Localization.Get("ResetWordsConfirm"),
+                Localization.Get("Attention"),
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question) != DialogResult.Yes)
+            return;
+
+        _wordCorrections = MappingDefaults.GetDefaultWordCorrections();
+        LoadWords();
     }
 
     // ── عملیات نگاشت → فقط کپی محلی ──
@@ -255,6 +424,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         // فقط حالا تغییرات روی تنظیمات اصلی اعمال می‌شود
         _settings.PersianToEnglishMap = new Dictionary<char, char>(_persianToEnglish);
         _settings.EnglishToPersianMap = new Dictionary<char, char>(_englishToPersian);
+        _settings.WordCorrections = new List<string>(_wordCorrections);
         SettingsManager.Save(_settings);
         DialogResult = DialogResult.OK;
         Close();

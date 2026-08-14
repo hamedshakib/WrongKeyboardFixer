@@ -1,6 +1,6 @@
+using Microsoft.Win32;
 using System;
 using System.Windows.Forms;
-using Microsoft.Win32;
 using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.Core.Services;

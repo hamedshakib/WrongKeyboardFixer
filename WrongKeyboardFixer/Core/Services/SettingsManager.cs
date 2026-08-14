@@ -43,6 +43,11 @@ public static class SettingsManager
             if (settings.EnglishToPersianMap is null || settings.EnglishToPersianMap.Count == 0)
                 settings.EnglishToPersianMap = MappingDefaults.GetDefaultEnglishToPersianMap();
 
+            // Word corrections come from defaults unless the user edited them
+            // (an explicitly empty list stays empty).
+            if (settings.WordCorrections is null)
+                settings.WordCorrections = MappingDefaults.GetDefaultWordCorrections();
+
             return settings;
         }
         catch (Exception ex)

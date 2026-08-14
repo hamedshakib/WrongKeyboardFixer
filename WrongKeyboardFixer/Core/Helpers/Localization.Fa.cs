@@ -142,6 +142,18 @@ public static partial class Localization
             ["HotkeyKeyDelete"] = "Delete",
             ["HotkeyKeySpace"] = "Space",
 
+            // Word corrections
+            ["WordCorrections"] = "کلمات تصحیح (آ / ژ)",
+            ["WordCorrectionsHint"] = "کلماتی که باید با «آ» یا «ژ» شروع شوند؛ اگر هنگام تبدیل اشتباه شدند اصلاح می‌شوند",
+            ["WordCount"] = "کلمات: {0}",
+            ["AddWord"] = "افزودن کلمه",
+            ["RemoveWord"] = "حذف کلمه",
+            ["ResetWords"] = "بازنشانی",
+            ["EnterWord"] = "کلمهٔ جدید:",
+            ["InvalidWord"] = "لطفاً یک کلمهٔ معتبر وارد کنید (باید با «آ» یا «ژ» شروع شود).",
+            ["WordAlreadyExists"] = "این کلمه از قبل در لیست وجود دارد.",
+            ["ResetWordsConfirm"] = "آیا مطمئن هستید که می‌خواهید لیست کلمات را به پیش‌فرض برگردانید؟",
+
             // Clipboard
             ["ClipboardSetTextError"] = "Failed to set clipboard text",
         };

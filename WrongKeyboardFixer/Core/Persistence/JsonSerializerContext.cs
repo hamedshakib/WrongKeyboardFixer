@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Models;
@@ -17,6 +16,7 @@ namespace WrongKeyboardFixer.Core.Persistence;
 [JsonSerializable(typeof(Keys))] // ← بسیار مهم برای AOT
 [JsonSerializable(typeof(HotkeyModifiers))]
 [JsonSerializable(typeof(Dictionary<char, char>))]
+[JsonSerializable(typeof(List<string>))] // ← برای WordCorrections (AOT)
 internal partial class AppSettingsJsonContext : JsonSerializerContext
 {
 }

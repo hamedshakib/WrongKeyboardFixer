@@ -17,6 +17,9 @@ public class AppSettings
 
     // تنظیمات نگاشت انگلیسی به فارسی
     public Dictionary<char, char> EnglishToPersianMap { get; set; } = MappingDefaults.GetDefaultEnglishToPersianMap();
+
+    // کلماتی که باید با «آ» یا «ژ» شروع شوند (برای اصلاح پس از تبدیل)
+    public List<string> WordCorrections { get; set; } = MappingDefaults.GetDefaultWordCorrections();
 }
 
 [Flags]

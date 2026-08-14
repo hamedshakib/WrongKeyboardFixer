@@ -142,6 +142,18 @@ public static partial class Localization
             ["HotkeyKeyDelete"] = "Delete",
             ["HotkeyKeySpace"] = "Space",
 
+            // Word corrections
+            ["WordCorrections"] = "Word Corrections (آ / ژ)",
+            ["WordCorrectionsHint"] = "Words that must begin with «آ» or «ژ»; corrected if converted wrongly",
+            ["WordCount"] = "Words: {0}",
+            ["AddWord"] = "Add Word",
+            ["RemoveWord"] = "Remove Word",
+            ["ResetWords"] = "Reset",
+            ["EnterWord"] = "New word:",
+            ["InvalidWord"] = "Please enter a valid word (must start with «آ» or «ژ»).",
+            ["WordAlreadyExists"] = "This word is already in the list.",
+            ["ResetWordsConfirm"] = "Reset the word list to defaults?",
+
             // Clipboard
             ["ClipboardSetTextError"] = "Failed to set clipboard text",
         };
