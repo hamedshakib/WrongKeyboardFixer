@@ -10,11 +10,12 @@ namespace WrongKeyboardFixer.Core.Services.Update;
 /// Communicates with the GitHub Releases API and downloads release assets.
 /// Owns a single shared <see cref="HttpClient"/> for connection reuse.
 /// </summary>
-internal sealed class GitHubReleaseClient
+internal sealed class GitHubReleaseClient : IDisposable
 {
     private const string GitHubApiUrl = "https://api.github.com/repos/hamedshakib/WrongKeyboardFixer/releases/latest";
 
     private readonly HttpClient _http;
+    private bool _disposed;
 
     public GitHubReleaseClient()
     {
@@ -71,6 +72,17 @@ internal sealed class GitHubReleaseClient
     /// Returns an open stream for downloading the given release asset.
     /// Caller is responsible for disposing the response.
     /// </summary>
-    public Task<HttpResponseMessage> GetAssetAsync(string downloadUrl) =>
-        _http.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
+    public Task<HttpResponseMessage> GetAssetAsync(string downloadUrl)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        return _http.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+        _disposed = true;
+        _http.Dispose();
+    }
 }

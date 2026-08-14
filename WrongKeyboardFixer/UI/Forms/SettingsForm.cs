@@ -40,7 +40,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         _settings = settings ?? new AppSettings();
         _hotkeyManager = hotkeyManager;
         Localization.SetLanguage(_settings.Language);
-        this.RightToLeftLayout = true;
+        this.RightToLeftLayout = Localization.IsRtl;
 
         this.SuspendLayout();
         InitializeForm();

@@ -13,8 +13,7 @@ public class ModernDataGridView : DataGridView
     [DynamicDependency(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof(DataGridViewTopLeftHeaderCell))]
     public ModernDataGridView()
     {
-        // nsjvsd lsjrdl fn,k Reflection (;hlghQ shc'hv fh AOT)
-        // دسترسی مستقیم بدون Reflection (کاملاً سازگار با AOT)
-        this.DoubleBuffered = true;
+        // Direct DoubleBuffered assignment (no reflection needed) — fully AOT-safe.
+        DoubleBuffered = true;
     }
 }

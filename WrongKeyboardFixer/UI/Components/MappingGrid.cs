@@ -226,19 +226,6 @@ public sealed class MappingGrid : ModernDataGridView
         }
     }
 
-    private sealed class HoverState
-    {
-        public int Row = -1;
-        public int Column = -1;
-        public bool Pressed;
-
-        public void Reset()
-        {
-            Row = Column = -1;
-            Pressed = false;
-        }
-    }
-
     // ── نقاشی سلول ──
 
     private void OnCellPainting(object? sender, DataGridViewCellPaintingEventArgs e)

@@ -18,7 +18,7 @@ namespace WrongKeyboardFixer.Core.Services.Update;
 /// </summary>
 internal sealed class UpdateInstaller
 {
-    private const int DownloadBufferSize = 8192;
+    private const int DownloadBufferSize = 65536; // 64 KiB – fewer syscalls, faster downloads
     private const int CopyBufferSize = 8192;
 
     private readonly GitHubReleaseClient _client;
