@@ -62,19 +62,8 @@ public static partial class MappingDefaults
             ['6'] = '۶',
             ['7'] = '۷',
             ['8'] = '۸',
-            ['9'] = '۹'
-        };
-    }
+            ['9'] = '۹',
 
-    /// <summary>
-    /// Returns a fresh copy of the English → Persian mapping for characters typed
-    /// with the Shift modifier (uppercase). It applies at any position in a word,
-    /// so «H» at the start of a word produces «آ» and «C» produces «ژ».
-    /// </summary>
-    public static Dictionary<char, char> GetDefaultEnglishToPersianShiftMap()
-    {
-        return new Dictionary<char, char>
-        {
             ['Q'] = 'ً',
             ['W'] = 'ٌ',
             ['E'] = 'ٍ',

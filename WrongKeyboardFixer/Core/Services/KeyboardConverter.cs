@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using WrongKeyboardFixer.Core.Models;
 
@@ -13,9 +14,6 @@ public static class KeyboardConverter
 {
     private static readonly IReadOnlyDictionary<char, char> DefaultEnglishToPersianMap =
         MappingDefaults.GetDefaultEnglishToPersianMap();
-
-    private static readonly IReadOnlyDictionary<char, char> DefaultEnglishToPersianShiftMap =
-        MappingDefaults.GetDefaultEnglishToPersianShiftMap();
 
     private static readonly IReadOnlyDictionary<char, char> DefaultPersianToEnglishMap =
         MappingDefaults.GetDefaultPersianToEnglishMap();
@@ -46,21 +44,11 @@ public static class KeyboardConverter
 
     /// <summary>
     /// Convert English character to Persian character.
-    /// For a single character without context, uppercase characters are treated as Shift characters.
     /// </summary>
     public static char? ConvertEnglishToPersian(
         char englishChar,
         IDictionary<char, char>? customMappings = null)
     {
-        if (char.IsUpper(englishChar))
-        {
-            var shifted = ConvertShiftChar(englishChar, customMappings);
-            if (shifted.HasValue)
-                return shifted.Value;
-
-            return ConvertPlainChar(char.ToLowerInvariant(englishChar), customMappings);
-        }
-
         return ConvertPlainChar(englishChar, customMappings);
     }
 
@@ -184,7 +172,7 @@ public static class KeyboardConverter
         // Use the Shift map directly.
         if (!autoCapitalizedByWord)
         {
-            char? shiftedFirst = ConvertShiftChar(first, customMappings);
+            char? shiftedFirst = ConvertPlainChar(first, customMappings);
             if (shiftedFirst.HasValue)
                 return shiftedFirst.Value + rest;
 
@@ -194,12 +182,12 @@ public static class KeyboardConverter
 
         // Case 2: Word may have auto-capitalized the first letter.
         // Only accept Shift if the whole corrected word is known.
-        char? autoShiftChar = ConvertShiftChar(first, customMappings);
+        char? autoShiftChar = ConvertPlainChar(first, customMappings);
         if (autoShiftChar.HasValue)
         {
             string candidate = autoShiftChar.Value + rest;
 
-            if (corrections.Count > 0 && corrections.Contains(candidate))
+            if (corrections.Count > 0 && PersianWordMatcher.IsEquivalentWord(candidate, corrections))
                 return candidate;
         }
 
@@ -255,15 +243,6 @@ public static class KeyboardConverter
         char c,
         IDictionary<char, char>? customMappings)
     {
-        if (char.IsUpper(c))
-        {
-            char? shifted = ConvertShiftChar(c, customMappings);
-            if (shifted.HasValue)
-                return shifted.Value;
-
-            return ConvertPlainChar(char.ToLowerInvariant(c), customMappings);
-        }
-
         return ConvertPlainChar(c, customMappings);
     }
 
@@ -301,22 +280,6 @@ public static class KeyboardConverter
     }
 
     /// <summary>
-    /// Resolves a Shift character via custom mappings, then default Shift map.
-    /// </summary>
-    private static char? ConvertShiftChar(
-        char c,
-        IDictionary<char, char>? customMappings)
-    {
-        if (customMappings is not null && customMappings.TryGetValue(c, out var customMapped))
-            return customMapped;
-
-        if (DefaultEnglishToPersianShiftMap.TryGetValue(c, out var mapped))
-            return mapped;
-
-        return null;
-    }
-
-    /// <summary>
     /// Builds a normalized HashSet from word corrections.
     /// Trimming is important because some default entries may have trailing spaces.
     /// </summary>
@@ -338,5 +301,314 @@ public static class KeyboardConverter
             }
 
         return set.Count == 0 ? EmptyCorrections : set;
+    }
+}
+
+public static class PersianWordMatcher
+{
+    private static readonly string[] EncliticPronouns =
+    {
+        "شان",
+        "تان",
+        "مان",
+        "ش",
+        "ت",
+        "م"
+    };
+
+    private static readonly string[] PluralSuffixes =
+    {
+        "ها",
+        "ان"
+    };
+
+    /// <summary>
+    /// بررسی می‌کند که candidate خودش یا یکی از اشکال صرفی/ترکیبی آن
+    /// قبلاً در corrections وجود داشته است یا خیر.
+    /// </summary>
+    public static bool IsEquivalentWord(
+        string candidate,
+        IReadOnlySet<string> corrections)
+    {
+        if (string.IsNullOrWhiteSpace(candidate) || corrections.Count == 0)
+            return false;
+
+        candidate = Normalize(candidate);
+
+        // 1. تطبیق مستقیم
+        if (corrections.Contains(candidate))
+            return true;
+
+        // 2. نیم‌فاصله / فاصله
+        //
+        // مثلا:
+        // کتاب‌مان
+        // کتاب مان
+        //
+        // هر بخش به صورت مستقل بررسی می‌شود.
+        foreach (var part in SplitParts(candidate))
+        {
+            if (part.Length == 0)
+                continue;
+
+            if (IsEquivalentSingleWord(part, corrections))
+                return true;
+        }
+
+        // 3. خود candidate را نیز به صورت یک کلمه بررسی کنیم.
+        return IsEquivalentSingleWord(candidate, corrections);
+    }
+
+    private static bool IsEquivalentSingleWord(
+        string word,
+        IReadOnlySet<string> corrections)
+    {
+        if (corrections.Contains(word))
+            return true;
+
+        // برای جلوگیری از loop
+        var visited = new HashSet<string>(StringComparer.Ordinal);
+
+        return TryReduce(
+            word,
+            corrections,
+            visited,
+            maxDepth: 4);
+    }
+
+    private static bool TryReduce(
+        string word,
+        IReadOnlySet<string> corrections,
+        HashSet<string> visited,
+        int maxDepth)
+    {
+        if (corrections.Contains(word))
+            return true;
+
+        if (maxDepth <= 0)
+            return false;
+
+        if (!visited.Add(word))
+            return false;
+
+        foreach (var reduced in GenerateReductions(word))
+        {
+            if (reduced.Length == 0)
+                continue;
+
+            if (corrections.Contains(reduced))
+                return true;
+
+            if (TryReduce(
+                    reduced,
+                    corrections,
+                    visited,
+                    maxDepth - 1))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// تمام حالت‌هایی که می‌توان از word با حذف وابسته‌های مجاز
+    /// به دست آورد.
+    /// </summary>
+    private static IEnumerable<string> GenerateReductions(string word)
+    {
+        var results = new HashSet<string>(StringComparer.Ordinal);
+
+        // ------------------------------------------------------------
+        // 1. ضمایر پی‌بستی
+        //
+        // قلبم    -> قلب
+        // قلبت    -> قلب
+        // قلبش    -> قلب
+        // قلبمان  -> قلب
+        // قلبتان  -> قلب
+        // قلبشان  -> قلب
+        // ------------------------------------------------------------
+        foreach (var suffix in EncliticPronouns)
+        {
+            if (!word.EndsWith(
+                    suffix,
+                    StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var baseWord = word[..^suffix.Length];
+
+            if (baseWord.Length > 1)
+                results.Add(baseWord);
+        }
+
+        // ------------------------------------------------------------
+        // 2. جمع "ها"
+        //
+        // کتاب‌ها -> کتاب
+        // کتابها  -> کتاب
+        // ------------------------------------------------------------
+        if (word.EndsWith("ها", StringComparison.Ordinal))
+        {
+            var baseWord = word[..^2];
+
+            if (baseWord.Length > 1)
+                results.Add(baseWord);
+        }
+
+        // ------------------------------------------------------------
+        // 3. جمع "ان"
+        //
+        // مثلا:
+        // دوستان -> دوست
+        //
+        // توجه: این Rule عمداً محدود است و فقط نتیجه‌ای را معتبر
+        // می‌دانیم که در corrections وجود داشته باشد.
+        // ------------------------------------------------------------
+        if (word.EndsWith("ان", StringComparison.Ordinal))
+        {
+            var baseWord = word[..^2];
+
+            if (baseWord.Length > 1)
+                results.Add(baseWord);
+        }
+
+        // ------------------------------------------------------------
+        // 4. "یی"
+        //
+        // آرزویی -> آرزو
+        //
+        // آرزو + یی
+        // ------------------------------------------------------------
+        if (word.EndsWith("یی", StringComparison.Ordinal))
+        {
+            var baseWord = word[..^2];
+
+            if (baseWord.Length > 1)
+                results.Add(baseWord);
+        }
+
+        // ------------------------------------------------------------
+        // 5. "ی"
+        //
+        // بعضی ساخت‌ها:
+        // کتابی -> کتاب
+        //
+        // ولی نتیجه فقط زمانی قبول می‌شود که کتاب واقعاً در dictionary
+        // وجود داشته باشد؛ بنابراین "علی" به صورت خودکار "عل" قبول نمی‌شود.
+        // ------------------------------------------------------------
+        if (word.EndsWith("ی", StringComparison.Ordinal))
+        {
+            var baseWord = word[..^1];
+
+            if (baseWord.Length > 1)
+                results.Add(baseWord);
+        }
+
+        // ------------------------------------------------------------
+        // 6. حالت "ها + ضمیر"
+        //
+        // کتاب‌هایمان
+        //
+        // ابتدا:
+        // کتاب‌هایمان -> کتاب‌ها
+        //
+        // و سپس در recursion:
+        // کتاب‌ها -> کتاب
+        // ------------------------------------------------------------
+        foreach (var pronoun in EncliticPronouns)
+        {
+            var pluralWithPronoun = "ها" + pronoun;
+
+            if (word.EndsWith(
+                    pluralWithPronoun,
+                    StringComparison.Ordinal))
+            {
+                var baseWord = word[..^pluralWithPronoun.Length];
+
+                if (baseWord.Length > 1)
+                    results.Add(baseWord);
+
+                // همچنین یک مرحله فقط ضمیر را حذف کنیم:
+                // کتاب‌هایمان -> کتاب‌ها
+                var withoutPronoun =
+                    word[..^pronoun.Length];
+
+                if (withoutPronoun.Length > 1)
+                    results.Add(withoutPronoun);
+            }
+        }
+
+        // ------------------------------------------------------------
+        // 7. "ی + ضمیر"
+        //
+        // مثلا در برخی ساخت‌ها:
+        // ...
+        // ------------------------------------------------------------
+        foreach (var pronoun in EncliticPronouns)
+        {
+            var suffix = "ی" + pronoun;
+
+            if (!word.EndsWith(
+                    suffix,
+                    StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var baseWord = word[..^suffix.Length];
+
+            if (baseWord.Length > 1)
+                results.Add(baseWord);
+
+            var withoutPronoun =
+                word[..^pronoun.Length];
+
+            if (withoutPronoun.Length > 1)
+                results.Add(withoutPronoun);
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Normalize کردن Unicode و فاصله‌ها.
+    /// </summary>
+    private static string Normalize(string value)
+    {
+        value = value.Trim();
+
+        // ي -> ی
+        value = value.Replace('ي', 'ی');
+
+        // ك -> ک
+        value = value.Replace('ك', 'ک');
+
+        // ZWNJ
+        value = value.Replace('\u200C', '\u200C');
+
+        return value;
+    }
+
+    /// <summary>
+    /// کلمه را روی فاصله و نیم‌فاصله می‌شکند.
+    /// </summary>
+    private static IEnumerable<string> SplitParts(string value)
+    {
+        return value
+            .Split(
+                new[]
+                {
+                    ' ',
+                    '\t',
+                    '\r',
+                    '\n',
+                    '\u200C' // Zero Width Non-Joiner
+                },
+                StringSplitOptions.RemoveEmptyEntries)
+            .Select(Normalize);
     }
 }
