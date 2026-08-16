@@ -14,8 +14,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 {
     private readonly AppSettings _settings;
 
-    // کپی محلی نگاشت‌ها: فقط هنگام فشردن «ذخیره» روی تنظیمات اصلی اعمال می‌شوند.
-    // (قبلاً ویرایش سلول مستقیماً _settings را تغییر می‌داد و «انصراف» بی‌اثر بود)
+    // کپی محلی نگاشت‌ها
     private Dictionary<char, char> _persianToEnglish;
     private Dictionary<char, char> _englishToPersian;
     private List<string> _wordCorrections;
@@ -26,13 +25,14 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     private ModernButton? _cancelButton;
     private Label? _persianToEnglishCountLabel;
     private Label? _englishToPersianCountLabel;
-    private ListBox? _wordListBox;
-    private TextBox? _wordTextBox;
+    private ModernDataGridView? _wordDataGridView;
     private TextBox? _searchTextBox;
+    private TextBox? _wordTextBox;
     private Label? _wordCountLabel;
 
+    // ابعاد فرم
     private const int FormWidth = 920;
-    private const int FormHeight = 780;
+    private const int FormHeight = 860;
 
     public KeyboardMappingsForm(AppSettings settings)
     {
@@ -83,7 +83,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         const int cardGap = 16;
         int cardWidth = (innerWidth - cardGap) / 2;
         const int cardY = 14;
-        const int gridHeight = 270;
+        const int gridHeight = 250;
 
         // ── کارت فارسی → انگلیسی ──────────────────────────
         _persianToEnglishCountLabel = Theme.BodyLabel("", Theme.TextSecondary, Theme.SmallFont);
@@ -169,10 +169,6 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 
     private static int BuildCardHeight(int gridHeight) => 14 + 26 + 6 + 38 + 10 + gridHeight + 14;
 
-    /// <summary>
-    /// Builds one mapping card (title, count label, add/reset buttons and the mapping grid).
-    /// Shared by the Persian→English and English→Persian cards to avoid duplicated layout code.
-    /// </summary>
     private RoundedPanel BuildMappingCard(
         int left, int cardWidth, int cardY, int gridHeight,
         string titleKey,
@@ -229,8 +225,8 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     }
 
     /// <summary>
-    /// Builds the full-width card that lets the user manage the «آ»/«ژ» word
-    /// correction list. Edits target the local copy until «ذخیره» is pressed.
+    /// طراحی دقیقاً منطبق بر تصویر درخواستی شما:
+    /// سرچ در بالا، متن راهنما، جدول و دکمه Reset در سمت راست جدول، و بخش افزودن در پایین.
     /// </summary>
     private RoundedPanel BuildWordCorrectionsCard(int left, int cardWidth, int cardY)
     {
@@ -242,9 +238,10 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             BorderWidth = 1,
             Padding = new Padding(14),
             Location = new Point(left, cardY),
-            Size = new Size(cardWidth, 220)
+            Size = new Size(cardWidth, 310)
         };
 
+        // 1. Header
         card.Controls.Add(Theme.SectionLabel(Localization.Get("WordCorrections"))
             .Then(l => l.Location = new Point(14, 12)));
 
@@ -255,11 +252,11 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         _wordCountLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         card.Controls.Add(_wordCountLabel);
 
-        // Search box
+        // 2. Search Box (فیلد جستجو در بالا)
         _searchTextBox = new TextBox
         {
-            Location = new Point(14, 40),
-            Size = new Size(cardWidth - 28, 28),
+            Location = new Point(14, 42),
+            Size = new Size(cardWidth - 28, 30),
             Font = Theme.BodyFont,
             BackColor = Theme.Surface,
             ForeColor = Theme.TextPrimary,
@@ -269,55 +266,78 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         _searchTextBox.TextChanged += SearchTextBox_TextChanged;
         card.Controls.Add(_searchTextBox);
 
+        // 3. Hint Label (متن راهنما زیر سرچ)
         var hint = Theme.BodyLabel(Localization.Get("WordCorrectionsHint"), Theme.TextSecondary, Theme.SmallFont);
-        hint.Location = new Point(14, 72);
+        hint.Location = new Point(14, 76);
         hint.Size = new Size(cardWidth - 28, 18);
         card.Controls.Add(hint);
 
-        const int buttonWidth = 160;
-        int listWidth = cardWidth - 28 - buttonWidth - 10;
-        int buttonX = 14 + listWidth + 10;
+        // 4. DataGrid & Reset Button
+        int gridY = 102;
+        int gridHeight = 132;
+        int rightElementWidth = 110;
+        int gridWidth = cardWidth - 28 - rightElementWidth - 12;
 
-        _wordListBox = new ListBox
+        _wordDataGridView = new ModernDataGridView();
+        Theme.StyleGrid(_wordDataGridView);
+        _wordDataGridView.CellBorderStyle = DataGridViewCellBorderStyle.None;
+        _wordDataGridView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+        _wordDataGridView.Location = new Point(14, gridY);
+        _wordDataGridView.Size = new Size(gridWidth, gridHeight);
+        _wordDataGridView.BackgroundColor = Theme.Surface;
+        _wordDataGridView.RowHeadersVisible = false;
+        _wordDataGridView.ColumnHeadersVisible = false;
+
+        _wordDataGridView.Columns.Add(new DataGridViewTextBoxColumn
         {
-            Location = new Point(14, 96),
-            Size = new Size(listWidth, 78),
-            BorderStyle = BorderStyle.FixedSingle,
-            IntegralHeight = false,
-            BackColor = Theme.Surface,
-            ForeColor = Theme.TextPrimary,
-            Font = Theme.BodyFont
-        };
-        card.Controls.Add(_wordListBox);
+            HeaderText = "",
+            ReadOnly = true,
+            AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
+            DefaultCellStyle = new DataGridViewCellStyle
+            {
+                BackColor = Theme.SurfaceMuted,
+                ForeColor = Theme.TextPrimary,
+                Alignment = DataGridViewContentAlignment.MiddleLeft
+            }
+        });
 
-        var removeButton = new ModernButton
+        _wordDataGridView.Columns.Add(new DataGridViewButtonColumn
         {
-            Text = Localization.Get("RemoveWord"),
-            ButtonVariant = ModernButton.Variant.Ghost,
-            Location = new Point(buttonX, 96),
-            Size = new Size(buttonWidth, 34)
-        };
-        removeButton.Click += RemoveWordButton_Click;
-        card.Controls.Add(removeButton);
+            HeaderText = Localization.Get("Delete"),
+            Text = Localization.Get("Delete"),
+            UseColumnTextForButtonValue = true,
+            AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+            Width = 80,
+            FlatStyle = FlatStyle.Flat
+        });
 
+        _wordDataGridView.CellContentClick += WordDataGridView_CellContentClick;
+        card.Controls.Add(_wordDataGridView);
+
+        // دکمه Reset در سمت راست جدول
         var resetButton = new ModernButton
         {
             Text = Localization.Get("ResetWords"),
             ButtonVariant = ModernButton.Variant.Ghost,
-            Location = new Point(buttonX, 134),
-            Size = new Size(buttonWidth, 34)
+            Location = new Point(cardWidth - 14 - rightElementWidth, gridY),
+            Size = new Size(rightElementWidth, 38)
         };
         resetButton.Click += ResetWordsButton_Click;
         card.Controls.Add(resetButton);
 
+        // 5. Add Word Section (بخش افزودن در پایین)
+        int actionY = gridY + gridHeight + 10;
+        int actionHeight = 34;
+
         _wordTextBox = new TextBox
         {
-            Location = new Point(14, 182),
-            Size = new Size(listWidth - 126 - 10, 30),
+            Location = new Point(14, actionY + 2),
+            Size = new Size(gridWidth, 30),
             Font = Theme.BodyFont,
             BackColor = Theme.Surface,
             ForeColor = Theme.TextPrimary,
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            PlaceholderText = Localization.Get("AddWord")
         };
         _wordTextBox.KeyDown += WordTextBox_KeyDown;
         card.Controls.Add(_wordTextBox);
@@ -326,8 +346,8 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         {
             Text = "+ " + Localization.Get("AddWord"),
             ButtonVariant = ModernButton.Variant.Primary,
-            Location = new Point(14 + _wordTextBox.Width + 10, 182),
-            Size = new Size(126, 30)
+            Location = new Point(cardWidth - 14 - rightElementWidth, actionY),
+            Size = new Size(rightElementWidth, actionHeight)
         };
         addButton.Click += AddWordButton_Click;
         card.Controls.Add(addButton);
@@ -335,9 +355,16 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         return card;
     }
 
-    private void SearchTextBox_TextChanged(object? sender, EventArgs e)
+    private void WordDataGridView_CellContentClick(object? sender, DataGridViewCellEventArgs e)
     {
-        LoadWords();
+        if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+        if (_wordDataGridView!.Rows[e.RowIndex].Cells[0].Value is not string word) return;
+
+        if (e.ColumnIndex == 1 && _wordDataGridView.Columns[e.ColumnIndex] is DataGridViewButtonColumn)
+        {
+            _wordCorrections.Remove(word);
+            LoadWords();
+        }
     }
 
     private void WordTextBox_KeyDown(object? sender, KeyEventArgs e)
@@ -350,7 +377,11 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         }
     }
 
-    // ── بارگذاری: با SuspendLayout و بدون انتخاب اضافی ──
+    private void SearchTextBox_TextChanged(object? sender, EventArgs e)
+    {
+        LoadWords();
+    }
+
     private void LoadMappings()
     {
         if (_persianToEnglishGrid is { } p2eGrid)
@@ -366,26 +397,28 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         }
     }
 
-    // ── لیست کلمات تصحیح → فقط کپی محلی ──
     private void LoadWords()
     {
-        _wordListBox!.BeginUpdate();
-        _wordListBox.Items.Clear();
-        
+        if (_wordDataGridView is null) return;
+
+        _wordDataGridView.SuspendLayout();
+        _wordDataGridView.Rows.Clear();
+
         string searchTerm = _searchTextBox!.Text.Trim();
         var words = _wordCorrections.OrderBy(w => w, StringComparer.Ordinal).ToList();
-        
+
         if (!string.IsNullOrEmpty(searchTerm))
         {
             words = words.Where(w => w.Contains(searchTerm, StringComparison.Ordinal)).ToList();
         }
-        
+
         foreach (string word in words)
-            _wordListBox.Items.Add(word);
-        
-        _wordListBox.EndUpdate();
-        
-        // Display filtered count if searching
+        {
+            _wordDataGridView.Rows.Add(word, Localization.Get("Delete"));
+        }
+
+        _wordDataGridView.ResumeLayout();
+
         int displayCount = words.Count;
         _wordCountLabel!.Text = Localization.Format("WordCount", displayCount);
     }
@@ -394,7 +427,6 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     {
         string word = _wordTextBox!.Text.Trim();
 
-        // بررسی وجود نیم فاصله یا space در کلمه
         if (word.Contains(' '))
         {
             ShowError("WordContainsSpace");
@@ -425,15 +457,6 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         LoadWords();
     }
 
-    private void RemoveWordButton_Click(object? sender, EventArgs e)
-    {
-        if (_wordListBox!.SelectedItem is not string word)
-            return;
-
-        _wordCorrections.Remove(word);
-        LoadWords();
-    }
-
     private void ResetWordsButton_Click(object? sender, EventArgs e)
     {
         if (MessageBox.Show(
@@ -447,7 +470,6 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         LoadWords();
     }
 
-    // ── عملیات نگاشت → فقط کپی محلی ──
     private void AddPersianToEnglishButton_Click(object? sender, EventArgs e) => AddPersianToEnglishMapping();
     private void AddEnglishToPersianButton_Click(object? sender, EventArgs e) => AddEnglishToPersianMapping();
 
@@ -467,7 +489,6 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 
     private void SaveButton_Click(object? sender, EventArgs e)
     {
-        // فقط حالا تغییرات روی تنظیمات اصلی اعمال می‌شود
         _settings.PersianToEnglishMap = new Dictionary<char, char>(_persianToEnglish);
         _settings.EnglishToPersianMap = new Dictionary<char, char>(_englishToPersian);
         _settings.WordCorrections = new List<string>(_wordCorrections);
@@ -484,7 +505,6 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 
     public void RequestClose() => CancelButton_Click(this, EventArgs.Empty);
 
-    // ── افزودن نگاشت: فقط یک دیالوگ (به‌جای دو InputBox پشت‌سرهم) ──
     private void AddPersianToEnglishMapping()
     {
         var input = MappingInputBox.Show(
@@ -539,7 +559,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     {
         if (MappingDefaults.GetDefaultPersianToEnglishMap().TryGetValue(persianChar, out var value))
             _persianToEnglish[persianChar] = value;
-        else if (_persianToEnglish.Remove(persianChar)) 
+        else if (_persianToEnglish.Remove(persianChar))
             LoadMappings();
     }
 
@@ -547,7 +567,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     {
         if (MappingDefaults.GetDefaultEnglishToPersianMap().TryGetValue(englishChar, out var value))
             _englishToPersian[englishChar] = value;
-        else if (_englishToPersian.Remove(englishChar)) 
+        else if (_englishToPersian.Remove(englishChar))
             LoadMappings();
     }
 
