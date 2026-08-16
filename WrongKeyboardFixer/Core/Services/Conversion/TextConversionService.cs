@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using WrongKeyboardFixer.Core.Models;
 
-namespace WrongKeyboardFixer.Core.Services;
+namespace WrongKeyboardFixer.Core.Services.Conversion;
 
 /// <summary>
 /// Performs the "copy selected text → convert language → paste back" pipeline
@@ -14,16 +14,21 @@ public sealed class TextConversionService
 {
     private readonly ClipboardManager _clipboard;
     private readonly AppSettings _settings;
+    private readonly IKeyboardConverter _converter;
     private readonly SemaphoreSlim _conversionGate = new(1, 1);
 
     // Timing constants (milliseconds)
     private const int ClipboardReadDelayMs = 300;
     private const int ClipboardWriteDelayMs = 200;
 
-    public TextConversionService(ClipboardManager clipboard, AppSettings settings)
+    public TextConversionService(
+        ClipboardManager clipboard,
+        AppSettings settings,
+        IKeyboardConverter? converter = null)
     {
         _clipboard = clipboard;
         _settings = settings;
+        _converter = converter ?? new KeyboardConverter();
     }
 
     /// <summary>
@@ -65,11 +70,11 @@ public sealed class TextConversionService
                 return;
             }
 
-            bool toPersian = KeyboardConverter.ShouldConvertToPersian(originalText);
+            bool toPersian = _converter.ShouldConvertToPersian(originalText);
 
             string convertedText = toPersian
-                ? KeyboardConverter.ConvertEnglishToPersian(originalText, _settings.EnglishToPersianMap, _settings.WordCorrections)
-                : KeyboardConverter.ConvertPersianToEnglish(originalText, _settings.PersianToEnglishMap);
+                ? _converter.ConvertEnglishToPersian(originalText, _settings.EnglishToPersianMap, _settings.WordCorrections)
+                : _converter.ConvertPersianToEnglish(originalText, _settings.PersianToEnglishMap);
 
             // Nothing changed: leave the selection untouched and give back the
             // clipboard instead of simulating a pointless Ctrl+V.

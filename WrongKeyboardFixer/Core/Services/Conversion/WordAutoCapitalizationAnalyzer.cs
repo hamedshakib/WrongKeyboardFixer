@@ -1,20 +1,24 @@
-namespace WrongKeyboardFixer.Core.Services;
+using System;
+
+namespace WrongKeyboardFixer.Core.Services.Conversion;
 
 /// <summary>
-/// Pure text-analysis helpers that detect the contextual hints Microsoft Word
-/// leaves behind when it auto-capitalizes, auto-lowercases standalone "I", and
-/// formats list markers. These heuristics let the English → Persian converter
-/// decide whether an uppercase first letter is a deliberate Shift press or a
-/// Word auto-correction.
+/// Analyzes text to detect Word auto-capitalization patterns.
+/// Detects positions where Word may have auto-capitalized letters or
+/// auto-lowercased standalone "I".
 /// </summary>
-internal static class TextAnalyzer
+public sealed class WordAutoCapitalizationAnalyzer
 {
     /// <summary>
     /// Determines whether an uppercase first letter may have been created by Word auto-capitalization.
     /// </summary>
-    public static bool IsAutoCapitalizedByWord(string text, int wordStart, string word)
+    /// <param name="text">The full text.</param>
+    /// <param name="wordStart">The starting index of the word in the text.</param>
+    /// <param name="word">The word to analyze.</param>
+    /// <returns>True if the word was likely auto-capitalized by Word.</returns>
+    public bool IsAutoCapitalizedByWord(string text, int wordStart, string word)
     {
-        if (word.Length == 0)
+        if (string.IsNullOrEmpty(word))
             return false;
 
         if (!char.IsUpper(word[0]))
@@ -36,7 +40,10 @@ internal static class TextAnalyzer
     /// "I,"     -> auto lowercase i
     /// "In"     -> not auto lowercase i, because I is followed by a letter
     /// </summary>
-    public static bool IsAutoLowercaseIAt(string text, int index)
+    /// <param name="text">The full text.</param>
+    /// <param name="index">The index of the character to check.</param>
+    /// <returns>True if the character at index is a standalone "I" that was auto-lowercased.</returns>
+    public bool IsAutoLowercaseIAt(string text, int index)
     {
         if (index < 0 || index >= text.Length)
             return false;
@@ -63,7 +70,10 @@ internal static class TextAnalyzer
     /// - after sentence terminators: . ? !
     /// - after bullets or numbered list markers
     /// </summary>
-    private static bool IsAtWordAutoCapitalizePosition(string text, int start)
+    /// <param name="text">The full text.</param>
+    /// <param name="start">The starting index of the word.</param>
+    /// <returns>True if the position is likely a Word auto-capitalize position.</returns>
+    private bool IsAtWordAutoCapitalizePosition(string text, int start)
     {
         if (start <= 0)
             return true;
@@ -109,23 +119,23 @@ internal static class TextAnalyzer
         return false;
     }
 
-    private static bool IsStandaloneWordChar(char c) =>
+    private bool IsStandaloneWordChar(char c) =>
         char.IsLetterOrDigit(c) || c == '_' || c == '\u200C';
 
-    private static bool IsNewLine(char c) =>
+    private bool IsNewLine(char c) =>
         c == '\n' ||
         c == '\r' ||
         c == '\u0085' ||
         c == '\u2028' ||
         c == '\u2029';
 
-    private static bool IsSentenceTerminator(char c) =>
+    private bool IsSentenceTerminator(char c) =>
         c == '.' ||
         c == '!' ||
         c == '?' ||
-        c == '\u061F'; // Persian question mark «؟»
+        c == '\u061F'; // Persian question mark "?"
 
-    private static bool IsListMarker(string text, int index)
+    private bool IsListMarker(string text, int index)
     {
         if (index < 0)
             return false;
@@ -144,20 +154,20 @@ internal static class TextAnalyzer
         return false;
     }
 
-    private static bool IsBulletChar(char c) =>
+    private bool IsBulletChar(char c) =>
         c == '-' ||
         c == '*' ||
         c == '+' ||
-        c == '\u2022' || // •
-        c == '\u00B7' || // ·
-        c == '\u25E6' || // ◦
-        c == '\u2023' || // ‣
-        c == '\u25AA' || // ▪
-        c == '\u25CB' || // ○
-        c == '\u25CF' || // ●
-        c == '\u203A';   // ›
+        c == '\u2022' || //bullet
+        c == '\u00B7' || //middle dot
+        c == '\u25E6' || //white bullet
+        c == '\u2023' || //hyphen bullet
+        c == '\u25AA' || //black small square
+        c == '\u25CB' || //white circle
+        c == '\u25CF' || //black circle
+        c == '\u203A';   //right-pointing single quotation mark
 
-    private static bool IsAtLineStartIgnoringSpaces(string text, int index)
+    private bool IsAtLineStartIgnoringSpaces(string text, int index)
     {
         int i = index - 1;
 
@@ -171,7 +181,7 @@ internal static class TextAnalyzer
         return IsNewLine(text[i]);
     }
 
-    private static bool HasNumberOrLetterListMarkerBefore(string text, int delimiterIndex)
+    private bool HasNumberOrLetterListMarkerBefore(string text, int delimiterIndex)
     {
         int i = delimiterIndex - 1;
         int markerLength = 0;
