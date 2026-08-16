@@ -26,8 +26,8 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     private Label? _persianToEnglishCountLabel;
     private Label? _englishToPersianCountLabel;
     private ModernDataGridView? _wordDataGridView;
-    private TextBox? _searchTextBox;
-    private TextBox? _wordTextBox;
+    private ModernTextBox? _searchTextBox;
+    private ModernTextBox? _wordTextBox;
     private Label? _wordCountLabel;
 
     // ابعاد فرم
@@ -253,7 +253,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         card.Controls.Add(_wordCountLabel);
 
         // 2. Search Box (فیلد جستجو در بالا)
-        _searchTextBox = new TextBox
+        _searchTextBox = new ModernTextBox
         {
             Location = new Point(14, 42),
             Size = new Size(cardWidth - 28, 30),
@@ -329,7 +329,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         int actionY = gridY + gridHeight + 10;
         int actionHeight = 34;
 
-        _wordTextBox = new TextBox
+        _wordTextBox = new ModernTextBox
         {
             Location = new Point(14, actionY + 2),
             Size = new Size(gridWidth, 30),
