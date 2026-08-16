@@ -491,12 +491,18 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 
     private void ResetPersianCharMapping(char persianChar)
     {
-        if (_persianToEnglish.Remove(persianChar)) LoadMappings();
+        if (MappingDefaults.GetDefaultPersianToEnglishMap().TryGetValue(persianChar, out var value))
+            _persianToEnglish[persianChar] = value;
+        else if (_persianToEnglish.Remove(persianChar)) 
+            LoadMappings();
     }
 
     private void ResetEnglishCharMapping(char englishChar)
     {
-        if (_englishToPersian.Remove(englishChar)) LoadMappings();
+        if (MappingDefaults.GetDefaultEnglishToPersianMap().TryGetValue(englishChar, out var value))
+            _englishToPersian[englishChar] = value;
+        else if (_englishToPersian.Remove(englishChar)) 
+            LoadMappings();
     }
 
     private static DialogResult ConfirmReset() => MessageBox.Show(
