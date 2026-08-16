@@ -361,6 +361,19 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     {
         string word = _wordTextBox!.Text.Trim();
 
+        // بررسی وجود نیم فاصله یا space در کلمه
+        if (word.Contains(' '))
+        {
+            ShowError("WordContainsSpace");
+            return;
+        }
+
+        if (word.Contains('\u200C'))
+        {
+            ShowError("WordContainsNonBreakingSpace");
+            return;
+        }
+
         if (word.Length < 2 || !word.All(char.IsLetter) ||
             (word[0] != 'آ' && word[0] != 'ژ'))
         {

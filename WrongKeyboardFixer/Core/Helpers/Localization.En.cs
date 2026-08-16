@@ -151,8 +151,10 @@ public static partial class Localization
             ["ResetWords"] = "Reset",
             ["EnterWord"] = "New word:",
             ["InvalidWord"] = "Please enter a valid word (must start with «آ» or «ژ»).",
-            ["WordAlreadyExists"] = "This word is already in the list.",
-            ["ResetWordsConfirm"] = "Reset the word list to defaults?",
+             ["WordAlreadyExists"] = "This word is already in the list.",
+             ["WordContainsSpace"] = "The word cannot contain spaces.",
+             ["WordContainsNonBreakingSpace"] = "The word cannot contain non-breaking space (نیم فاصله).",
+             ["ResetWordsConfirm"] = "Reset the word list to defaults?",
 
             // Clipboard
             ["ClipboardSetTextError"] = "Failed to set clipboard text",

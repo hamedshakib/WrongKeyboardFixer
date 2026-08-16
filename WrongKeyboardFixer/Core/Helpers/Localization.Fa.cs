@@ -151,8 +151,10 @@ public static partial class Localization
             ["ResetWords"] = "بازنشانی",
             ["EnterWord"] = "کلمهٔ جدید:",
             ["InvalidWord"] = "لطفاً یک کلمهٔ معتبر وارد کنید (باید با «آ» یا «ژ» شروع شود).",
-            ["WordAlreadyExists"] = "این کلمه از قبل در لیست وجود دارد.",
-            ["ResetWordsConfirm"] = "آیا مطمئن هستید که می‌خواهید لیست کلمات را به پیش‌فرض برگردانید؟",
+             ["WordAlreadyExists"] = "این کلمه از قبل در لیست وجود دارد.",
+             ["WordContainsSpace"] = "کلمه نمی‌تواند شامل فاصله باشد.",
+             ["WordContainsNonBreakingSpace"] = "کلمه نمی‌تواند شامل نیم فاصله باشد.",
+             ["ResetWordsConfirm"] = "آیا مطمئن هستید که می‌خواهید لیست کلمات را به پیش‌فرض برگردانید؟",
 
             // Clipboard
             ["ClipboardSetTextError"] = "Failed to set clipboard text",
