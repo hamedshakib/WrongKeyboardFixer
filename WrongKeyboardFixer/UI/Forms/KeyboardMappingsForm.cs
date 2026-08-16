@@ -260,7 +260,6 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             Font = Theme.BodyFont,
             BackColor = Theme.Surface,
             ForeColor = Theme.TextPrimary,
-            BorderStyle = BorderStyle.FixedSingle,
             PlaceholderText = Localization.Get("Search")
         };
         _searchTextBox.TextChanged += SearchTextBox_TextChanged;
@@ -336,7 +335,6 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             Font = Theme.BodyFont,
             BackColor = Theme.Surface,
             ForeColor = Theme.TextPrimary,
-            BorderStyle = BorderStyle.FixedSingle,
             PlaceholderText = Localization.Get("AddWord")
         };
         _wordTextBox.KeyDown += WordTextBox_KeyDown;
