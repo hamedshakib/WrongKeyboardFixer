@@ -1,5 +1,6 @@
 using Microsoft.Win32;
 using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Helpers;
 
@@ -20,23 +21,38 @@ internal sealed class RegistryManager
     {
         try
         {
-            using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, true);
+            // Open the Run key for writing (creates if it doesn't exist)
+            using var key = Registry.CurrentUser.CreateSubKey(RunKeyPath);
             if (key == null)
+            {
+                Debug.WriteLine($"❌ Failed to create/open registry key: {RunKeyPath}");
                 return;
+            }
 
             if (enable)
-                key.SetValue(AutoStartKeyName, $"\"{ExecutablePath}\"");
-            else if (key.GetValue(AutoStartKeyName) is not null)
-                key.DeleteValue(AutoStartKeyName);
+            {
+                // Ensure the executable path is properly quoted for registry
+                string pathToRun = $"\"{ExecutablePath}\"";
+                key.SetValue(AutoStartKeyName, pathToRun);
+                Debug.WriteLine($"✅ Set auto-start: {pathToRun}");
+            }
+            else
+            {
+                if (key.GetValue(AutoStartKeyName) is not null)
+                {
+                    key.DeleteValue(AutoStartKeyName);
+                    Debug.WriteLine("✅ Removed auto-start entry");
+                }
+            }
         }
         catch (Exception ex)
         {
+            Debug.WriteLine($"❌ Registry error: {ex.Message}");
             MessageBox.Show(
                 Localization.Format("StartupSettingsError", ex.Message),
                 Localization.Get("Error"),
                 MessageBoxButtons.OK,
-                MessageBoxIcon.Error
-            );
+                MessageBoxIcon.Error);
         }
     }
 }
