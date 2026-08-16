@@ -28,6 +28,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     private Label? _englishToPersianCountLabel;
     private ListBox? _wordListBox;
     private TextBox? _wordTextBox;
+    private TextBox? _searchTextBox;
     private Label? _wordCountLabel;
 
     private const int FormWidth = 920;
@@ -241,7 +242,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             BorderWidth = 1,
             Padding = new Padding(14),
             Location = new Point(left, cardY),
-            Size = new Size(cardWidth, 194)
+            Size = new Size(cardWidth, 220)
         };
 
         card.Controls.Add(Theme.SectionLabel(Localization.Get("WordCorrections"))
@@ -254,8 +255,22 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         _wordCountLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         card.Controls.Add(_wordCountLabel);
 
+        // Search box
+        _searchTextBox = new TextBox
+        {
+            Location = new Point(14, 40),
+            Size = new Size(cardWidth - 28, 28),
+            Font = Theme.BodyFont,
+            BackColor = Theme.Surface,
+            ForeColor = Theme.TextPrimary,
+            BorderStyle = BorderStyle.FixedSingle,
+            PlaceholderText = Localization.Get("Search")
+        };
+        _searchTextBox.TextChanged += SearchTextBox_TextChanged;
+        card.Controls.Add(_searchTextBox);
+
         var hint = Theme.BodyLabel(Localization.Get("WordCorrectionsHint"), Theme.TextSecondary, Theme.SmallFont);
-        hint.Location = new Point(14, 40);
+        hint.Location = new Point(14, 72);
         hint.Size = new Size(cardWidth - 28, 18);
         card.Controls.Add(hint);
 
@@ -265,7 +280,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 
         _wordListBox = new ListBox
         {
-            Location = new Point(14, 64),
+            Location = new Point(14, 96),
             Size = new Size(listWidth, 78),
             BorderStyle = BorderStyle.FixedSingle,
             IntegralHeight = false,
@@ -279,7 +294,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         {
             Text = Localization.Get("RemoveWord"),
             ButtonVariant = ModernButton.Variant.Ghost,
-            Location = new Point(buttonX, 64),
+            Location = new Point(buttonX, 96),
             Size = new Size(buttonWidth, 34)
         };
         removeButton.Click += RemoveWordButton_Click;
@@ -289,7 +304,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         {
             Text = Localization.Get("ResetWords"),
             ButtonVariant = ModernButton.Variant.Ghost,
-            Location = new Point(buttonX, 102),
+            Location = new Point(buttonX, 134),
             Size = new Size(buttonWidth, 34)
         };
         resetButton.Click += ResetWordsButton_Click;
@@ -297,7 +312,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 
         _wordTextBox = new TextBox
         {
-            Location = new Point(14, 150),
+            Location = new Point(14, 182),
             Size = new Size(listWidth - 126 - 10, 30),
             Font = Theme.BodyFont,
             BackColor = Theme.Surface,
@@ -311,13 +326,18 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         {
             Text = "+ " + Localization.Get("AddWord"),
             ButtonVariant = ModernButton.Variant.Primary,
-            Location = new Point(14 + _wordTextBox.Width + 10, 150),
+            Location = new Point(14 + _wordTextBox.Width + 10, 182),
             Size = new Size(126, 30)
         };
         addButton.Click += AddWordButton_Click;
         card.Controls.Add(addButton);
 
         return card;
+    }
+
+    private void SearchTextBox_TextChanged(object? sender, EventArgs e)
+    {
+        LoadWords();
     }
 
     private void WordTextBox_KeyDown(object? sender, KeyEventArgs e)
@@ -351,10 +371,23 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     {
         _wordListBox!.BeginUpdate();
         _wordListBox.Items.Clear();
-        foreach (string word in _wordCorrections.OrderBy(w => w, StringComparer.Ordinal))
+        
+        string searchTerm = _searchTextBox!.Text.Trim();
+        var words = _wordCorrections.OrderBy(w => w, StringComparer.Ordinal).ToList();
+        
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            words = words.Where(w => w.Contains(searchTerm, StringComparison.Ordinal)).ToList();
+        }
+        
+        foreach (string word in words)
             _wordListBox.Items.Add(word);
+        
         _wordListBox.EndUpdate();
-        _wordCountLabel!.Text = Localization.Format("WordCount", _wordCorrections.Count);
+        
+        // Display filtered count if searching
+        int displayCount = words.Count;
+        _wordCountLabel!.Text = Localization.Format("WordCount", displayCount);
     }
 
     private void AddWordButton_Click(object? sender, EventArgs e)
