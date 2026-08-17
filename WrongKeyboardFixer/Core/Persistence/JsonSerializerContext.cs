@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Models;
 
 namespace WrongKeyboardFixer.Core.Persistence;
@@ -13,10 +12,9 @@ namespace WrongKeyboardFixer.Core.Persistence;
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(AppSettings))]
-[JsonSerializable(typeof(Keys))] // ← بسیار مهم برای AOT
 [JsonSerializable(typeof(HotkeyModifiers))]
 [JsonSerializable(typeof(Dictionary<char, char>))]
-[JsonSerializable(typeof(List<string>))] // ← برای WordCorrections (AOT)
+[JsonSerializable(typeof(List<string>))]
 internal partial class AppSettingsJsonContext : JsonSerializerContext
 {
 }

@@ -1,8 +1,6 @@
-using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
-using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Helpers;
 using WrongKeyboardFixer.Core.Models;
 using WrongKeyboardFixer.Core.Persistence;
@@ -10,18 +8,16 @@ using WrongKeyboardFixer.Core.Persistence;
 namespace WrongKeyboardFixer.Core.Services;
 
 /// <summary>
-/// Loads and saves application settings to a JSON file, and manages
-/// the Windows auto-start registry entry.
+/// Loads and saves application settings to a JSON file.
+/// Uses Environment.CommonApplicationDataPath for cross-platform compatibility.
 /// </summary>
 public static class SettingsManager
 {
     private static readonly string SettingsPath = Path.Combine(
-        Application.CommonAppDataPath,
+        Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
         "WrongKeyboardFixer",
         "settings.json"
     );
-
-    private static readonly RegistryManager RegistryManager = new();
 
     public static AppSettings Load()
     {
@@ -36,15 +32,12 @@ public static class SettingsManager
             if (settings == null)
                 return CreateDefaultSettings();
 
-            // Initialize custom mappings from defaults if empty
             if (settings.PersianToEnglishMap is null || settings.PersianToEnglishMap.Count == 0)
                 settings.PersianToEnglishMap = MappingDefaults.GetDefaultPersianToEnglishMap();
 
             if (settings.EnglishToPersianMap is null || settings.EnglishToPersianMap.Count == 0)
                 settings.EnglishToPersianMap = MappingDefaults.GetDefaultEnglishToPersianMap();
 
-            // Word corrections come from defaults unless the user edited them
-            // (an explicitly empty list stays empty).
             if (settings.WordCorrections is null)
                 settings.WordCorrections = MappingDefaults.GetDefaultWordCorrections();
 
@@ -52,8 +45,7 @@ public static class SettingsManager
         }
         catch (Exception ex)
         {
-            // On any failure, return fresh default settings
-            Debug.WriteLine($"⚠️ Failed to load settings: {ex.Message}");
+            Debug.WriteLine($"Failed to load settings: {ex.Message}");
             return CreateDefaultSettings();
         }
     }
@@ -73,17 +65,15 @@ public static class SettingsManager
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
-                Localization.Format("SaveSettingsError", ex.Message),
-                Localization.Get("Error"),
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error
-            );
+            Debug.WriteLine($"Failed to save settings: {ex.Message}");
         }
     }
 
     public static void AddToStartup(bool enable)
     {
-        RegistryManager.SetAutoStart(enable);
+#if WINDOWS
+        var registry = new Platforms.Windows.WindowsRegistryService();
+        registry.SetAutoStart(enable);
+#endif
     }
 }

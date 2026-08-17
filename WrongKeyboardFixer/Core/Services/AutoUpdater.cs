@@ -1,18 +1,13 @@
-using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using WrongKeyboardFixer.Core.Helpers;
-using WrongKeyboardFixer.Core.Services.Update;
 
 namespace WrongKeyboardFixer.Core.Services;
 
 /// <summary>
 /// Orchestrates the update workflow: fetch the latest release, compare versions,
-/// ask the user, and hand the download/install work to the update services.
-/// Owns all user-facing messaging for the flow.
+/// and hand the download/install work to the update services.
+/// Uses events for user interaction (no direct UI dependency).
 /// </summary>
-public static class AutoUpdater
+public class AutoUpdater
 {
     public enum UpdateStatus
     {
@@ -23,16 +18,18 @@ public static class AutoUpdater
         Error
     }
 
-    // One shared client for all requests (connection reuse, no per-call setup).
-    private static readonly GitHubReleaseClient Client = new();
+    private readonly GitHubReleaseClient Client = new();
 
-    /// <summary>
-    /// Checks for updates from GitHub releases.
-    /// </summary>
-    /// <param name="progress">Optional progress reporter for download status.</param>
-    /// <param name="silent">If true, suppresses the "no update" and "error" messages (startup mode).</param>
-    /// <returns>The update status result.</returns>
-    public static async Task<UpdateStatus> CheckForUpdatesAsync(
+    /// <summary>Raised when the user needs to confirm an action (Yes/No prompt).</summary>
+    public event Func<string, string, Task<bool>>? ConfirmRequested;
+
+    /// <summary>Raised when a message needs to be shown to the user.</summary>
+    public event Action<string, string>? MessageRequested;
+
+    /// <summary>Raised when the app needs to exit for update installation.</summary>
+    public event Action? ExitRequested;
+
+    public async Task<UpdateStatus> CheckForUpdatesAsync(
         IProgress<(int percent, string message)>? progress = null,
         bool silent = false)
     {
@@ -46,7 +43,7 @@ public static class AutoUpdater
             if (latestRelease == null)
             {
                 if (!silent)
-                    ShowMessage(Localization.Get("UpdFetchError"), Localization.Get("Error"), MessageBoxIcon.Error);
+                    MessageRequested?.Invoke(Localization.Get("UpdFetchError"), Localization.Get("Error"));
                 return UpdateStatus.Error;
             }
 
@@ -55,31 +52,34 @@ public static class AutoUpdater
             if (latestVersion <= currentVersion)
             {
                 if (!silent)
-                    ShowMessage(
+                    MessageRequested?.Invoke(
                         Localization.Format("UpdNoUpdate", currentVersion),
-                        Localization.Get("Update"),
-                        MessageBoxIcon.Information);
+                        Localization.Get("Update"));
                 progress?.Report((100, Localization.Get("UpdNoUpdateShort")));
                 return UpdateStatus.NoUpdate;
             }
 
-            // Ask the user whether to download the new version.
             progress?.Report((15, Localization.Format("UpdFound", latestVersion)));
-            var result = MessageBox.Show(
-                Localization.Format("UpdAvailablePrompt", latestVersion, currentVersion),
-                Localization.Get("UpdAvailableTitle"),
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
 
-            if (result != DialogResult.Yes)
+            if (ConfirmRequested != null)
+            {
+                bool accepted = await ConfirmRequested.Invoke(
+                    Localization.Format("UpdAvailablePrompt", latestVersion, currentVersion),
+                    Localization.Get("UpdAvailableTitle"));
+
+                if (!accepted)
+                    return UpdateStatus.UserDeclined;
+            }
+            else
+            {
                 return UpdateStatus.UserDeclined;
+            }
 
             var installer = new UpdateInstaller(Client);
             bool restartScheduled = await installer.InstallAsync(latestRelease, latestVersion, progress);
             if (restartScheduled)
             {
-                // Exit so the replacement script can swap the running exe.
-                Application.Exit();
+                ExitRequested?.Invoke();
                 return UpdateStatus.DownloadedAndInstalling;
             }
 
@@ -87,22 +87,19 @@ public static class AutoUpdater
         }
         catch (UpdateInstallException ex)
         {
-            Debug.WriteLine($"❌ Update install failed: {ex.Message}");
+            Debug.WriteLine($"Update install failed: {ex.Message}");
             progress?.Report((100, ex.Message));
             if (!silent)
-                ShowMessage(ex.Message, Localization.Get("Error"), ex.IsWarning ? MessageBoxIcon.Warning : MessageBoxIcon.Error);
+                MessageRequested?.Invoke(ex.Message, Localization.Get("Error"));
             return UpdateStatus.Error;
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"❌ Update check failed: {ex.Message}");
+            Debug.WriteLine($"Update check failed: {ex.Message}");
             progress?.Report((100, Localization.Format("UpdCheckError", ex.Message)));
             if (!silent)
-                ShowMessage(Localization.Format("UpdCheckError", ex.Message), Localization.Get("Error"), MessageBoxIcon.Error);
+                MessageRequested?.Invoke(Localization.Format("UpdCheckError", ex.Message), Localization.Get("Error"));
             return UpdateStatus.Error;
         }
     }
-
-    private static void ShowMessage(string text, string caption, MessageBoxIcon icon) =>
-        MessageBox.Show(text, caption, MessageBoxButtons.OK, icon);
 }

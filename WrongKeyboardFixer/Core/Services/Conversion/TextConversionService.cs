@@ -12,7 +12,8 @@ namespace WrongKeyboardFixer.Core.Services.Conversion;
 /// </summary>
 public sealed class TextConversionService
 {
-    private readonly ClipboardManager _clipboard;
+    private readonly IClipboardService _clipboard;
+    private readonly IKeyboardSimulator _keyboard;
     private readonly AppSettings _settings;
     private readonly IKeyboardConverter _converter;
     private readonly SemaphoreSlim _conversionGate = new(1, 1);
@@ -22,19 +23,20 @@ public sealed class TextConversionService
     private const int ClipboardWriteDelayMs = 200;
 
     public TextConversionService(
-        ClipboardManager clipboard,
+        IClipboardService clipboard,
+        IKeyboardSimulator keyboard,
         AppSettings settings,
         IKeyboardConverter? converter = null)
     {
         _clipboard = clipboard;
+        _keyboard = keyboard;
         _settings = settings;
         _converter = converter ?? new KeyboardConverter();
     }
 
     /// <summary>
     /// Converts the currently selected text.
-    /// Overlapping invocations (e.g. a second hotkey press while a conversion is
-    /// still in flight) are ignored so two pipelines never touch the clipboard
+    /// Overlapping invocations are ignored so two pipelines never touch the clipboard
     /// at the same time.
     /// </summary>
     public async Task ConvertSelectedTextAsync()
@@ -58,9 +60,9 @@ public sealed class TextConversionService
 
         try
         {
-            Debug.WriteLine("🔄 Starting text conversion...");
+            Debug.WriteLine("Starting text conversion...");
 
-            KeyboardSimulator.SendCtrlC();
+            _keyboard.SendCtrlC();
             await Task.Delay(ClipboardReadDelayMs);
 
             string originalText = await _clipboard.GetTextWithRetryAsync();
@@ -76,8 +78,6 @@ public sealed class TextConversionService
                 ? _converter.ConvertEnglishToPersian(originalText, _settings.EnglishToPersianMap, _settings.WordCorrections)
                 : _converter.ConvertPersianToEnglish(originalText, _settings.PersianToEnglishMap);
 
-            // Nothing changed: leave the selection untouched and give back the
-            // clipboard instead of simulating a pointless Ctrl+V.
             if (convertedText == originalText)
             {
                 _clipboard.RestoreText(previousClipboard);
@@ -86,15 +86,15 @@ public sealed class TextConversionService
 
             _clipboard.SetText(convertedText);
             await Task.Delay(ClipboardWriteDelayMs);
-            KeyboardSimulator.SendCtrlV();
+            _keyboard.SendCtrlV();
             await Task.Delay(ClipboardWriteDelayMs);
 
             _clipboard.RestoreText(previousClipboard);
-            Debug.WriteLine("✅ Conversion completed successfully");
+            Debug.WriteLine("Conversion completed successfully");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"❌ Error: {ex.Message}");
+            Debug.WriteLine($"Error: {ex.Message}");
             _clipboard.RestoreText(previousClipboard);
         }
     }

@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:WrongKeyboardFixer.UI.Controls"
+             xmlns:vm="clr-namespace:WrongKeyboardFixer.ViewModels"
+             x:Class="WrongKeyboardFixer.Pages.KeyboardMappingsPage"
+             x:DataType="vm:KeyboardMappingsViewModel"
+             BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundColor}, Dark={StaticResource BackgroundColor}}"
+             Title="{Binding Title}"
+             NavigationPage.HasNavigationBar="False">
+
+    <Grid Padding="14" RowDefinitions="Auto,*">
+
+        <!-- Title Bar -->
+        <Border Grid.Row="0"
+                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColor}}"
+                Padding="16,12"
+                StrokeThickness="0">
+            <Grid ColumnDefinitions="*,Auto">
+                <VerticalStackLayout VerticalOptions="Center">
+                    <Label Text="{Binding Title}"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource TextPrimaryColor}" />
+                    <Label Text="{Binding Subtitle}"
+                           FontSize="12.5"
+                           TextColor="{StaticResource TextSecondaryColor}" />
+                </VerticalStackLayout>
+
+                <Border Grid.Column="1"
+                        StrokeThickness="0"
+                        BackgroundColor="Transparent"
+                        WidthRequest="36"
+                        HeightRequest="36"
+                        Padding="0"
+                        VerticalOptions="Center">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding CancelCommand}" />
+                    </Border.GestureRecognizers>
+                    <Label Text="✕"
+                           FontSize="18"
+                           TextColor="{StaticResource TextSecondaryColor}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Content -->
+        <ScrollView Grid.Row="1" Margin="0,10,0,0">
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColor}}"
+                    CornerRadius="14"
+                    Padding="24"
+                    StrokeThickness="0">
+
+                <VerticalStackLayout Spacing="16">
+
+                    <!-- Persian → English Card -->
+                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceAltColor}, Dark={StaticResource SurfaceAltColor}}"
+                            CornerRadius="12"
+                            Stroke="{StaticResource BorderColor}"
+                            StrokeThickness="1"
+                            Padding="14">
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="{Binding PersianToEnglishTitle}"
+                                       FontSize="14.5"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource AccentColor}"
+                                       VerticalOptions="Center" />
+                                <Label Grid.Column="1"
+                                       Text="{Binding PersianToEnglishCount}"
+                                       FontSize="12.5"
+                                       TextColor="{StaticResource TextSecondaryColor}"
+                                       VerticalOptions="Center" />
+                            </Grid>
+
+                            <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
+                                <controls:ModernButton Text="{Binding AddNewMappingLabel}"
+                                                        ButtonVariant="Primary"
+                                                        WidthRequest="160"
+                                                        HorizontalOptions="Start" />
+                                <controls:ModernButton Grid.Column="1"
+                                                        Text="{Binding ResetAllLabel}"
+                                                        ButtonVariant="Ghost"
+                                                        WidthRequest="170"
+                                                        HorizontalOptions="Start"
+                                                        Command="{Binding ResetAllPersianToEnglishCommand}" />
+                            </Grid>
+
+                            <controls:MappingDataGrid x:Name="PersianToEnglishGrid"
+                                                        HeightRequest="250" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- English → Persian Card -->
+                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceAltColor}, Dark={StaticResource SurfaceAltColor}}"
+                            CornerRadius="12"
+                            Stroke="{StaticResource BorderColor}"
+                            StrokeThickness="1"
+                            Padding="14">
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="{Binding EnglishToPersianTitle}"
+                                       FontSize="14.5"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource AccentColor}"
+                                       VerticalOptions="Center" />
+                                <Label Grid.Column="1"
+                                       Text="{Binding EnglishToPersianCount}"
+                                       FontSize="12.5"
+                                       TextColor="{StaticResource TextSecondaryColor}"
+                                       VerticalOptions="Center" />
+                            </Grid>
+
+                            <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
+                                <controls:ModernButton Text="{Binding AddNewMappingLabel}"
+                                                        ButtonVariant="Primary"
+                                                        WidthRequest="160"
+                                                        HorizontalOptions="Start" />
+                                <controls:ModernButton Grid.Column="1"
+                                                        Text="{Binding ResetAllLabel}"
+                                                        ButtonVariant="Ghost"
+                                                        WidthRequest="170"
+                                                        HorizontalOptions="Start"
+                                                        Command="{Binding ResetAllEnglishToPersianCommand}" />
+                            </Grid>
+
+                            <controls:MappingDataGrid x:Name="EnglishToPersianGrid"
+                                                        HeightRequest="250" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Word Corrections Card -->
+                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceAltColor}, Dark={StaticResource SurfaceAltColor}}"
+                            CornerRadius="12"
+                            Stroke="{StaticResource BorderColor}"
+                            StrokeThickness="1"
+                            Padding="14">
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="{Binding WordCorrectionsTitle}"
+                                       FontSize="14.5"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource AccentColor}"
+                                       VerticalOptions="Center" />
+                                <Label Grid.Column="1"
+                                       Text="{Binding WordCount}"
+                                       FontSize="12.5"
+                                       TextColor="{StaticResource TextSecondaryColor}"
+                                       VerticalOptions="Center" />
+                            </Grid>
+
+                            <controls:ModernEntry PlaceholderText="{Binding SearchPlaceholder}"
+                                                   EntryText="{Binding SearchText}"
+                                                   HeightRequest="36" />
+
+                            <Label Text="{Binding WordCorrectionsHint}"
+                                   FontSize="12.5"
+                                   TextColor="{StaticResource TextSecondaryColor}" />
+
+                            <!-- Word list as CollectionView -->
+                            <CollectionView ItemsSource="{Binding WordItems}"
+                                            HeightRequest="200"
+                                            BackgroundColor="{StaticResource SurfaceColor}">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:KeyboardMappingsViewModel+WordItem">
+                                        <Grid ColumnDefinitions="*,Auto"
+                                              Padding="8,6"
+                                              HeightRequest="36">
+                                            <Label Text="{Binding Word}"
+                                                   FontSize="14"
+                                                   TextColor="{StaticResource TextPrimaryColor}"
+                                                   VerticalOptions="Center" />
+                                            <Button Grid.Column="1"
+                                                    Text="{Binding DeleteLabel}"
+                                                    FontSize="12.5"
+                                                    TextColor="{StaticResource DangerColor}"
+                                                    BackgroundColor="{StaticResource DangerSoftColor}"
+                                                    CornerRadius="6"
+                                                    HeightRequest="28"
+                                                    Padding="8,0"
+                                                    FontAttributes="Bold"
+                                                    VerticalOptions="Center"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:KeyboardMappingsViewModel}}, Path=DeleteWordCommand}"
+                                                    CommandParameter="{Binding Word}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+
+                            <!-- Add word section -->
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                <controls:ModernEntry Grid.Column="0"
+                                                       PlaceholderText="{Binding AddWordPlaceholder}"
+                                                       EntryText="{Binding NewWordText}"
+                                                       HeightRequest="36" />
+                                <controls:ModernButton Grid.Column="1"
+                                                        Text="{Binding AddWordLabel}"
+                                                        ButtonVariant="Primary"
+                                                        WidthRequest="110"
+                                                        Command="{Binding AddWordCommand}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Footer -->
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12" Margin="0,16,0,0">
+                        <controls:ModernButton Grid.Column="1"
+                                                Text="{Binding SaveLabel}"
+                                                ButtonVariant="Primary"
+                                                WidthRequest="112"
+                                                Command="{Binding SaveCommand}" />
+                        <controls:ModernButton Grid.Column="2"
+                                                Text="{Binding CancelLabel}"
+                                                ButtonVariant="Secondary"
+                                                WidthRequest="112"
+                                                Command="{Binding CancelCommand}" />
+                    </Grid>
+
+                </VerticalStackLayout>
+            </Border>
+        </ScrollView>
+
+    </Grid>
+
+</ContentPage>

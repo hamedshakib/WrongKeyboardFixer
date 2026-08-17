@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="WrongKeyboardFixer.Resources.Styles.Styles">
+
+    <Style TargetType="NavigationPage">
+        <Setter Property="BarBackgroundColor" Value="{StaticResource SurfaceColor}" />
+        <Setter Property="BarTextColor" Value="{StaticResource TextPrimaryColor}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource BackgroundColor}" />
+    </Style>
+
+    <Style TargetType="ContentPage" ApplyToDerivedTypes="True">
+        <Setter Property="BackgroundColor" Value="{StaticResource BackgroundColor}" />
+    </Style>
+
+    <Style TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TextPrimaryColor}" />
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+    </Style>
+
+    <Style TargetType="Button" x:Key="ModernButtonStyle">
+        <Setter Property="BackgroundColor" Value="{StaticResource AccentColor}" />
+        <Setter Property="TextColor" Value="{StaticResource TextOnAccentColor}" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="HeightRequest" Value="40" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="Visual" Value="Flat" />
+        <Setter Property="Padding" Value="16,0" />
+    </Style>
+
+    <Style TargetType="Entry">
+        <Setter Property="TextColor" Value="{StaticResource TextPrimaryColor}" />
+        <Setter Property="PlaceholderColor" Value="{StaticResource TextSecondaryColor}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource SurfaceColor}" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+
+    <Style TargetType="Picker">
+        <Setter Property="TextColor" Value="{StaticResource TextPrimaryColor}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource SurfaceColor}" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+
+    <Style TargetType="Frame">
+        <Setter Property="HasShadow" Value="False" />
+        <Setter Property="BorderColor" Value="{StaticResource BorderColor}" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style TargetType="ScrollView">
+        <Setter Property="BackgroundColor" Value="{StaticResource BackgroundColor}" />
+    </Style>
+
+    <Style TargetType="Border">
+        <Setter Property="Stroke" Value="{StaticResource BorderColor}" />
+    </Style>
+
+    <Style TargetType="BoxView">
+        <Setter Property="BackgroundColor" Value="{StaticResource BorderColor}" />
+    </Style>
+
+    <Style TargetType="CollectionView">
+        <Setter Property="BackgroundColor" Value="{StaticResource SurfaceColor}" />
+    </Style>
+
+</ResourceDictionary>

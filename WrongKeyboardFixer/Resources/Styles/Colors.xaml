@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="WrongKeyboardFixer.Resources.Styles.Colors">
+
+    <!-- Brand -->
+    <Color x:Key="AccentColor">#3B69F5</Color>
+    <Color x:Key="AccentDarkColor">#2E55D2</Color>
+    <Color x:Key="AccentSoftColor">#EEF3FF</Color>
+    <Color x:Key="AccentBorderColor">#B4C7FA</Color>
+
+    <!-- Surfaces -->
+    <Color x:Key="BackgroundColor">#F4F6FA</Color>
+    <Color x:Key="SurfaceColor">#FFFFFF</Color>
+    <Color x:Key="SurfaceAltColor">#F8F9FC</Color>
+    <Color x:Key="SurfaceMutedColor">#F3F4F8</Color>
+
+    <!-- Borders -->
+    <Color x:Key="BorderColor">#E5E9F0</Color>
+    <Color x:Key="BorderStrongColor">#D6DBE6</Color>
+
+    <!-- Text -->
+    <Color x:Key="TextPrimaryColor">#18202E</Color>
+    <Color x:Key="TextSecondaryColor">#6A7385</Color>
+    <Color x:Key="TextDisabledColor">#A3AAB8</Color>
+    <Color x:Key="TextOnAccentColor">#FFFFFF</Color>
+
+    <!-- Status -->
+    <Color x:Key="SuccessColor">#22AD5C</Color>
+    <Color x:Key="SuccessSoftColor">#E8F9EE</Color>
+    <Color x:Key="WarningColor">#DE8A12</Color>
+    <Color x:Key="WarningSoftColor">#FFF8E6</Color>
+    <Color x:Key="DangerColor">#E64C3C</Color>
+    <Color x:Key="DangerSoftColor">#FEECE9</Color>
+    <Color x:Key="InfoColor">#2F80ED</Color>
+    <Color x:Key="InfoSoftColor">#E8F1FD</Color>
+
+</ResourceDictionary>

@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.Core.Services.Update;
@@ -51,7 +50,7 @@ internal sealed class UpdateInstaller
 
             progress?.Report((90, Localization.Get("UpdPreparing")));
 
-            string currentExePath = Application.ExecutablePath;
+            string currentExePath = Environment.ProcessPath ?? throw new InvalidOperationException("Unable to determine executable path.");
             string? newExePath = isZip
                 ? await ExtractZipAsync(downloadedFile, tempDir)
                 : downloadedFile;

@@ -1,12 +1,9 @@
-using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.Core.Models;
 
 /// <summary>
 /// Single source of truth for the hotkey combinations offered in the settings UI.
-/// Keeps the display order and the underlying values together so the form no
-/// longer needs duplicated switch/if chains.
 /// </summary>
 public static class HotkeyOptions
 {
@@ -20,30 +17,30 @@ public static class HotkeyOptions
         ("HotkeyModifierShift", (uint)HotkeyModifiers.Shift)
     };
 
-    private static readonly (string LocalizationKey, Keys Key)[] KeyOptions =
+    private static readonly (string LocalizationKey, int Key)[] KeyOptions =
     {
-        ("HotkeyKeyAdd", Keys.Add),
-        ("HotkeyKeySubtract", Keys.Subtract),
-        ("HotkeyKeyMultiply", Keys.Multiply),
-        ("HotkeyKeyF1", Keys.F1),
-        ("HotkeyKeyF2", Keys.F2),
-        ("HotkeyKeyF3", Keys.F3),
-        ("HotkeyKeyF4", Keys.F4),
-        ("HotkeyKeyF5", Keys.F5),
-        ("HotkeyKeyF6", Keys.F6),
-        ("HotkeyKeyF7", Keys.F7),
-        ("HotkeyKeyF8", Keys.F8),
-        ("HotkeyKeyF9", Keys.F9),
-        ("HotkeyKeyF10", Keys.F10),
-        ("HotkeyKeyF11", Keys.F11),
-        ("HotkeyKeyF12", Keys.F12),
-        ("HotkeyKeyInsert", Keys.Insert),
-        ("HotkeyKeyHome", Keys.Home),
-        ("HotkeyKeyPageUp", Keys.PageUp),
-        ("HotkeyKeyPageDown", Keys.PageDown),
-        ("HotkeyKeyEnd", Keys.End),
-        ("HotkeyKeyDelete", Keys.Delete),
-        ("HotkeyKeySpace", Keys.Space)
+        ("HotkeyKeyAdd", VirtualKeys.Add),
+        ("HotkeyKeySubtract", VirtualKeys.Subtract),
+        ("HotkeyKeyMultiply", VirtualKeys.Multiply),
+        ("HotkeyKeyF1", VirtualKeys.F1),
+        ("HotkeyKeyF2", VirtualKeys.F2),
+        ("HotkeyKeyF3", VirtualKeys.F3),
+        ("HotkeyKeyF4", VirtualKeys.F4),
+        ("HotkeyKeyF5", VirtualKeys.F5),
+        ("HotkeyKeyF6", VirtualKeys.F6),
+        ("HotkeyKeyF7", VirtualKeys.F7),
+        ("HotkeyKeyF8", VirtualKeys.F8),
+        ("HotkeyKeyF9", VirtualKeys.F9),
+        ("HotkeyKeyF10", VirtualKeys.F10),
+        ("HotkeyKeyF11", VirtualKeys.F11),
+        ("HotkeyKeyF12", VirtualKeys.F12),
+        ("HotkeyKeyInsert", VirtualKeys.Insert),
+        ("HotkeyKeyHome", VirtualKeys.Home),
+        ("HotkeyKeyPageUp", VirtualKeys.PageUp),
+        ("HotkeyKeyPageDown", VirtualKeys.PageDown),
+        ("HotkeyKeyEnd", VirtualKeys.End),
+        ("HotkeyKeyDelete", VirtualKeys.Delete),
+        ("HotkeyKeySpace", VirtualKeys.Space)
     };
 
     public static int ModifierCount => ModifierOptions.Length;
@@ -53,9 +50,8 @@ public static class HotkeyOptions
     public static uint ModifierValue(int index) => ModifierOptions[index].Modifier;
 
     public static string KeyText(int index) => Localization.Get(KeyOptions[index].LocalizationKey);
-    public static Keys KeyValue(int index) => KeyOptions[index].Key;
+    public static int KeyValue(int index) => KeyOptions[index].Key;
 
-    /// <summary>Returns the combo index matching a modifier value (defaults to 0 = Ctrl+Alt).</summary>
     public static int IndexOfModifier(uint modifier)
     {
         for (int i = 0; i < ModifierOptions.Length; i++)
@@ -63,8 +59,7 @@ public static class HotkeyOptions
         return 0;
     }
 
-    /// <summary>Returns the combo index matching a key (defaults to 0 = Add).</summary>
-    public static int IndexOfKey(Keys key)
+    public static int IndexOfKey(int key)
     {
         for (int i = 0; i < KeyOptions.Length; i++)
             if (KeyOptions[i].Key == key) return i;
