@@ -25,7 +25,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     private ModernButton? _cancelButton;
     private Label? _persianToEnglishCountLabel;
     private Label? _englishToPersianCountLabel;
-    private ModernDataGridView? _wordDataGridView;
+    private WordCorrectionGrid? _wordGrid;
     private ModernTextBox? _searchTextBox;
     private ModernTextBox? _wordTextBox;
     private Label? _wordCountLabel;
@@ -277,41 +277,14 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         int rightElementWidth = 110;
         int gridWidth = cardWidth - 28 - rightElementWidth - 12;
 
-        _wordDataGridView = new ModernDataGridView();
-        Theme.StyleGrid(_wordDataGridView);
-        _wordDataGridView.CellBorderStyle = DataGridViewCellBorderStyle.None;
-        _wordDataGridView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-        _wordDataGridView.Location = new Point(14, gridY);
-        _wordDataGridView.Size = new Size(gridWidth, gridHeight);
-        _wordDataGridView.BackgroundColor = Theme.Surface;
-        _wordDataGridView.RowHeadersVisible = false;
-        _wordDataGridView.ColumnHeadersVisible = false;
-
-        _wordDataGridView.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            HeaderText = "",
-            ReadOnly = true,
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
-            DefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = Theme.SurfaceMuted,
-                ForeColor = Theme.TextPrimary,
-                Alignment = DataGridViewContentAlignment.MiddleLeft
-            }
-        });
-
-        _wordDataGridView.Columns.Add(new DataGridViewButtonColumn
-        {
-            HeaderText = Localization.Get("Delete"),
-            Text = Localization.Get("Delete"),
-            UseColumnTextForButtonValue = true,
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
-            Width = 80,
-            FlatStyle = FlatStyle.Flat
-        });
-
-        _wordDataGridView.CellContentClick += WordDataGridView_CellContentClick;
-        card.Controls.Add(_wordDataGridView);
+        _wordGrid = new WordCorrectionGrid();
+        _wordGrid.DeleteRequested += DeleteWordCorrection;
+        _wordGrid.Location = new Point(14, gridY);
+        _wordGrid.Size = new Size(gridWidth, gridHeight);
+        _wordGrid.BackgroundColor = Theme.Surface;
+        _wordGrid.RowHeadersVisible = false;
+        _wordGrid.ColumnHeadersVisible = false;
+        card.Controls.Add(_wordGrid);
 
         // دکمه Reset در سمت راست جدول
         var resetButton = new ModernButton
@@ -353,16 +326,10 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         return card;
     }
 
-    private void WordDataGridView_CellContentClick(object? sender, DataGridViewCellEventArgs e)
+    private void DeleteWordCorrection(string word)
     {
-        if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
-        if (_wordDataGridView!.Rows[e.RowIndex].Cells[0].Value is not string word) return;
-
-        if (e.ColumnIndex == 1 && _wordDataGridView.Columns[e.ColumnIndex] is DataGridViewButtonColumn)
-        {
-            _wordCorrections.Remove(word);
-            LoadWords();
-        }
+        _wordCorrections.Remove(word);
+        LoadWords();
     }
 
     private void WordTextBox_KeyDown(object? sender, KeyEventArgs e)
@@ -397,10 +364,10 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 
     private void LoadWords()
     {
-        if (_wordDataGridView is null) return;
+        if (_wordGrid is null) return;
 
-        _wordDataGridView.SuspendLayout();
-        _wordDataGridView.Rows.Clear();
+        _wordGrid.SuspendLayout();
+        _wordGrid.Rows.Clear();
 
         string searchTerm = _searchTextBox!.Text.Trim();
         var words = _wordCorrections.OrderBy(w => w, StringComparer.Ordinal).ToList();
@@ -410,12 +377,9 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             words = words.Where(w => w.Contains(searchTerm, StringComparison.Ordinal)).ToList();
         }
 
-        foreach (string word in words)
-        {
-            _wordDataGridView.Rows.Add(word, Localization.Get("Delete"));
-        }
+        _wordGrid.Load(words);
 
-        _wordDataGridView.ResumeLayout();
+        _wordGrid.ResumeLayout();
 
         int displayCount = words.Count;
         _wordCountLabel!.Text = Localization.Format("WordCount", displayCount);
