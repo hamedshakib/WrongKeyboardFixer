@@ -9,7 +9,7 @@ public class AppSettings
 {
     public bool RunOnStartup { get; set; } = false;
     public string Language { get; set; } = Localization.Languages.English;
-    public int HotkeyModifier { get; set; } = (int)(HotkeyModifiers.Control | HotkeyModifiers.Alt);
+    public int HotkeyModifier { get; set; } = 3; // Control (0x0002) | Alt (0x0001)
     public Keys HotkeyKey { get; set; } = Keys.Add;
 
     // تنظیمات نگاشت فارسی به انگلیسی

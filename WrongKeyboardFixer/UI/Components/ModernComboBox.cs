@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
+using WrongKeyboardFixer.Core.Helpers;
+
 namespace WrongKeyboardFixer.UI.Components;
 
 /// <summary>
@@ -18,8 +20,8 @@ public class ModernComboBox : ComboBox
         FlatStyle = FlatStyle.Flat;
         DropDownStyle = ComboBoxStyle.DropDownList;
         DrawMode = DrawMode.OwnerDrawFixed;
-        ItemHeight = Theme.DpiScale(30, DeviceDpi);
-        DropDownHeight = Theme.DpiScale(240, DeviceDpi);
+        ItemHeight = Theme.DpiScale(Constants.UI.ComboBoxItemHeight, DeviceDpi);
+        DropDownHeight = Theme.DpiScale(Constants.UI.ComboBoxDropDownHeight, DeviceDpi);
         IntegralHeight = false;
         Font = Theme.BodyFont;
         BackColor = Theme.Surface;
@@ -61,7 +63,7 @@ public class ModernComboBox : ComboBox
         string text = Items[e.Index]?.ToString() ?? "";
 
         // ── مستطیل متن: در قسمت نمایش، فضای فلش در سمت صحیح کم می‌شود ──
-        int arrowZone = Theme.DpiScale(24, dpi);
+        int arrowZone = Theme.DpiScale(Constants.UI.ArrowZoneWidth, dpi);
         Rectangle textRect;
         if (isEditArea)
         {
@@ -97,7 +99,7 @@ public class ModernComboBox : ComboBox
         int dpi = DeviceDpi;
 
         // ── پوشاندن دکمهٔ پیش‌فرض سیستم‌عامل (با رنگ حالت غیرفعال) ──
-        int coverWidth = Theme.DpiScale(30, dpi);
+        int coverWidth = Theme.DpiScale(Constants.UI.ButtonWidth, dpi);
         var coverRect = isRtl
             ? new Rectangle(0, 0, coverWidth, Height)
             : new Rectangle(Width - coverWidth, 0, coverWidth, Height);
@@ -106,18 +108,18 @@ public class ModernComboBox : ComboBox
 
         // ── حاشیهٔ گرد ──
         var rect = new Rectangle(0, 0, Width - 1, Height - 1);
-        using (var path = Theme.RoundRect(rect, Theme.DpiScale(6, dpi)))
+        using (var path = Theme.RoundRect(rect, Theme.DpiScale(Constants.UI.CornerRadiusSmall, dpi)))
         using (var pen = new Pen(!Enabled ? Theme.Border : _hovered ? Theme.Accent : Theme.BorderStrong))
             g.DrawPath(pen, path);
 
         // ── فلش (با قلم مقیاس‌شده با DPI و رنگ حالت غیرفعال) ──
-        int cx = isRtl ? Theme.DpiScale(15, dpi) : Width - Theme.DpiScale(15, dpi);
+        int cx = isRtl ? Theme.DpiScale(Constants.UI.ChevronOffset, dpi) : Width - Theme.DpiScale(Constants.UI.ChevronOffset, dpi);
         int cy = Height / 2;
         using var chevron = new Pen(
             !Enabled ? Theme.TextDisabled : _hovered ? Theme.Accent : Theme.TextSecondary,
             Theme.DpiScaleF(1.6f, dpi));
         chevron.LineJoin = LineJoin.Round;
-        int ch = Theme.DpiScale(4, dpi);
+        int ch = Theme.DpiScale(Constants.UI.ChevronHeight, dpi);
         g.DrawLines(chevron, new[]
         {
             new PointF(cx - ch, cy - Theme.DpiScale(2, dpi)),

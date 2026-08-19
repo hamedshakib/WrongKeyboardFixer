@@ -205,21 +205,9 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         this.MinimumSize = this.ClientSize;
     }
 
-    private void FitFormToContent()
-    {
-        _layout.PerformLayout();
-        int contentH = _layout.Height;                      // ارتفاع واقعی پس از چیدمان نهایی
-        int panelHeight = _panel.Padding.Vertical + contentH;
-        _panel.Height = panelHeight;
-        this.ClientSize = new Size(this.ClientSize.Width,
-            _panel.Location.Y + panelHeight + 14);
-        this.MinimumSize = this.ClientSize;
-    }
-
     protected override void OnShown(EventArgs e)
     {
         base.OnShown(e);
-        FitFormToContent();   // تصحیح نهایی پس از layout واقعی → حذف کادر خالی پایین
         RedrawLock.Resume(this);
     }
 

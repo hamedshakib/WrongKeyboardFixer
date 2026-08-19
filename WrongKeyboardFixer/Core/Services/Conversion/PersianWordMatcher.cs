@@ -11,6 +11,7 @@ namespace WrongKeyboardFixer.Core.Services.Conversion;
 /// </summary>
 public sealed class PersianWordMatcher : IPersianWordMatcher
 {
+    private const int MaxDepth = 4;
     private static readonly string[] EncliticPronouns =
     {
         "شان", "تان", "مان", "ش", "ت", "م"
@@ -61,7 +62,7 @@ public sealed class PersianWordMatcher : IPersianWordMatcher
         // Avoid infinite loops
         var visited = new HashSet<string>(StringComparer.Ordinal);
 
-        return TryReduce(word, corrections, visited, maxDepth: 4);
+        return TryReduce(word, corrections, visited, maxDepth: MaxDepth);
     }
 
     private bool TryReduce(string word, IReadOnlySet<string> corrections, HashSet<string> visited, int maxDepth)

@@ -4,9 +4,11 @@ using System.Windows.Forms;
 
 namespace WrongKeyboardFixer.UI.Components;
 
+using WrongKeyboardFixer.Core.Helpers;
+
 internal static partial class RedrawLock
 {
-    private const int WmSetRedraw = 0x000B;
+    private const int WmSetRedraw = Constants.WindowsMessages.WM_SETREDRAW;
 
     // اضافه کردن EntryPoint = "SendMessageW" برای مشخص کردن نام دقیق در DLL
     [LibraryImport("user32.dll", EntryPoint = "SendMessageW")]

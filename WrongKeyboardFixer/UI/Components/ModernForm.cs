@@ -10,13 +10,16 @@ namespace WrongKeyboardFixer.UI.Components;
 /// </summary>
 public class ModernForm : Form
 {
+    private const int WS_CLIPCHILDREN = 0x02000000;
+    private const int WS_CLIPSIBLINGS = 0x04000000;
+
     protected override CreateParams CreateParams
     {
         get
         {
             var cp = base.CreateParams;
-            cp.Style |= 0x02000000;   // WS_CLIPCHILDREN → پس‌زمینهٔ فرم زیر بچه‌ها repaint نمی‌شود
-            cp.Style |= 0x04000000;   // WS_CLIPSIBLINGS → کنترل‌ها روی هم overwrite نمی‌کنند
+            cp.Style |= WS_CLIPCHILDREN;   // WS_CLIPCHILDREN → پس‌زمینهٔ فرم زیر بچه‌ها repaint نمی‌شود
+            cp.Style |= WS_CLIPSIBLINGS;   // WS_CLIPSIBLINGS → کنترل‌ها روی هم overwrite نمی‌کنند
             return cp;
         }
     }

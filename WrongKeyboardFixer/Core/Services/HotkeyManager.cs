@@ -4,6 +4,8 @@ using System.Windows.Forms;
 
 namespace WrongKeyboardFixer.Core.Services;
 
+using WrongKeyboardFixer.Core.Helpers;
+
 public partial class HotkeyManager : IDisposable
 {
     private readonly IntPtr _windowHandle;
@@ -18,7 +20,7 @@ public partial class HotkeyManager : IDisposable
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool UnregisterHotKey(IntPtr hWnd, int id);
 
-    private const int WM_HOTKEY = 0x0312;
+    private const int WM_HOTKEY = Constants.WindowsMessages.WM_HOTKEY;
 
     public HotkeyManager(IntPtr windowHandle, int hotkeyId = 1)
     {
