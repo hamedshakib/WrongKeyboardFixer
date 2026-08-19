@@ -20,7 +20,7 @@ public static class MappingInputBox
             MaximizeBox = false,
             MinimizeBox = false,
             StartPosition = FormStartPosition.CenterParent,
-            Size = new Size(380, 250),
+            Size = new Size(Constants.UI.MappingInputBoxWidth, Constants.UI.MappingInputBoxHeight),
             BackColor = Theme.Surface,
             Font = Theme.BodyFont,
             RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No,
@@ -33,15 +33,15 @@ public static class MappingInputBox
         {
             Text = prompt1,
             AutoSize = true,
-            Location = new Point(24, 18),
+            Location = new Point(Constants.UI.MappingInputBoxLabelX, Constants.UI.MappingInputBoxLabelY),
             ForeColor = Theme.TextPrimary
         };
         form.Controls.Add(firstLabel);
 
         var firstTextBox = new TextBox
         {
-            Location = new Point(24, 44),
-            Size = new Size(316, 30),
+            Location = new Point(Constants.UI.MappingInputBoxLabelX, Constants.UI.MappingInputBoxFirstTextY),
+            Size = new Size(Constants.UI.MappingInputBoxTextBoxWidth, Constants.UI.MappingInputBoxTextBoxHeight),
             MaxLength = 1,
             TextAlign = HorizontalAlignment.Center,
             Font = Theme.TitleFont,
@@ -55,15 +55,15 @@ public static class MappingInputBox
         {
             Text = prompt2,
             AutoSize = true,
-            Location = new Point(24, 92),
+            Location = new Point(Constants.UI.MappingInputBoxLabelX, Constants.UI.MappingInputBoxSecondLabelY),
             ForeColor = Theme.TextPrimary
         };
         form.Controls.Add(secondLabel);
 
         var secondTextBox = new TextBox
         {
-            Location = new Point(24, 118),
-            Size = new Size(316, 30),
+            Location = new Point(Constants.UI.MappingInputBoxLabelX, Constants.UI.MappingInputBoxSecondTextY),
+            Size = new Size(Constants.UI.MappingInputBoxTextBoxWidth, Constants.UI.MappingInputBoxTextBoxHeight),
             MaxLength = 1,
             TextAlign = HorizontalAlignment.Center,
             Font = Theme.TitleFont,
@@ -78,8 +78,8 @@ public static class MappingInputBox
             Text = Localization.Get("OK"),
             ButtonVariant = ModernButton.Variant.Primary,
             DialogResult = DialogResult.OK,
-            Location = new Point(124, 166),
-            Size = new Size(100, 38)
+            Location = new Point(Constants.UI.MappingInputBoxOkButtonX, Constants.UI.MappingInputBoxButtonY),
+            Size = new Size(Constants.UI.MappingInputBoxButtonWidth, Constants.UI.StdButtonHeight)
         };
         form.Controls.Add(okButton);
 
@@ -88,8 +88,8 @@ public static class MappingInputBox
             Text = Localization.Get("Cancel"),
             ButtonVariant = ModernButton.Variant.Secondary,
             DialogResult = DialogResult.Cancel,
-            Location = new Point(240, 166),
-            Size = new Size(100, 38)
+            Location = new Point(Constants.UI.MappingInputBoxCancelButtonX, Constants.UI.MappingInputBoxButtonY),
+            Size = new Size(Constants.UI.MappingInputBoxButtonWidth, Constants.UI.StdButtonHeight)
         };
         form.Controls.Add(cancelButton);
 

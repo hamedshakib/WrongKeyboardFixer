@@ -12,9 +12,9 @@ namespace WrongKeyboardFixer.UI.Forms;
 
 public class SettingsForm : ModernForm, ICloseRequestHandler
 {
-    private const int StdHeight = 36;
-    private const int RowGap = 14;
-    private const int SectionGap = 22;
+    private const int StdHeight = Constants.UI.StdButtonHeight;
+    private const int RowGap = Constants.UI.RowGapMedium;
+    private const int SectionGap = Constants.UI.SectionGap;
     private readonly HotkeyManager _hotkeyManager;
 
     private readonly AppSettings _settings;
@@ -64,8 +64,8 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         FormBorderStyle = FormBorderStyle.None;
         AutoScaleDimensions = new SizeF(96F, 96F);
         AutoScaleMode = AutoScaleMode.Dpi;
-        ClientSize = new Size(560, 600);
-        MinimumSize = new Size(560, 600);
+        ClientSize = new Size(Constants.Forms.SettingsFormWidth, Constants.Forms.SettingsFormHeight);
+        MinimumSize = new Size(Constants.Forms.SettingsFormWidth, Constants.Forms.SettingsFormHeight);
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Theme.Background;
         Font = Theme.BodyFont;
@@ -79,15 +79,15 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
     {
         _panel = new RoundedPanel
         {
-            CornerRadius = 14,
+            CornerRadius = Constants.UI.CardCornerRadiusLarge,
             BackColor = Theme.Surface,
-            Padding = new Padding(24),
-            Location = new Point(14, ModernTitleBar.TitleBarHeight + 10),
+            Padding = new Padding(Constants.UI.PanelPadding),
+            Location = new Point(Constants.UI.CardPadding, ModernTitleBar.TitleBarHeight + 10),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
             AutoScroll = true
         };
-        _panel.Size = new Size(ClientSize.Width - 28,
-            ClientSize.Height - ModernTitleBar.TitleBarHeight - 24);
+        _panel.Size = new Size(ClientSize.Width - Constants.UI.CardPadding * 2,
+            ClientSize.Height - ModernTitleBar.TitleBarHeight - Constants.UI.PanelPadding);
         Controls.Add(_panel);
 
         // Single vertical TableLayoutPanel that owns the whole layout.
@@ -114,7 +114,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
             Localization.Get("LanguageEnglish"),
             Localization.Get("LanguagePersian"));
         _languageComboBox.SelectedIndexChanged += LanguageComboBox_SelectedIndexChanged;
-        AddControlRow(_languageComboBox, width: 170, topGap: 10);
+        AddControlRow(_languageComboBox, width: Constants.UI.ButtonWidthMedium, topGap: 10);
 
         _runOnStartupToggle = new ToggleSwitch
         {
@@ -135,7 +135,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         for (int i = 0; i < HotkeyOptions.ModifierCount; i++)
             modifierItems[i] = HotkeyOptions.ModifierText(i);
         _hotkeyModifierComboBox = Theme.CreateCombo(modifierItems);
-        _hotkeyModifierComboBox.Width = 160;
+        _hotkeyModifierComboBox.Width = Constants.UI.ButtonWidthMedium;
         _hotkeyModifierComboBox.SelectedIndex = 0;
         _hotkeyModifierComboBox.SelectedIndexChanged += HotkeyModifierComboBox_SelectedIndexChanged;
 
@@ -147,22 +147,22 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         for (int i = 0; i < HotkeyOptions.KeyCount; i++)
             keyItems[i] = HotkeyOptions.KeyText(i);
         _hotkeyKeyComboBox = Theme.CreateCombo(keyItems);
-        _hotkeyKeyComboBox.Width = 130;
+        _hotkeyKeyComboBox.Width = Constants.UI.LabelCountWidth;
         _hotkeyKeyComboBox.SelectedIndex = 0;
         _hotkeyKeyComboBox.SelectedIndexChanged += HotkeyKeyComboBox_SelectedIndexChanged;
-        AddColumnsRow(10, (_hotkeyModifierComboBox, 160), (lblPlus, 24), (_hotkeyKeyComboBox, 130));
+        AddColumnsRow(10, (_hotkeyModifierComboBox, Constants.UI.ButtonWidthMedium), (lblPlus, 24), (_hotkeyKeyComboBox, Constants.UI.LabelCountWidth));
 
         _registerHotkeyButton = new ModernButton
         {
             Text = Localization.Get("ApplyHotkey"),
             ButtonVariant = ModernButton.Variant.Primary,
-            Width = 150
+            Width = Constants.UI.ButtonWidthSmall
         };
         _registerHotkeyButton.Click += RegisterHotkeyButton_Click;
         _registerHotkeyButton.Enabled = false;
 
         _statusChip = new StatusChip(Localization.Get("StatusChecking"), Theme.Info, Theme.InfoSoft);
-        AddColumnsRow(RowGap, (_registerHotkeyButton, 150), (_statusChip, null));
+        AddColumnsRow(RowGap, (_registerHotkeyButton, Constants.UI.ButtonWidthSmall), (_statusChip, null));
 
         AddDividerRow();
 
@@ -184,15 +184,15 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         AddHeaderRow(Localization.Get("CurrentVersion"));
 
         _versionLabel = Theme.BodyLabel(VersionInfo.CurrentString, Theme.Accent, Theme.BodyBoldFont);
-        _versionLabel.Width = 140;
+        _versionLabel.Width = Constants.UI.LabelCountWidth;
         _checkUpdateButton = new ModernButton
         {
             Text = Localization.Get("CheckUpdate"),
             ButtonVariant = ModernButton.Variant.Secondary,
-            Width = 170
+            Width = Constants.UI.ButtonWidthMedium
         };
         _checkUpdateButton.Click += async (_, _) => await CheckUpdateButton_Click();
-        AddColumnsRow(10, (_versionLabel, 140), (_checkUpdateButton, 170));
+        AddColumnsRow(10, (_versionLabel, Constants.UI.LabelCountWidth), (_checkUpdateButton, Constants.UI.ButtonWidthMedium));
 
         AddDividerRow();
 
@@ -203,7 +203,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         var prefSize = _layout.GetPreferredSize(new Size(_panel.ClientSize.Width, 0));
         int panelHeight = _panel.Padding.Top + prefSize.Height + _panel.Padding.Bottom;
         _panel.Height = panelHeight;
-        ClientSize = new Size(ClientSize.Width, _panel.Location.Y + panelHeight + 14);
+        ClientSize = new Size(ClientSize.Width, _panel.Location.Y + panelHeight + Constants.UI.CardPadding);
         MinimumSize = ClientSize;
     }
 
@@ -293,8 +293,8 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
             BackColor = Theme.Surface
         };
         footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 112));
-        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 112));
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, Constants.UI.ButtonWidthSmall));
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, Constants.UI.ButtonWidthSmall));
         footer.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
         _cancelButton = new ModernButton

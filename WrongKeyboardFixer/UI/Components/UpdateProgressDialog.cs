@@ -20,7 +20,7 @@ public sealed class UpdateProgressDialog : IDisposable
         _form = new Form
         {
             Text = Localization.Get("CheckingUpdate"),
-            Size = new Size(400, 120),
+            Size = new Size(Constants.Forms.UpdateProgressDialogWidth, Constants.Forms.UpdateProgressDialogHeight),
             FormBorderStyle = FormBorderStyle.FixedDialog,
             StartPosition = FormStartPosition.CenterScreen,
             MaximizeBox = false,

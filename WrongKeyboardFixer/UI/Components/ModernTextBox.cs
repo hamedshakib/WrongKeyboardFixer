@@ -3,14 +3,15 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.UI.Components;
 
 public class ModernTextBox : UserControl
 {
     private readonly Color _borderColor = Theme.Border;
-    private readonly int _cornerRadius = 8;
-    private readonly Color _focusBorderColor = Color.FromArgb(99, 102, 241); // رنگ فوتر/آکست مدرن
+    private readonly int _cornerRadius = Constants.UI.ModernTextBoxCornerRadius;
+    private readonly Color _focusBorderColor = Theme.FocusBorderColor;
     private readonly TextBox _textBox;
     private bool _isFocused;
     private bool _isPlaceholderActive = true;
@@ -23,7 +24,7 @@ public class ModernTextBox : UserControl
                  ControlStyles.OptimizedDoubleBuffer |
                  ControlStyles.ResizeRedraw, true);
 
-        Size = new Size(220, 36);
+        Size = new Size(Constants.UI.ModernTextBoxWidth, Constants.UI.ModernTextBoxHeight);
         BackColor = Theme.Surface;
 
         _textBox = new TextBox
@@ -188,8 +189,8 @@ public class ModernTextBox : UserControl
         {
             // تنظیم موقعیت متن برای قرارگیری دقیق در وسط به صورت عمودی
             int top = (Height - _textBox.Height) / 2;
-            _textBox.Location = new Point(12, Math.Max(2, top));
-            _textBox.Width = Width - 24;
+            _textBox.Location = new Point(Constants.UI.ModernTextBoxPadding, Math.Max(2, top));
+            _textBox.Width = Width - Constants.UI.ModernTextBoxPadding * 2;
         }
     }
 

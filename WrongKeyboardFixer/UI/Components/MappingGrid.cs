@@ -60,7 +60,7 @@ public sealed class MappingGrid : ModernDataGridView
             HeaderText = firstHeader,
             ReadOnly = true,
             AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
-            FillWeight = 30,
+            FillWeight = Constants.UI.GridColumnSmall,
             SortMode = DataGridViewColumnSortMode.NotSortable,
             DefaultCellStyle = new DataGridViewCellStyle
             {
@@ -75,7 +75,7 @@ public sealed class MappingGrid : ModernDataGridView
             HeaderText = secondHeader,
             ReadOnly = false,
             AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
-            FillWeight = 30,
+            FillWeight = Constants.UI.GridColumnSmall,
             SortMode = DataGridViewColumnSortMode.NotSortable,
             DefaultCellStyle = new DataGridViewCellStyle
             {
@@ -91,7 +91,7 @@ public sealed class MappingGrid : ModernDataGridView
             Text = Localization.Get("Delete"),
             UseColumnTextForButtonValue = true,
             AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
-            FillWeight = 20,
+            FillWeight = Constants.UI.GridColumnMedium,
             FlatStyle = FlatStyle.Flat,
             SortMode = DataGridViewColumnSortMode.NotSortable
         });
@@ -102,7 +102,7 @@ public sealed class MappingGrid : ModernDataGridView
             Text = Localization.Get("Reset"),
             UseColumnTextForButtonValue = true,
             AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
-            FillWeight = 20,
+            FillWeight = Constants.UI.GridColumnMedium,
             FlatStyle = FlatStyle.Flat,
             SortMode = DataGridViewColumnSortMode.NotSortable
         });
@@ -244,11 +244,11 @@ public sealed class MappingGrid : ModernDataGridView
         bool rowHover = _hover.Row == e.RowIndex;
         bool cellHover = rowHover && _hover.Column == e.ColumnIndex && isButton;
 
-        Color hoverColor = Color.FromArgb(232, 238, 246);
+        Color hoverColor = Theme.GridRowHover;
         Color bg = selected ? Theme.AccentSoft
             : rowHover ? hoverColor
             : colStyle.BackColor != Color.Empty ? colStyle.BackColor
-            : e.RowIndex % 2 == 1 ? Color.FromArgb(250, 251, 253)
+            : e.RowIndex % 2 == 1 ? Theme.GridAlternatingRow
             : Theme.Surface;
 
         // کاهش ۱ پیکسلی ارتفاع باعث می‌شود پس‌زمینه هرگز روی خط حاشیه رسم نشود
@@ -263,7 +263,7 @@ public sealed class MappingGrid : ModernDataGridView
         {
             bool isDelete = e.ColumnIndex == 2;
             var rect = bounds;
-            rect.Inflate(-Theme.DpiScale(8, DeviceDpi), -Theme.DpiScale(6, DeviceDpi));
+            rect.Inflate(-Theme.DpiScale(Constants.UI.DpiTrackPadding, DeviceDpi), -Theme.DpiScale(Constants.UI.DpiCellPadding, DeviceDpi));
             if (rect.Width > 20 && rect.Height > 10)
             {
                 Color pillBg = isDelete ? Theme.DangerSoft : Theme.WarningSoft;
@@ -281,7 +281,7 @@ public sealed class MappingGrid : ModernDataGridView
 
                 using var path = Theme.RoundRect(
                     new Rectangle(rect.X, rect.Y, rect.Width - 1, rect.Height - 1),
-                    Theme.DpiScale(7, DeviceDpi));
+                    Theme.DpiScale(Constants.UI.CornerRadius, DeviceDpi));
                 using (var pill = new SolidBrush(pillBg))
                 {
                     e.Graphics.FillPath(pill, path);

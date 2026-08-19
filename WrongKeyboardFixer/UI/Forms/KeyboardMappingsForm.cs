@@ -13,8 +13,8 @@ namespace WrongKeyboardFixer.UI.Forms;
 public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 {
     // ابعاد فرم
-    private const int FormWidth = 920;
-    private const int FormHeight = 860;
+    private const int FormWidth = Constants.Forms.KeyboardMappingsFormWidth;
+    private const int FormHeight = Constants.Forms.KeyboardMappingsFormHeight;
     private readonly AppSettings _settings;
     private ModernButton? _cancelButton;
     private Dictionary<char, char> _englishToPersian;
@@ -73,21 +73,21 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 
         var panel = new RoundedPanel
         {
-            CornerRadius = 14,
+            CornerRadius = Constants.UI.CardCornerRadiusLarge,
             BackColor = Theme.Surface,
-            Padding = new Padding(24),
-            Location = new Point(14, ModernTitleBar.TitleBarHeight + 10),
-            Size = new Size(FormWidth - 28, FormHeight - ModernTitleBar.TitleBarHeight - 24)
+            Padding = new Padding(Constants.UI.PanelPadding),
+            Location = new Point(Constants.UI.CardPadding, ModernTitleBar.TitleBarHeight + 10),
+            Size = new Size(FormWidth - Constants.UI.CardPadding * 2, FormHeight - ModernTitleBar.TitleBarHeight - Constants.UI.PanelPadding)
         };
         Controls.Add(panel);
 
         int left = panel.Padding.Left;
         int right = panel.Width - panel.Padding.Right;
         int innerWidth = right - left;
-        const int cardGap = 16;
+        const int cardGap = Constants.UI.CardGap;
         int cardWidth = (innerWidth - cardGap) / 2;
-        const int cardY = 14;
-        const int gridHeight = 250;
+        const int cardY = Constants.UI.CardPadding;
+        const int gridHeight = Constants.UI.GridHeightMapping;
 
         // ── کارت فارسی → انگلیسی ──────────────────────────
         _persianToEnglishCountLabel = Theme.BodyLabel("", Theme.TextSecondary, Theme.SmallFont);
@@ -118,14 +118,14 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         panel.Controls.Add(BuildWordCorrectionsCard(left, innerWidth, wordCardY));
 
         // ── فوتر ──────────────────────────────────────────
-        int footerY = panel.Height - panel.Padding.Bottom - 42;
+        int footerY = panel.Height - panel.Padding.Bottom - Constants.UI.FooterHeight;
 
         _cancelButton = new ModernButton
         {
             Text = Localization.Get("Cancel"),
             ButtonVariant = ModernButton.Variant.Secondary,
-            Location = new Point(right - 112, footerY),
-            Size = new Size(112, 38),
+            Location = new Point(right - Constants.UI.ButtonWidthSmall, footerY),
+            Size = new Size(Constants.UI.ButtonWidthSmall, Constants.UI.ButtonHeight),
             Anchor = AnchorStyles.Right | AnchorStyles.Bottom
         };
         _cancelButton.Click += CancelButton_Click;
@@ -135,8 +135,8 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         {
             Text = Localization.Get("Save"),
             ButtonVariant = ModernButton.Variant.Primary,
-            Location = new Point(right - 112 - 124, footerY),
-            Size = new Size(112, 38),
+            Location = new Point(right - Constants.UI.ButtonWidthSmall - Constants.UI.FooterButtonSpacing, footerY),
+            Size = new Size(Constants.UI.ButtonWidthSmall, Constants.UI.ButtonHeight),
             Anchor = AnchorStyles.Right | AnchorStyles.Bottom
         };
         _saveButton.Click += SaveButton_Click;
@@ -146,7 +146,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         {
             Height = 1,
             Width = innerWidth,
-            Location = new Point(left, footerY - 16),
+            Location = new Point(left, footerY - Constants.UI.FooterDividerOffset),
             CornerRadius = 0,
             BackColor = Theme.Border,
             BorderWidth = 0,
@@ -173,7 +173,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 
     private static int BuildCardHeight(int gridHeight)
     {
-        return 14 + 26 + 6 + 38 + 10 + gridHeight + 14;
+        return Constants.UI.CardPadding + 26 + 6 + Constants.UI.ButtonHeight + Constants.UI.RowGapSmall + gridHeight + Constants.UI.CardPadding;
     }
 
     private RoundedPanel BuildMappingCard(
@@ -186,20 +186,20 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     {
         var card = new RoundedPanel
         {
-            CornerRadius = 12,
+            CornerRadius = Constants.UI.CardCornerRadius,
             BackColor = Theme.SurfaceAlt,
             BorderColor = Theme.Border,
             BorderWidth = 1,
-            Padding = new Padding(14),
+            Padding = new Padding(Constants.UI.CardPadding),
             Location = new Point(left, cardY),
             Size = new Size(cardWidth, BuildCardHeight(gridHeight))
         };
 
         card.Controls.Add(Theme.SectionLabel(Localization.Get(titleKey))
-            .Then(l => l.Location = new Point(14, 12)));
+            .Then(l => l.Location = new Point(Constants.UI.CardPadding, 12)));
 
-        countLabel.Location = new Point(cardWidth - 14 - 130, 14);
-        countLabel.Size = new Size(130, 22);
+        countLabel.Location = new Point(cardWidth - Constants.UI.CardPadding - Constants.UI.LabelCountWidth, 14);
+        countLabel.Size = new Size(Constants.UI.LabelCountWidth, Constants.UI.LabelCountHeight);
         countLabel.TextAlign = ContentAlignment.MiddleRight;
         countLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         card.Controls.Add(countLabel);
@@ -208,8 +208,8 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         {
             Text = "+ " + Localization.Get("AddNewMapping"),
             ButtonVariant = ModernButton.Variant.Primary,
-            Location = new Point(14, 46),
-            Size = new Size(160, 38)
+            Location = new Point(Constants.UI.CardPadding, 46),
+            Size = new Size(Constants.UI.ButtonWidthMedium, Constants.UI.ButtonHeight)
         };
         addButton.Click += addClick;
         card.Controls.Add(addButton);
@@ -218,14 +218,14 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         {
             Text = Localization.Get("ResetAll"),
             ButtonVariant = ModernButton.Variant.Ghost,
-            Location = new Point(14 + 160 + 10, 46),
-            Size = new Size(170, 38)
+            Location = new Point(Constants.UI.CardPadding + Constants.UI.ButtonWidthMedium + Constants.UI.RowGapSmall, 46),
+            Size = new Size(Constants.UI.ButtonWidthLarge, Constants.UI.ButtonHeight)
         };
         resetButton.Click += resetClick;
         card.Controls.Add(resetButton);
 
-        grid.Location = new Point(14, 94);
-        grid.Size = new Size(cardWidth - 28, gridHeight);
+        grid.Location = new Point(Constants.UI.CardPadding, Constants.UI.GridYMapping);
+        grid.Size = new Size(cardWidth - Constants.UI.CardPadding * 2, gridHeight);
         card.Controls.Add(grid);
 
         return card;
@@ -239,22 +239,22 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     {
         var card = new RoundedPanel
         {
-            CornerRadius = 12,
+            CornerRadius = Constants.UI.CardCornerRadius,
             BackColor = Theme.SurfaceAlt,
             BorderColor = Theme.Border,
             BorderWidth = 1,
-            Padding = new Padding(14),
+            Padding = new Padding(Constants.UI.CardPadding),
             Location = new Point(left, cardY),
-            Size = new Size(cardWidth, 310)
+            Size = new Size(cardWidth, Constants.UI.WordCorrectionsCardHeight)
         };
 
         // 1. Header
         card.Controls.Add(Theme.SectionLabel(Localization.Get("WordCorrections"))
-            .Then(l => l.Location = new Point(14, 12)));
+            .Then(l => l.Location = new Point(Constants.UI.CardPadding, 12)));
 
         _wordCountLabel = Theme.BodyLabel("", Theme.TextSecondary, Theme.SmallFont);
-        _wordCountLabel.Location = new Point(cardWidth - 14 - 130, 14);
-        _wordCountLabel.Size = new Size(130, 22);
+        _wordCountLabel.Location = new Point(cardWidth - Constants.UI.CardPadding - Constants.UI.LabelCountWidth, 14);
+        _wordCountLabel.Size = new Size(Constants.UI.LabelCountWidth, Constants.UI.LabelCountHeight);
         _wordCountLabel.TextAlign = ContentAlignment.MiddleRight;
         _wordCountLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         card.Controls.Add(_wordCountLabel);
@@ -262,8 +262,8 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         // 2. Search Box (فیلد جستجو در بالا)
         _searchTextBox = new ModernTextBox
         {
-            Location = new Point(14, 42),
-            Size = new Size(cardWidth - 28, 30),
+            Location = new Point(Constants.UI.CardPadding, Constants.UI.WordCorrectionsSearchY),
+            Size = new Size(cardWidth - Constants.UI.CardPadding * 2, 30),
             Font = Theme.BodyFont,
             BackColor = Theme.Surface,
             ForeColor = Theme.TextPrimary,
@@ -274,19 +274,19 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 
         // 3. Hint Label (متن راهنما زیر سرچ)
         var hint = Theme.BodyLabel(Localization.Get("WordCorrectionsHint"), Theme.TextSecondary, Theme.SmallFont);
-        hint.Location = new Point(14, 76);
-        hint.Size = new Size(cardWidth - 28, 18);
+        hint.Location = new Point(Constants.UI.CardPadding, Constants.UI.WordCorrectionsHintY);
+        hint.Size = new Size(cardWidth - Constants.UI.CardPadding * 2, 18);
         card.Controls.Add(hint);
 
         // 4. DataGrid & Reset Button
-        int gridY = 102;
-        int gridHeight = 132;
-        int rightElementWidth = 110;
-        int gridWidth = cardWidth - 28 - rightElementWidth - 12;
+        int gridY = Constants.UI.GridYWord;
+        int gridHeight = Constants.UI.GridHeightWord;
+        int rightElementWidth = Constants.UI.RightElementWidth;
+        int gridWidth = cardWidth - Constants.UI.CardPadding * 2 - rightElementWidth - Constants.UI.RowGapSmall;
 
         _wordGrid = new WordCorrectionGrid();
         _wordGrid.DeleteRequested += DeleteWordCorrection;
-        _wordGrid.Location = new Point(14, gridY);
+        _wordGrid.Location = new Point(Constants.UI.CardPadding, gridY);
         _wordGrid.Size = new Size(gridWidth, gridHeight);
         _wordGrid.BackgroundColor = Theme.Surface;
         _wordGrid.RowHeadersVisible = false;
@@ -298,20 +298,20 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         {
             Text = Localization.Get("ResetWords"),
             ButtonVariant = ModernButton.Variant.Ghost,
-            Location = new Point(cardWidth - 14 - rightElementWidth, gridY),
-            Size = new Size(rightElementWidth, 38)
+            Location = new Point(cardWidth - Constants.UI.CardPadding - rightElementWidth, gridY),
+            Size = new Size(rightElementWidth, Constants.UI.ButtonHeight)
         };
         resetButton.Click += ResetWordsButton_Click;
         card.Controls.Add(resetButton);
 
         // 5. Add Word Section (بخش افزودن در پایین)
-        int actionY = gridY + gridHeight + 10;
-        int actionHeight = 34;
+        int actionY = gridY + gridHeight + Constants.UI.RowGapSmall;
+        int actionHeight = Constants.UI.WordCorrectionsActionHeight;
 
         _wordTextBox = new ModernTextBox
         {
-            Location = new Point(14, actionY + 2),
-            Size = new Size(gridWidth, 30),
+            Location = new Point(Constants.UI.CardPadding, actionY + Constants.UI.WordCorrectionsTextBoxOffset),
+            Size = new Size(gridWidth, Constants.UI.WordCorrectionsTextBoxHeight),
             Font = Theme.BodyFont,
             BackColor = Theme.Surface,
             ForeColor = Theme.TextPrimary,
@@ -324,7 +324,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         {
             Text = "+ " + Localization.Get("AddWord"),
             ButtonVariant = ModernButton.Variant.Primary,
-            Location = new Point(cardWidth - 14 - rightElementWidth, actionY),
+            Location = new Point(cardWidth - Constants.UI.CardPadding - rightElementWidth, actionY),
             Size = new Size(rightElementWidth, actionHeight)
         };
         addButton.Click += AddWordButton_Click;

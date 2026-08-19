@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.UI.Components;
 
@@ -14,7 +15,7 @@ public class RoundedPanel : Panel
 {
     private Color _borderColor = Theme.Border;
     private int _borderWidth = 1;
-    private int _cornerRadius = 10;
+    private int _cornerRadius = Constants.UI.RoundedPanelDefaultCornerRadius;
 
     public RoundedPanel()
     {
@@ -24,7 +25,7 @@ public class RoundedPanel : Panel
                  ControlStyles.ResizeRedraw |
                  ControlStyles.UserPaint, true);
         BackColor = Theme.Surface;
-        Padding = new Padding(16);
+        Padding = new Padding(Constants.UI.RoundedPanelDefaultPadding);
     }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]

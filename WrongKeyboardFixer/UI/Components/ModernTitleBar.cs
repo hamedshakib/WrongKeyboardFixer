@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.UI.Components;
 
@@ -14,9 +15,9 @@ namespace WrongKeyboardFixer.UI.Components;
 /// </summary>
 public partial class ModernTitleBar : Control
 {
-    public const int TitleBarHeight = 56;
-    public const int ControlAreaWidth = 96;
-    private const int ButtonWidth = 46;
+    public const int TitleBarHeight = Constants.UI.TitleBarHeight;
+    public const int ControlAreaWidth = Constants.UI.ControlAreaWidth;
+    private const int ButtonWidth = Constants.UI.TitleBarButtonWidth;
     private bool _hoveredClose;
     private bool _hoveredMin;
     private bool _pressedClose;
@@ -144,7 +145,7 @@ public partial class ModernTitleBar : Control
             g.FillRectangle(bg, 0, 0, Width, Height);
         }
 
-        int textStart = Scaled(34);
+        int textStart = Scaled(Constants.UI.TitleBarTextStart);
         int availW = Width - CtrlW - textStart;
         int startY;
         int titleH;
@@ -171,11 +172,11 @@ public partial class ModernTitleBar : Control
         }
 
         // ── نقطهٔ برند، هم‌تراز با خط عنوان ──
-        int dotSize = Scaled(10);
+        int dotSize = Scaled(Constants.UI.TitleBarIconSize);
         g.SmoothingMode = SmoothingMode.AntiAlias;
         using (var dot = new SolidBrush(IconColor))
         {
-            g.FillEllipse(dot, Scaled(16), startY + titleH / 2 - dotSize / 2, dotSize, dotSize);
+            g.FillEllipse(dot, Scaled(Constants.UI.TitleBarIconX), startY + titleH / 2 - dotSize / 2, dotSize, dotSize);
         }
 
         // ── دکمه‌ها از y=0 شروع می‌شوند و تا انتهای نوار ادامه دارند؛

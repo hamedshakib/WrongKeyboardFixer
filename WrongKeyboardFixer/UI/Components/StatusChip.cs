@@ -12,7 +12,7 @@ namespace WrongKeyboardFixer.UI.Components;
 /// </summary>
 public class StatusChip : Label
 {
-    public const int StdHeight = 36;
+    public const int StdHeight = Constants.UI.StatusChipHeight;
 
     public StatusChip(string text, Color fore, Color back)
     {
@@ -23,7 +23,7 @@ public class StatusChip : Label
         AutoSize = false;
         Height = StdHeight;
         TextAlign = ContentAlignment.MiddleLeft;
-        Padding = new Padding(12, 0, 12, 0);
+        Padding = new Padding(Constants.UI.StatusChipPadding, 0, Constants.UI.StatusChipPadding, 0);
         BackColor = Theme.Surface; // همیشه هم‌رنگ پنل → گوشه‌های مربعی نامرئی
 
         Paint += (_, e) => PaintChip(e.Graphics);
@@ -34,11 +34,11 @@ public class StatusChip : Label
     {
         g.SmoothingMode = SmoothingMode.AntiAlias;
         var bounds = new Rectangle(0, 0, Width - 1, Height - 1);
-        using var path = Theme.RoundRect(bounds, Theme.DpiScale(8, DeviceDpi));
+        using var path = Theme.RoundRect(bounds, Theme.DpiScale(Constants.UI.StatusChipCornerRadius, DeviceDpi));
         using var brush = new SolidBrush(Tag is Color c ? c : Theme.Surface);
         g.FillPath(brush, path);
 
-        int pad = Theme.DpiScale(12, DeviceDpi);
+        int pad = Theme.DpiScale(Constants.UI.StatusChipPadding, DeviceDpi);
         var textRect = new Rectangle(pad, 0, Width - pad * 2, Height);
         var flags = TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix;
         if (Localization.IsRtl) flags |= TextFormatFlags.RightToLeft;
@@ -49,6 +49,6 @@ public class StatusChip : Label
     public void UpdateSize()
     {
         int textWidth = TextRenderer.MeasureText(Text, Font).Width;
-        Width = textWidth + Theme.DpiScale(24, DeviceDpi);
+        Width = textWidth + Theme.DpiScale(Constants.UI.StatusChipMinWidth, DeviceDpi);
     }
 }

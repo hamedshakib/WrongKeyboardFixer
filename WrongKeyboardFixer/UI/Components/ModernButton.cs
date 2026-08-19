@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.UI.Components;
 
@@ -18,7 +19,7 @@ public class ModernButton : Button
         Ghost
     }
 
-    private int _cornerRadius = 7;
+    private int _cornerRadius = Constants.UI.ModernButtonCornerRadius;
     private bool _hovered;
     private bool _pressed;
 
@@ -31,7 +32,7 @@ public class ModernButton : Button
         FlatStyle = FlatStyle.Flat;
         FlatAppearance.BorderSize = 0;
         Cursor = Cursors.Hand;
-        Height = 36;
+        Height = Constants.UI.ModernButtonHeight;
         Font = Theme.ButtonFont;
         UpdateColors();
     }

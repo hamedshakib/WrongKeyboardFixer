@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.UI.Components;
 
@@ -19,12 +20,20 @@ public static class Theme
     public static readonly Color AccentDark = Color.FromArgb(46, 85, 210);
     public static readonly Color AccentSoft = Color.FromArgb(238, 243, 255);
     public static readonly Color AccentBorder = Color.FromArgb(180, 199, 250);
+    
+    // ── ModernTextBox Focus Border ─────────────────────────
+    public static readonly Color FocusBorderColor = Color.FromArgb(99, 102, 241); // رنگ فوتر/آکست مدرن
 
     // ── Surfaces ───────────────────────────────────────────
     public static readonly Color Background = Color.FromArgb(244, 246, 250);
     public static readonly Color Surface = Color.White;
     public static readonly Color SurfaceAlt = Color.FromArgb(248, 249, 252);
     public static readonly Color SurfaceMuted = Color.FromArgb(243, 244, 248);
+
+    // ── Grid Colors ────────────────────────────────────────
+    public static readonly Color GridRowHover = Color.FromArgb(232, 238, 246);
+    public static readonly Color GridAlternatingRow = Color.FromArgb(250, 251, 253);
+    public static readonly Color GridBorder = Color.FromArgb(238, 241, 248);
 
     // ── Borders ────────────────────────────────────────────
     public static readonly Color Border = Color.FromArgb(229, 233, 240);
@@ -183,9 +192,9 @@ public static class Theme
         grid.ScrollBars = ScrollBars.Vertical;
 
         int dpi = grid.DeviceDpi;
-        int cellPad = DpiScale(6, dpi);
-        grid.RowTemplate.Height = DpiScale(38, dpi);
-        grid.ColumnHeadersHeight = DpiScale(40, dpi);
+        int cellPad = DpiScale(Constants.UI.GridCellPadding, dpi);
+        grid.RowTemplate.Height = DpiScale(Constants.UI.GridRowTemplateHeight, dpi);
+        grid.ColumnHeadersHeight = DpiScale(Constants.UI.GridColumnHeadersHeight, dpi);
         grid.DefaultCellStyle = new DataGridViewCellStyle
         {
             Font = GridFont,
@@ -200,7 +209,7 @@ public static class Theme
         {
             BackColor = Color.FromArgb(250, 251, 253)
         };
-        int headerPad = DpiScale(4, dpi);
+        int headerPad = DpiScale(Constants.UI.GridHeaderPadding, dpi);
         grid.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
         {
             Font = BodyBoldFont,

@@ -2,19 +2,20 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.UI.Components;
 
 public class ToggleSwitch : CheckBox
 {
-    private const int SwitchWidth = 44;
-    private const int SwitchHeight = 24;
+    private const int SwitchWidth = Constants.UI.ToggleSwitchWidth;
+    private const int SwitchHeight = Constants.UI.ToggleSwitchHeight;
 
     public ToggleSwitch()
     {
         SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer |
                  ControlStyles.ResizeRedraw | ControlStyles.UserPaint, true);
-        Height = 30;
+        Height = Constants.UI.StdTextBoxHeight;
         Font = Theme.BodyFont;
         Cursor = Cursors.Hand;
     }
@@ -46,7 +47,7 @@ public class ToggleSwitch : CheckBox
         }
 
         // ── Knob (در RTL آینه می‌شود) ──
-        int knobSize = switchH - Theme.DpiScale(6, DeviceDpi);
+        int knobSize = switchH - Theme.DpiScale(Constants.UI.DpiKnobSizeOffset, DeviceDpi);
         int knobY = trackRect.Y + (switchH - knobSize) / 2;
         int onX = rtl
             ? trackRect.X + Theme.DpiScale(3, DeviceDpi)
@@ -65,7 +66,7 @@ public class ToggleSwitch : CheckBox
         }
 
         // ── متن: در RTL باید کنار کلید بچسبد، نه به گوشهٔ مقابل ──
-        int gap = Theme.DpiScale(10, DeviceDpi);
+        int gap = Theme.DpiScale(Constants.UI.ToggleSwitchGap, DeviceDpi);
         int textW = Math.Max(0, Width - switchW - gap - 2);
         if (textW > 0 && !string.IsNullOrEmpty(Text))
         {
