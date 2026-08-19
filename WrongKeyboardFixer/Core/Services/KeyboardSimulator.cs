@@ -1,12 +1,14 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.Core.Services;
 
 /// <summary>
 /// Simulates keyboard input (Ctrl+C / Ctrl+V) via the modern <c>SendInput</c>
 /// API instead of the deprecated <c>keybd_event</c>.
+/// Static class - use KeyboardSimulatorAdapter for interface-based access.
 /// </summary>
 public static partial class KeyboardSimulator
 {
@@ -18,8 +20,6 @@ public static partial class KeyboardSimulator
     private const byte VkV = 0x56;
     private const byte VkMenu = 0x12; // Alt
 
-    private const int KeyReleaseDelayMs = 30;
-
     [LibraryImport("user32.dll")]
     private static partial uint SendInput(uint nInputs, ReadOnlySpan<Input> pInputs, int cbSize);
 
@@ -29,7 +29,7 @@ public static partial class KeyboardSimulator
     public static void SendCtrlC()
     {
         ReleaseModifierKeys();
-        Thread.Sleep(KeyReleaseDelayMs);
+        Thread.Sleep(AppConfiguration.Keyboard.KeyReleaseDelayMs);
         SendKeyCombination(VkControl, VkC);
     }
 
@@ -39,7 +39,7 @@ public static partial class KeyboardSimulator
     public static void SendCtrlV()
     {
         ReleaseModifierKeys();
-        Thread.Sleep(KeyReleaseDelayMs);
+        Thread.Sleep(AppConfiguration.Keyboard.KeyReleaseDelayMs);
         SendKeyCombination(VkControl, VkV);
     }
 

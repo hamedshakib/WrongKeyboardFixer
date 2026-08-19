@@ -11,6 +11,10 @@ using WrongKeyboardFixer.UI.Components;
 
 namespace WrongKeyboardFixer.UI.Forms;
 
+/// <summary>
+/// Main application form (tray-only application).
+/// Manages hotkey registration, clipboard monitoring, and update checking.
+/// </summary>
 public class MainForm : Form
 {
     private HotkeyManager? _hotkeyManager;
@@ -18,12 +22,14 @@ public class MainForm : Form
     private TextConversionService? _textConversionService;
     private AppSettings _settings = null!;
     private TrayIconManager? _trayIcon;
+    private ILogger _logger = null!;
     private bool _isInitialized;
 
-    public MainForm()
+    public MainForm(ILogger? logger = null)
     {
         try
         {
+            _logger = logger ?? new ConsoleLogger();
             _settings = SettingsManager.Load();
 
             // اعمال زبان ذخیره‌شده قبل از ایجاد هر کنترل
@@ -34,9 +40,11 @@ public class MainForm : Form
             _isInitialized = true;
 
             ApplyStartupSettings();
+            _logger.Info("MainForm initialized successfully");
         }
         catch (Exception ex)
         {
+            _logger.Error("Failed to initialize MainForm", ex);
             MessageBox.Show(
                 Localization.Format("StartupError", ex.Message),
                 Localization.Get("Error"),
@@ -48,8 +56,8 @@ public class MainForm : Form
 
     private void InitializeComponents()
     {
-        _clipboardManager = new ClipboardManager();
-        _textConversionService = new TextConversionService(_clipboardManager, _settings);
+        _clipboardManager = new ClipboardManager(_logger);
+        _textConversionService = new TextConversionService(_clipboardManager, _settings, null, _logger);
         _hotkeyManager = new HotkeyManager(this.Handle);
 
         // ثبت کلید ترکیبی از تنظیمات
