@@ -7,35 +7,14 @@ using System.Windows.Forms;
 namespace WrongKeyboardFixer.UI.Components;
 
 /// <summary>
-/// پنل تخت با گوشه‌های گرد. بدون Region:
-/// ریجن‌ها کندند، فرزندان را clip می‌کنند و هندل GDI نشت می‌دهند.
+///     پنل تخت با گوشه‌های گرد. بدون Region:
+///     ریجن‌ها کندند، فرزندان را clip می‌کنند و هندل GDI نشت می‌دهند.
 /// </summary>
 public class RoundedPanel : Panel
 {
-    private int _cornerRadius = 10;
     private Color _borderColor = Theme.Border;
     private int _borderWidth = 1;
-
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public int CornerRadius
-    {
-        get => _cornerRadius;
-        set { _cornerRadius = Math.Max(0, value); Invalidate(); }
-    }
-
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public Color BorderColor
-    {
-        get => _borderColor;
-        set { _borderColor = value; Invalidate(); }
-    }
-
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public int BorderWidth
-    {
-        get => _borderWidth;
-        set { _borderWidth = Math.Max(0, value); Invalidate(); }
-    }
+    private int _cornerRadius = 10;
 
     public RoundedPanel()
     {
@@ -48,8 +27,43 @@ public class RoundedPanel : Panel
         Padding = new Padding(16);
     }
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public int CornerRadius
+    {
+        get => _cornerRadius;
+        set
+        {
+            _cornerRadius = Math.Max(0, value);
+            Invalidate();
+        }
+    }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public Color BorderColor
+    {
+        get => _borderColor;
+        set
+        {
+            _borderColor = value;
+            Invalidate();
+        }
+    }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public int BorderWidth
+    {
+        get => _borderWidth;
+        set
+        {
+            _borderWidth = Math.Max(0, value);
+            Invalidate();
+        }
+    }
+
     // رنگ‌آمیزی پیش‌فرض پس‌زمینه حذف می‌شود تا فلیکر دو مرحله‌ای نداشته باشیم.
-    protected override void OnPaintBackground(PaintEventArgs e) { }
+    protected override void OnPaintBackground(PaintEventArgs e)
+    {
+    }
 
     protected override void OnPaint(PaintEventArgs e)
     {
@@ -65,7 +79,9 @@ public class RoundedPanel : Panel
         using var path = Theme.RoundRect(bounds, Theme.DpiScale(_cornerRadius, DeviceDpi));
 
         using (var brush = new SolidBrush(BackColor))
+        {
             g.FillPath(brush, path);
+        }
 
         if (_borderWidth > 0)
         {

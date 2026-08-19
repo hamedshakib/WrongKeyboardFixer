@@ -12,27 +12,26 @@ namespace WrongKeyboardFixer.UI.Forms;
 
 public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 {
-    private readonly AppSettings _settings;
-
-    // کپی محلی نگاشت‌ها
-    private Dictionary<char, char> _persianToEnglish;
-    private Dictionary<char, char> _englishToPersian;
-    private List<string> _wordCorrections;
-
-    private MappingGrid? _persianToEnglishGrid;
-    private MappingGrid? _englishToPersianGrid;
-    private ModernButton? _saveButton;
-    private ModernButton? _cancelButton;
-    private Label? _persianToEnglishCountLabel;
-    private Label? _englishToPersianCountLabel;
-    private WordCorrectionGrid? _wordGrid;
-    private ModernTextBox? _searchTextBox;
-    private ModernTextBox? _wordTextBox;
-    private Label? _wordCountLabel;
-
     // ابعاد فرم
     private const int FormWidth = 920;
     private const int FormHeight = 860;
+    private readonly AppSettings _settings;
+    private ModernButton? _cancelButton;
+    private Dictionary<char, char> _englishToPersian;
+    private Label? _englishToPersianCountLabel;
+    private MappingGrid? _englishToPersianGrid;
+
+    // کپی محلی نگاشت‌ها
+    private Dictionary<char, char> _persianToEnglish;
+    private Label? _persianToEnglishCountLabel;
+
+    private MappingGrid? _persianToEnglishGrid;
+    private ModernButton? _saveButton;
+    private ModernTextBox? _searchTextBox;
+    private List<string> _wordCorrections;
+    private Label? _wordCountLabel;
+    private WordCorrectionGrid? _wordGrid;
+    private ModernTextBox? _wordTextBox;
 
     public KeyboardMappingsForm(AppSettings settings)
     {
@@ -43,27 +42,32 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
 
         Localization.SetLanguage(_settings.Language);
 
-        this.SuspendLayout();
+        SuspendLayout();
         InitializeControls();
-        this.ResumeLayout(false);
+        ResumeLayout(false);
 
         LoadMappings();
         LoadWords();
     }
 
+    public void RequestClose()
+    {
+        CancelButton_Click(this, EventArgs.Empty);
+    }
+
     private void InitializeControls()
     {
-        this.Text = Localization.Get("KeyboardMappingsTitle");
-        this.FormBorderStyle = FormBorderStyle.None;
-        this.AutoScaleDimensions = new SizeF(96F, 96F);
-        this.AutoScaleMode = AutoScaleMode.Dpi;
-        this.ClientSize = new Size(FormWidth, FormHeight);
-        this.MinimumSize = new Size(FormWidth, FormHeight);
-        this.StartPosition = FormStartPosition.CenterScreen;
-        this.Font = Theme.BodyFont;
-        this.Icon = IconLoader.GetIcon();
-        this.RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No;
-        this.RightToLeftLayout = Localization.IsRtl;
+        Text = Localization.Get("KeyboardMappingsTitle");
+        FormBorderStyle = FormBorderStyle.None;
+        AutoScaleDimensions = new SizeF(96F, 96F);
+        AutoScaleMode = AutoScaleMode.Dpi;
+        ClientSize = new Size(FormWidth, FormHeight);
+        MinimumSize = new Size(FormWidth, FormHeight);
+        StartPosition = FormStartPosition.CenterScreen;
+        Font = Theme.BodyFont;
+        Icon = IconLoader.GetIcon();
+        RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No;
+        RightToLeftLayout = Localization.IsRtl;
 
         AddTitleBar("KeyboardMappingsTitle", "KeyboardMappingsSubtitle");
 
@@ -75,7 +79,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             Location = new Point(14, ModernTitleBar.TitleBarHeight + 10),
             Size = new Size(FormWidth - 28, FormHeight - ModernTitleBar.TitleBarHeight - 24)
         };
-        this.Controls.Add(panel);
+        Controls.Add(panel);
 
         int left = panel.Padding.Left;
         int right = panel.Width - panel.Padding.Right;
@@ -151,7 +155,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
         panel.Controls.Add(footerDivider);
-        this.ActiveControl = null;
+        ActiveControl = null;
     }
 
     private static MappingGrid CreateGrid(
@@ -167,7 +171,10 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         return grid;
     }
 
-    private static int BuildCardHeight(int gridHeight) => 14 + 26 + 6 + 38 + 10 + gridHeight + 14;
+    private static int BuildCardHeight(int gridHeight)
+    {
+        return 14 + 26 + 6 + 38 + 10 + gridHeight + 14;
+    }
 
     private RoundedPanel BuildMappingCard(
         int left, int cardWidth, int cardY, int gridHeight,
@@ -225,8 +232,8 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
     }
 
     /// <summary>
-    /// طراحی دقیقاً منطبق بر تصویر درخواستی شما:
-    /// سرچ در بالا، متن راهنما، جدول و دکمه Reset در سمت راست جدول، و بخش افزودن در پایین.
+    ///     طراحی دقیقاً منطبق بر تصویر درخواستی شما:
+    ///     سرچ در بالا، متن راهنما، جدول و دکمه Reset در سمت راست جدول، و بخش افزودن در پایین.
     /// </summary>
     private RoundedPanel BuildWordCorrectionsCard(int left, int cardWidth, int cardY)
     {
@@ -373,9 +380,7 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         var words = _wordCorrections.OrderBy(w => w, StringComparer.Ordinal).ToList();
 
         if (!string.IsNullOrEmpty(searchTerm))
-        {
             words = words.Where(w => w.Contains(searchTerm, StringComparison.Ordinal)).ToList();
-        }
 
         _wordGrid.Load(words);
 
@@ -432,8 +437,15 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         LoadWords();
     }
 
-    private void AddPersianToEnglishButton_Click(object? sender, EventArgs e) => AddPersianToEnglishMapping();
-    private void AddEnglishToPersianButton_Click(object? sender, EventArgs e) => AddEnglishToPersianMapping();
+    private void AddPersianToEnglishButton_Click(object? sender, EventArgs e)
+    {
+        AddPersianToEnglishMapping();
+    }
+
+    private void AddEnglishToPersianButton_Click(object? sender, EventArgs e)
+    {
+        AddEnglishToPersianMapping();
+    }
 
     private void ResetAllPersianToEnglishButton_Click(object? sender, EventArgs e)
     {
@@ -465,8 +477,6 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         Close();
     }
 
-    public void RequestClose() => CancelButton_Click(this, EventArgs.Empty);
-
     private void AddPersianToEnglishMapping()
     {
         var input = MappingInputBox.Show(
@@ -478,8 +488,17 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         string persian = input.Value.first.Trim();
         string english = input.Value.second.Trim();
 
-        if (persian.Length != 1) { ShowError("InvalidPersianChar"); return; }
-        if (english.Length != 1 || english[0] < 32 || english[0] > 126) { ShowError("InvalidEnglishChar"); return; }
+        if (persian.Length != 1)
+        {
+            ShowError("InvalidPersianChar");
+            return;
+        }
+
+        if (english.Length != 1 || english[0] < 32 || english[0] > 126)
+        {
+            ShowError("InvalidEnglishChar");
+            return;
+        }
 
         char p = persian[0], en = english[0];
         _englishToPersian.Remove(en);
@@ -498,8 +517,17 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
         string english = input.Value.first.Trim();
         string persian = input.Value.second.Trim();
 
-        if (english.Length != 1 || english[0] < 32 || english[0] > 126) { ShowError("InvalidEnglishChar"); return; }
-        if (persian.Length != 1) { ShowError("InvalidPersianChar"); return; }
+        if (english.Length != 1 || english[0] < 32 || english[0] > 126)
+        {
+            ShowError("InvalidEnglishChar");
+            return;
+        }
+
+        if (persian.Length != 1)
+        {
+            ShowError("InvalidPersianChar");
+            return;
+        }
 
         char en = english[0], p = persian[0];
         _persianToEnglish.Remove(p);
@@ -533,15 +561,21 @@ public class KeyboardMappingsForm : ModernForm, ICloseRequestHandler
             LoadMappings();
     }
 
-    private static DialogResult ConfirmReset() => MessageBox.Show(
-        Localization.Get("ResetAllConfirm"),
-        Localization.Get("Attention"),
-        MessageBoxButtons.YesNo,
-        MessageBoxIcon.Question);
+    private static DialogResult ConfirmReset()
+    {
+        return MessageBox.Show(
+            Localization.Get("ResetAllConfirm"),
+            Localization.Get("Attention"),
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question);
+    }
 
-    private static void ShowError(string key) => MessageBox.Show(
-        Localization.Get(key),
-        Localization.Get("Error"),
-        MessageBoxButtons.OK,
-        MessageBoxIcon.Error);
+    private static void ShowError(string key)
+    {
+        MessageBox.Show(
+            Localization.Get(key),
+            Localization.Get("Error"),
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Error);
+    }
 }

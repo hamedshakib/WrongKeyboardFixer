@@ -10,8 +10,8 @@ using WrongKeyboardFixer.Core.Persistence;
 namespace WrongKeyboardFixer.Core.Services;
 
 /// <summary>
-/// Loads and saves application settings to a JSON file, and manages
-/// the Windows auto-start registry entry.
+///     Loads and saves application settings to a JSON file, and manages
+///     the Windows auto-start registry entry.
 /// </summary>
 public static class SettingsManager
 {
@@ -58,7 +58,10 @@ public static class SettingsManager
         }
     }
 
-    private static AppSettings CreateDefaultSettings() => new();
+    private static AppSettings CreateDefaultSettings()
+    {
+        return new AppSettings();
+    }
 
     public static void Save(AppSettings settings)
     {

@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WrongKeyboardFixer.Core.Helpers;
@@ -7,8 +6,8 @@ using WrongKeyboardFixer.Core.Helpers;
 namespace WrongKeyboardFixer.Core.Services;
 
 /// <summary>
-/// Provides reliable clipboard operations with retry logic.
-/// Implements IClipboardManager interface for testability.
+///     Provides reliable clipboard operations with retry logic.
+///     Implements IClipboardManager interface for testability.
 /// </summary>
 public class ClipboardManager : IClipboardManager
 {
@@ -18,7 +17,7 @@ public class ClipboardManager : IClipboardManager
     private readonly ILogger _logger;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ClipboardManager"/> class.
+    ///     Initializes a new instance of the <see cref="ClipboardManager" /> class.
     /// </summary>
     /// <param name="logger">The logger for recording clipboard operations.</param>
     public ClipboardManager(ILogger? logger = null)
@@ -27,8 +26,8 @@ public class ClipboardManager : IClipboardManager
     }
 
     /// <summary>
-    /// Gets the current text content from the clipboard.
-    /// Returns empty string on failure.
+    ///     Gets the current text content from the clipboard.
+    ///     Returns empty string on failure.
     /// </summary>
     /// <returns>The clipboard text, or empty string if unavailable.</returns>
     public string GetText()
@@ -46,8 +45,8 @@ public class ClipboardManager : IClipboardManager
     }
 
     /// <summary>
-    /// Sets text content to the clipboard.
-    /// Throws exception on failure.
+    ///     Sets text content to the clipboard.
+    ///     Throws exception on failure.
     /// </summary>
     /// <param name="text">The text to set.</param>
     /// <exception cref="InvalidOperationException">Thrown when clipboard operation fails.</exception>
@@ -68,8 +67,8 @@ public class ClipboardManager : IClipboardManager
     }
 
     /// <summary>
-    /// Gets text from clipboard with retry logic.
-    /// Useful after copy operations where clipboard may not be immediately available.
+    ///     Gets text from clipboard with retry logic.
+    ///     Useful after copy operations where clipboard may not be immediately available.
     /// </summary>
     /// <returns>The clipboard text, or empty string if all retries fail.</returns>
     public async Task<string> GetTextWithRetryAsync()
@@ -90,20 +89,16 @@ public class ClipboardManager : IClipboardManager
         }
 
         if (string.IsNullOrWhiteSpace(text))
-        {
             _logger.Warning($"Clipboard read failed after {MaxRetryAttempts} attempts");
-        }
         else
-        {
             _logger.Debug($"Clipboard read succeeded on attempt {attempt + 1}");
-        }
 
         return text;
     }
 
     /// <summary>
-    /// Restores the clipboard to the specified text.
-    /// Silently fails on error (for auto-recovery scenarios).
+    ///     Restores the clipboard to the specified text.
+    ///     Silently fails on error (for auto-recovery scenarios).
     /// </summary>
     /// <param name="text">The text to restore, or null/empty to clear clipboard.</param>
     public void RestoreText(string text)
@@ -127,8 +122,8 @@ public class ClipboardManager : IClipboardManager
     }
 
     /// <summary>
-    /// Clears the clipboard content.
-    /// Used when restoring null/empty text.
+    ///     Clears the clipboard content.
+    ///     Used when restoring null/empty text.
     /// </summary>
     private void ClearClipboard()
     {

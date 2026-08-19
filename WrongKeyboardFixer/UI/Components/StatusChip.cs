@@ -6,9 +6,9 @@ using WrongKeyboardFixer.Core.Helpers;
 namespace WrongKeyboardFixer.UI.Components;
 
 /// <summary>
-/// A rounded status label ("chip") used in the settings form.
-/// Paints itself with the status color stored in <see cref="Control.Tag"/>
-/// and sizes itself to its content so it never stretches across its row.
+///     A rounded status label ("chip") used in the settings form.
+///     Paints itself with the status color stored in <see cref="Control.Tag" />
+///     and sizes itself to its content so it never stretches across its row.
 /// </summary>
 public class StatusChip : Label
 {
@@ -24,7 +24,7 @@ public class StatusChip : Label
         Height = StdHeight;
         TextAlign = ContentAlignment.MiddleLeft;
         Padding = new Padding(12, 0, 12, 0);
-        BackColor = Theme.Surface;   // همیشه هم‌رنگ پنل → گوشه‌های مربعی نامرئی
+        BackColor = Theme.Surface; // همیشه هم‌رنگ پنل → گوشه‌های مربعی نامرئی
 
         Paint += (_, e) => PaintChip(e.Graphics);
         UpdateSize();

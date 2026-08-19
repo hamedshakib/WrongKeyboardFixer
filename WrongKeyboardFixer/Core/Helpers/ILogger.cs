@@ -3,8 +3,8 @@ using System;
 namespace WrongKeyboardFixer.Core.Helpers;
 
 /// <summary>
-/// Simple logging interface for the application.
-/// Provides methods for different log levels.
+///     Simple logging interface for the application.
+///     Provides methods for different log levels.
 /// </summary>
 public interface ILogger
 {

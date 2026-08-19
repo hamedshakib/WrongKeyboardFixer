@@ -1,8 +1,8 @@
 namespace WrongKeyboardFixer.Core.Helpers;
 
 /// <summary>
-/// Centralized application configuration constants.
-/// All hardcoded values are defined here for easy maintenance and consistency.
+///     Centralized application configuration constants.
+///     All hardcoded values are defined here for easy maintenance and consistency.
 /// </summary>
 public static class AppConfiguration
 {

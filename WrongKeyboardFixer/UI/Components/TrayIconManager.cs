@@ -8,15 +8,12 @@ using WrongKeyboardFixer.Core.Helpers;
 namespace WrongKeyboardFixer.UI.Components;
 
 /// <summary>
-/// Owns the system tray icon and its context menu. Exposes the user's
-/// actions (open settings / exit) as events; the menu is rebuilt whenever
-/// the active language changes.
+///     Owns the system tray icon and its context menu. Exposes the user's
+///     actions (open settings / exit) as events; the menu is rebuilt whenever
+///     the active language changes.
 /// </summary>
 public sealed class TrayIconManager : IDisposable
 {
-    public event EventHandler? SettingsRequested;
-    public event EventHandler? ExitRequested;
-
     private readonly NotifyIcon _trayIcon;
     private ContextMenuStrip? _trayMenu;
 
@@ -33,8 +30,17 @@ public sealed class TrayIconManager : IDisposable
         RebuildMenu();
     }
 
+    public void Dispose()
+    {
+        _trayMenu?.Dispose();
+        _trayIcon.Dispose();
+    }
+
+    public event EventHandler? SettingsRequested;
+    public event EventHandler? ExitRequested;
+
     /// <summary>
-    /// Recreates the context menu using the current language.
+    ///     Recreates the context menu using the current language.
     /// </summary>
     public void RebuildMenu()
     {
@@ -91,11 +97,5 @@ public sealed class TrayIconManager : IDisposable
         graphics.DrawString(emoji, font, brush, rect, format);
 
         return bitmap;
-    }
-
-    public void Dispose()
-    {
-        _trayMenu?.Dispose();
-        _trayIcon.Dispose();
     }
 }

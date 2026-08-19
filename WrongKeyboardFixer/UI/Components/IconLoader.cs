@@ -4,8 +4,8 @@ using System.Reflection;
 namespace WrongKeyboardFixer.UI.Components;
 
 /// <summary>
-/// Loads the application icon directly from an embedded manifest resource.
-/// This avoids using ResourceManager for custom types, which is not AOT-compatible.
+///     Loads the application icon directly from an embedded manifest resource.
+///     This avoids using ResourceManager for custom types, which is not AOT-compatible.
 /// </summary>
 public static class IconLoader
 {

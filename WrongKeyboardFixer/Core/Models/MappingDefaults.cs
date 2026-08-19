@@ -3,8 +3,8 @@ using System.Collections.Generic;
 namespace WrongKeyboardFixer.Core.Models;
 
 /// <summary>
-/// Provides the default Persian &lt;-&gt; English character mappings.
-/// Each method returns a fresh dictionary so callers may mutate it freely.
+///     Provides the default Persian &lt;-&gt; English character mappings.
+///     Each method returns a fresh dictionary so callers may mutate it freely.
 /// </summary>
 public static partial class MappingDefaults
 {

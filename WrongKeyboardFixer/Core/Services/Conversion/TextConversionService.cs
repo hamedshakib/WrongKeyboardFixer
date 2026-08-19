@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using WrongKeyboardFixer.Core.Helpers;
@@ -8,17 +7,17 @@ using WrongKeyboardFixer.Core.Models;
 namespace WrongKeyboardFixer.Core.Services.Conversion;
 
 /// <summary>
-/// Performs the "copy selected text → convert language → paste back" pipeline
-/// using the clipboard, the keyboard simulator and the configured mappings.
-/// Thread-safe through semaphore-based gate to prevent overlapping conversions.
+///     Performs the "copy selected text → convert language → paste back" pipeline
+///     using the clipboard, the keyboard simulator and the configured mappings.
+///     Thread-safe through semaphore-based gate to prevent overlapping conversions.
 /// </summary>
 public sealed class TextConversionService : IDisposable
 {
     private readonly IClipboardManager _clipboard;
-    private readonly AppSettings _settings;
+    private readonly SemaphoreSlim _conversionGate = new(1, 1);
     private readonly IKeyboardConverter _converter;
     private readonly ILogger _logger;
-    private readonly SemaphoreSlim _conversionGate = new(1, 1);
+    private readonly AppSettings _settings;
 
     public TextConversionService(
         ClipboardManager clipboard,
@@ -33,7 +32,7 @@ public sealed class TextConversionService : IDisposable
     }
 
     /// <summary>
-    /// Disposes the semaphore used for conversion gating.
+    ///     Disposes the semaphore used for conversion gating.
     /// </summary>
     public void Dispose()
     {
@@ -42,10 +41,10 @@ public sealed class TextConversionService : IDisposable
     }
 
     /// <summary>
-    /// Converts the currently selected text.
-    /// Overlapping invocations (e.g. a second hotkey press while a conversion is
-    /// still in flight) are ignored so two pipelines never touch the clipboard
-    /// at the same time.
+    ///     Converts the currently selected text.
+    ///     Overlapping invocations (e.g. a second hotkey press while a conversion is
+    ///     still in flight) are ignored so two pipelines never touch the clipboard
+    ///     at the same time.
     /// </summary>
     public async Task ConvertSelectedTextAsync()
     {

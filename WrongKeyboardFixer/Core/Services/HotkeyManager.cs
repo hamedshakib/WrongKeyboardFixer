@@ -1,16 +1,28 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.Core.Services;
 
-using WrongKeyboardFixer.Core.Helpers;
-
 public partial class HotkeyManager : IDisposable
 {
-    private readonly IntPtr _windowHandle;
+    private const int WM_HOTKEY = Constants.WindowsMessages.WM_HOTKEY;
     private readonly int _hotkeyId;
+    private readonly IntPtr _windowHandle;
     private bool _isRegistered;
+
+    public HotkeyManager(IntPtr windowHandle, int hotkeyId = 1)
+    {
+        _windowHandle = windowHandle;
+        _hotkeyId = hotkeyId;
+    }
+
+    public void Dispose()
+    {
+        Unregister();
+        GC.SuppressFinalize(this);
+    }
 
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -19,14 +31,6 @@ public partial class HotkeyManager : IDisposable
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool UnregisterHotKey(IntPtr hWnd, int id);
-
-    private const int WM_HOTKEY = Constants.WindowsMessages.WM_HOTKEY;
-
-    public HotkeyManager(IntPtr windowHandle, int hotkeyId = 1)
-    {
-        _windowHandle = windowHandle;
-        _hotkeyId = hotkeyId;
-    }
 
     public bool Register(uint modifiers, Keys key)
     {
@@ -49,11 +53,5 @@ public partial class HotkeyManager : IDisposable
     public bool HandleHotkeyMessage(ref Message message)
     {
         return message.Msg == WM_HOTKEY && message.WParam.ToInt32() == _hotkeyId;
-    }
-
-    public void Dispose()
-    {
-        Unregister();
-        GC.SuppressFinalize(this);
     }
 }

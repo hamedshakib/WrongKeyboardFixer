@@ -7,7 +7,7 @@ using System.Windows.Forms;
 namespace WrongKeyboardFixer.UI.Components;
 
 /// <summary>
-/// A flat, rounded button that supports three variants: primary, secondary and ghost.
+///     A flat, rounded button that supports three variants: primary, secondary and ghost.
 /// </summary>
 public class ModernButton : Button
 {
@@ -18,24 +18,11 @@ public class ModernButton : Button
         Ghost
     }
 
-    private Variant _variant = Variant.Primary;
+    private int _cornerRadius = 7;
     private bool _hovered;
     private bool _pressed;
-    private int _cornerRadius = 7;
 
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public Variant ButtonVariant
-    {
-        get => _variant;
-        set { _variant = value; UpdateColors(); Invalidate(); }
-    }
-
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public int CornerRadius
-    {
-        get => _cornerRadius;
-        set { _cornerRadius = Math.Max(0, value); Invalidate(); }
-    }
+    private Variant _variant = Variant.Primary;
 
     public ModernButton()
     {
@@ -49,17 +36,73 @@ public class ModernButton : Button
         UpdateColors();
     }
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public Variant ButtonVariant
+    {
+        get => _variant;
+        set
+        {
+            _variant = value;
+            UpdateColors();
+            Invalidate();
+        }
+    }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public int CornerRadius
+    {
+        get => _cornerRadius;
+        set
+        {
+            _cornerRadius = Math.Max(0, value);
+            Invalidate();
+        }
+    }
+
     private void UpdateColors()
     {
         BackColor = _variant == Variant.Primary ? Theme.Accent : Theme.Surface;
         ForeColor = _variant == Variant.Primary ? Theme.TextOnAccent : Theme.TextPrimary;
     }
 
-    protected override void OnMouseEnter(EventArgs e) { _hovered = true; Invalidate(); base.OnMouseEnter(e); }
-    protected override void OnMouseLeave(EventArgs e) { _hovered = false; _pressed = false; Invalidate(); base.OnMouseLeave(e); }
-    protected override void OnMouseDown(MouseEventArgs e) { if (e.Button == MouseButtons.Left) { _pressed = true; Invalidate(); } base.OnMouseDown(e); }
-    protected override void OnMouseUp(MouseEventArgs e) { _pressed = false; Invalidate(); base.OnMouseUp(e); }
-    protected override void OnEnabledChanged(EventArgs e) { Invalidate(); base.OnEnabledChanged(e); }
+    protected override void OnMouseEnter(EventArgs e)
+    {
+        _hovered = true;
+        Invalidate();
+        base.OnMouseEnter(e);
+    }
+
+    protected override void OnMouseLeave(EventArgs e)
+    {
+        _hovered = false;
+        _pressed = false;
+        Invalidate();
+        base.OnMouseLeave(e);
+    }
+
+    protected override void OnMouseDown(MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Left)
+        {
+            _pressed = true;
+            Invalidate();
+        }
+
+        base.OnMouseDown(e);
+    }
+
+    protected override void OnMouseUp(MouseEventArgs e)
+    {
+        _pressed = false;
+        Invalidate();
+        base.OnMouseUp(e);
+    }
+
+    protected override void OnEnabledChanged(EventArgs e)
+    {
+        Invalidate();
+        base.OnEnabledChanged(e);
+    }
 
     protected override void OnPaint(PaintEventArgs e)
     {
@@ -86,7 +129,9 @@ public class ModernButton : Button
             };
 
         using (var brush = new SolidBrush(fill))
+        {
             g.FillPath(brush, path);
+        }
 
         // ── حذف خط آبی زیر دکمه‌های Secondary ──
         // این خط باعث می‌شد دکمه Cancel همیشه یک خط آبی زیرش داشته باشد

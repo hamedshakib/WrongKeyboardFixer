@@ -1,16 +1,14 @@
-using System;
-
 namespace WrongKeyboardFixer.Core.Services.Conversion;
 
 /// <summary>
-/// Analyzes text to detect Word auto-capitalization patterns.
-/// Detects positions where Word may have auto-capitalized letters or
-/// auto-lowercased standalone "I".
+///     Analyzes text to detect Word auto-capitalization patterns.
+///     Detects positions where Word may have auto-capitalized letters or
+///     auto-lowercased standalone "I".
 /// </summary>
 public sealed class WordAutoCapitalizationAnalyzer
 {
     /// <summary>
-    /// Determines whether an uppercase first letter may have been created by Word auto-capitalization.
+    ///     Determines whether an uppercase first letter may have been created by Word auto-capitalization.
     /// </summary>
     /// <param name="text">The full text.</param>
     /// <param name="wordStart">The starting index of the word in the text.</param>
@@ -32,13 +30,13 @@ public sealed class WordAutoCapitalizationAnalyzer
     }
 
     /// <summary>
-    /// Detects Word's standalone "i" to "I" correction at any position.
-    /// Examples:
-    /// "I"      -> auto lowercase i
-    /// ";I"     -> auto lowercase i
-    /// "(I)"    -> auto lowercase i
-    /// "I,"     -> auto lowercase i
-    /// "In"     -> not auto lowercase i, because I is followed by a letter
+    ///     Detects Word's standalone "i" to "I" correction at any position.
+    ///     Examples:
+    ///     "I"      -> auto lowercase i
+    ///     ";I"     -> auto lowercase i
+    ///     "(I)"    -> auto lowercase i
+    ///     "I,"     -> auto lowercase i
+    ///     "In"     -> not auto lowercase i, because I is followed by a letter
     /// </summary>
     /// <param name="text">The full text.</param>
     /// <param name="index">The index of the character to check.</param>
@@ -63,12 +61,12 @@ public sealed class WordAutoCapitalizationAnalyzer
     }
 
     /// <summary>
-    /// Detects positions where Word often auto-capitalizes the next word:
-    /// - start of text
-    /// - after newline / paragraph
-    /// - after tab / table cell separator
-    /// - after sentence terminators: . ? !
-    /// - after bullets or numbered list markers
+    ///     Detects positions where Word often auto-capitalizes the next word:
+    ///     - start of text
+    ///     - after newline / paragraph
+    ///     - after tab / table cell separator
+    ///     - after sentence terminators: . ? !
+    ///     - after bullets or numbered list markers
     /// </summary>
     /// <param name="text">The full text.</param>
     /// <param name="start">The starting index of the word.</param>
@@ -119,21 +117,28 @@ public sealed class WordAutoCapitalizationAnalyzer
         return false;
     }
 
-    private bool IsStandaloneWordChar(char c) =>
-        char.IsLetterOrDigit(c) || c == '_' || c == '\u200C';
+    private bool IsStandaloneWordChar(char c)
+    {
+        return char.IsLetterOrDigit(c) || c == '_' || c == '\u200C';
+    }
 
-    private bool IsNewLine(char c) =>
-        c == '\n' ||
-        c == '\r' ||
-        c == '\u0085' ||
-        c == '\u2028' ||
-        c == '\u2029';
+    private bool IsNewLine(char c)
+    {
+        return c == '\n' ||
+               c == '\r' ||
+               c == '\u0085' ||
+               c == '\u2028' ||
+               c == '\u2029';
+    }
 
-    private bool IsSentenceTerminator(char c) =>
-        c == '.' ||
-        c == '!' ||
-        c == '?' ||
-        c == '\u061F'; // Persian question mark "?"
+    private bool IsSentenceTerminator(char c)
+    {
+        return c == '.' ||
+               c == '!' ||
+               c == '?' ||
+               c == '\u061F';
+        // Persian question mark "?"
+    }
 
     private bool IsListMarker(string text, int index)
     {
@@ -154,18 +159,21 @@ public sealed class WordAutoCapitalizationAnalyzer
         return false;
     }
 
-    private bool IsBulletChar(char c) =>
-        c == '-' ||
-        c == '*' ||
-        c == '+' ||
-        c == '\u2022' || //bullet
-        c == '\u00B7' || //middle dot
-        c == '\u25E6' || //white bullet
-        c == '\u2023' || //hyphen bullet
-        c == '\u25AA' || //black small square
-        c == '\u25CB' || //white circle
-        c == '\u25CF' || //black circle
-        c == '\u203A';   //right-pointing single quotation mark
+    private bool IsBulletChar(char c)
+    {
+        return c == '-' ||
+               c == '*' ||
+               c == '+' ||
+               c == '\u2022' || //bullet
+               c == '\u00B7' || //middle dot
+               c == '\u25E6' || //white bullet
+               c == '\u2023' || //hyphen bullet
+               c == '\u25AA' || //black small square
+               c == '\u25CB' || //white circle
+               c == '\u25CF' || //black circle
+               c == '\u203A';
+        //right-pointing single quotation mark
+    }
 
     private bool IsAtLineStartIgnoringSpaces(string text, int index)
     {

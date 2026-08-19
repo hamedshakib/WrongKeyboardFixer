@@ -5,16 +5,16 @@ using System.Windows.Forms;
 namespace WrongKeyboardFixer.UI.Components;
 
 /// <summary>
-/// تضمین می‌کند از هر فرم فقط یک نمونه باز باشد (singleton-per-form).
-/// اگر نمونه‌ای از همان فرم هنوز باز است، به‌جای ساخت نمونهٔ جدید همان را جلو می‌آورد.
-/// کاملاً سازگار با Native AOT — بدون هرگونه reflection (فقط <see cref="Type"/> و typeof).
+///     تضمین می‌کند از هر فرم فقط یک نمونه باز باشد (singleton-per-form).
+///     اگر نمونه‌ای از همان فرم هنوز باز است، به‌جای ساخت نمونهٔ جدید همان را جلو می‌آورد.
+///     کاملاً سازگار با Native AOT — بدون هرگونه reflection (فقط <see cref="Type" /> و typeof).
 /// </summary>
 public static class FormSingleton
 {
     private static readonly Dictionary<Type, Form> Open = new();
 
     /// <summary>
-    /// باز کردن فرم به‌صورت مودال؛ فقط در صورتی که نمونهٔ بازِ همنوعی وجود نداشته باشد.
+    ///     باز کردن فرم به‌صورت مودال؛ فقط در صورتی که نمونهٔ بازِ همنوعی وجود نداشته باشد.
     /// </summary>
     public static DialogResult ShowDialog<T>(Func<T> factory, IWin32Window? owner = null) where T : Form
     {
@@ -40,7 +40,7 @@ public static class FormSingleton
     }
 
     /// <summary>
-    /// باز کردن فرم به‌صورت غیرمودال؛ فقط در صورتی که نمونهٔ بازِ همنوعی وجود نداشته باشد.
+    ///     باز کردن فرم به‌صورت غیرمودال؛ فقط در صورتی که نمونهٔ بازِ همنوعی وجود نداشته باشد.
     /// </summary>
     public static void Show<T>(Func<T> factory) where T : Form
     {

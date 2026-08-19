@@ -6,23 +6,23 @@ using WrongKeyboardFixer.Core.Models;
 namespace WrongKeyboardFixer.Core.Services.Conversion;
 
 /// <summary>
-/// Converts characters between Persian and English based on user-defined mappings.
-/// The English-to-Persian conversion includes a heuristic for Word-like auto-capitalization.
+///     Converts characters between Persian and English based on user-defined mappings.
+///     The English-to-Persian conversion includes a heuristic for Word-like auto-capitalization.
 /// </summary>
 public sealed class KeyboardConverter : IKeyboardConverter
 {
-    private static readonly HashSet<string> EmptyCorrections =
-        new HashSet<string>(StringComparer.Ordinal);
+    private static readonly HashSet<string> EmptyCorrections = new(StringComparer.Ordinal);
 
     private static readonly HashSet<string> DefaultWordCorrections =
         BuildCorrectionSet(MappingDefaults.GetDefaultWordCorrections());
 
-    private readonly TextDirectionDetector _directionDetector = new();
-    private readonly PersianWordMatcher _wordMatcher = new();
     private readonly WordAutoCapitalizationAnalyzer _autoCapAnalyzer = new();
 
+    private readonly TextDirectionDetector _directionDetector = new();
+    private readonly PersianWordMatcher _wordMatcher = new();
+
     /// <summary>
-    /// Converts a Persian character to English using custom mappings or defaults.
+    ///     Converts a Persian character to English using custom mappings or defaults.
     /// </summary>
     /// <param name="persianChar">The Persian character to convert.</param>
     /// <param name="customMappings">Optional custom mappings.</param>
@@ -39,7 +39,7 @@ public sealed class KeyboardConverter : IKeyboardConverter
     }
 
     /// <summary>
-    /// Converts an English character to Persian using custom mappings or defaults.
+    ///     Converts an English character to Persian using custom mappings or defaults.
     /// </summary>
     /// <param name="englishChar">The English character to convert.</param>
     /// <param name="customMappings">Optional custom mappings.</param>
@@ -50,7 +50,7 @@ public sealed class KeyboardConverter : IKeyboardConverter
     }
 
     /// <summary>
-    /// Converts a Persian string to English using custom mappings or defaults.
+    ///     Converts a Persian string to English using custom mappings or defaults.
     /// </summary>
     /// <param name="text">The Persian text to convert.</param>
     /// <param name="customMappings">Optional custom mappings.</param>
@@ -72,8 +72,8 @@ public sealed class KeyboardConverter : IKeyboardConverter
     }
 
     /// <summary>
-    /// Converts an English string to Persian using custom mappings or defaults.
-    /// Uppercase first letters are resolved with a Word auto-capitalization heuristic.
+    ///     Converts an English string to Persian using custom mappings or defaults.
+    ///     Uppercase first letters are resolved with a Word auto-capitalization heuristic.
     /// </summary>
     /// <param name="text">The English text to convert.</param>
     /// <param name="customMappings">Optional custom mappings.</param>
@@ -119,19 +119,19 @@ public sealed class KeyboardConverter : IKeyboardConverter
     }
 
     /// <summary>
-    /// Analyzes the text and determines if it should be converted to Persian.
-    /// Returns true if the text is mostly English (should convert to Persian),
-    /// or false if it's mostly Persian (should convert to English).
+    ///     Analyzes the text and determines if it should be converted to Persian.
+    ///     Returns true if the text is mostly English (should convert to Persian),
+    ///     or false if it's mostly Persian (should convert to English).
     /// </summary>
     /// <param name="text">The text to analyze.</param>
     /// <returns>True if text should be converted TO Persian, false otherwise.</returns>
     public bool ShouldConvertToPersian(string? text)
     {
-        return _directionDetector.ShouldConvertToPersian(text, null);
+        return _directionDetector.ShouldConvertToPersian(text);
     }
 
     /// <summary>
-    /// Converts one English word with attention to Word auto-capitalization context.
+    ///     Converts one English word with attention to Word auto-capitalization context.
     /// </summary>
     private string ConvertWordWithContext(
         string text,
@@ -185,9 +185,9 @@ public sealed class KeyboardConverter : IKeyboardConverter
     }
 
     /// <summary>
-    /// Converts the tail of a word.
-    /// Mid-word uppercase letters are treated as Shift letters,
-    /// except standalone-like "I" that Word may have auto-capitalized.
+    ///     Converts the tail of a word.
+    ///     Mid-word uppercase letters are treated as Shift letters,
+    ///     except standalone-like "I" that Word may have auto-capitalized.
     /// </summary>
     private string ConvertTail(
         string text,
@@ -222,9 +222,9 @@ public sealed class KeyboardConverter : IKeyboardConverter
     }
 
     /// <summary>
-    /// Resolves a non-first character of a word.
-    /// Lowercase letters use the normal map.
-    /// Uppercase letters use the Shift map, then fallback to lowercase.
+    ///     Resolves a non-first character of a word.
+    ///     Lowercase letters use the normal map.
+    ///     Uppercase letters use the Shift map, then fallback to lowercase.
     /// </summary>
     private char? ConvertNonInitialChar(char c, IDictionary<char, char>? customMappings)
     {
@@ -232,8 +232,8 @@ public sealed class KeyboardConverter : IKeyboardConverter
     }
 
     /// <summary>
-    /// Returns whether a character belongs inside a word for conversion purposes.
-    /// Besides letters and digits, ZWNJ is kept as part of the word.
+    ///     Returns whether a character belongs inside a word for conversion purposes.
+    ///     Besides letters and digits, ZWNJ is kept as part of the word.
     /// </summary>
     private bool IsConversionWordChar(char c, IDictionary<char, char>? customMappings)
     {
@@ -245,7 +245,7 @@ public sealed class KeyboardConverter : IKeyboardConverter
     }
 
     /// <summary>
-    /// Resolves a plain character via custom mappings, then default lowercase map.
+    ///     Resolves a plain character via custom mappings, then default lowercase map.
     /// </summary>
     private char? ConvertPlainChar(char c, IDictionary<char, char>? customMappings)
     {
@@ -259,8 +259,8 @@ public sealed class KeyboardConverter : IKeyboardConverter
     }
 
     /// <summary>
-    /// Builds a normalized HashSet from word corrections.
-    /// Trimming is important because some default entries may have trailing spaces.
+    ///     Builds a normalized HashSet from word corrections.
+    ///     Trimming is important because some default entries may have trailing spaces.
     /// </summary>
     private static HashSet<string> BuildCorrectionSet(IReadOnlyCollection<string>? words)
     {

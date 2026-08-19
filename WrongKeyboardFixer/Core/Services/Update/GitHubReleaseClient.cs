@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 namespace WrongKeyboardFixer.Core.Services.Update;
 
 /// <summary>
-/// Communicates with the GitHub Releases API and downloads release assets.
-/// Owns a single shared <see cref="HttpClient"/> for connection reuse.
+///     Communicates with the GitHub Releases API and downloads release assets.
+///     Owns a single shared <see cref="HttpClient" /> for connection reuse.
 /// </summary>
 internal sealed class GitHubReleaseClient : IDisposable
 {
@@ -23,9 +23,17 @@ internal sealed class GitHubReleaseClient : IDisposable
         _http.DefaultRequestHeaders.UserAgent.ParseAdd("WrongKeyboardFixer-AutoUpdater");
     }
 
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+        _disposed = true;
+        _http.Dispose();
+    }
+
     /// <summary>
-    /// Fetches the latest release metadata from GitHub. Returns null when the
-    /// request fails or no downloadable asset (zip/exe) is present.
+    ///     Fetches the latest release metadata from GitHub. Returns null when the
+    ///     request fails or no downloadable asset (zip/exe) is present.
     /// </summary>
     public async Task<ReleaseInfo?> GetLatestReleaseAsync()
     {
@@ -69,20 +77,12 @@ internal sealed class GitHubReleaseClient : IDisposable
     }
 
     /// <summary>
-    /// Returns an open stream for downloading the given release asset.
-    /// Caller is responsible for disposing the response.
+    ///     Returns an open stream for downloading the given release asset.
+    ///     Caller is responsible for disposing the response.
     /// </summary>
     public Task<HttpResponseMessage> GetAssetAsync(string downloadUrl)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         return _http.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
-    }
-
-    public void Dispose()
-    {
-        if (_disposed)
-            return;
-        _disposed = true;
-        _http.Dispose();
     }
 }

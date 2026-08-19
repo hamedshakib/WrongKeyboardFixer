@@ -146,19 +146,19 @@ public static partial class Localization
             ["WordCorrections"] = "کلمات تصحیح (آ / ژ)",
             ["WordCorrectionsHint"] = "کلماتی که باید با «آ» یا «ژ» شروع شوند؛ اگر هنگام تبدیل اشتباه شدند اصلاح می‌شوند",
             ["WordCount"] = "کلمات: {0}",
-             ["AddWord"] = "افزودن کلمه",
-             ["RemoveWord"] = "حذف کلمه",
-             ["Search"] = "جستجو",
+            ["AddWord"] = "افزودن کلمه",
+            ["RemoveWord"] = "حذف کلمه",
+            ["Search"] = "جستجو",
             ["ResetWords"] = "بازنشانی",
             ["EnterWord"] = "کلمهٔ جدید:",
             ["InvalidWord"] = "لطفاً یک کلمهٔ معتبر وارد کنید (باید با «آ» یا «ژ» شروع شود).",
-             ["WordAlreadyExists"] = "این کلمه از قبل در لیست وجود دارد.",
-             ["WordContainsSpace"] = "کلمه نمی‌تواند شامل فاصله باشد.",
-             ["WordContainsNonBreakingSpace"] = "کلمه نمی‌تواند شامل نیم فاصله باشد.",
-             ["ResetWordsConfirm"] = "آیا مطمئن هستید که می‌خواهید لیست کلمات را به پیش‌فرض برگردانید؟",
+            ["WordAlreadyExists"] = "این کلمه از قبل در لیست وجود دارد.",
+            ["WordContainsSpace"] = "کلمه نمی‌تواند شامل فاصله باشد.",
+            ["WordContainsNonBreakingSpace"] = "کلمه نمی‌تواند شامل نیم فاصله باشد.",
+            ["ResetWordsConfirm"] = "آیا مطمئن هستید که می‌خواهید لیست کلمات را به پیش‌فرض برگردانید؟",
 
             // Clipboard
-            ["ClipboardSetTextError"] = "Failed to set clipboard text",
+            ["ClipboardSetTextError"] = "Failed to set clipboard text"
         };
     }
 }

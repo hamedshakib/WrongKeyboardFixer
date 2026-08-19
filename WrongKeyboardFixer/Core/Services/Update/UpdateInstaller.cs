@@ -10,11 +10,11 @@ using WrongKeyboardFixer.Core.Helpers;
 namespace WrongKeyboardFixer.Core.Services.Update;
 
 /// <summary>
-/// Performs the mechanical work of applying an update: downloading the release
-/// asset, extracting it, verifying the new version and launching the batch
-/// script that swaps the running executable.
-/// Problems are reported by throwing <see cref="UpdateInstallException"/> so the
-/// caller decides how to present them; this class never touches the UI.
+///     Performs the mechanical work of applying an update: downloading the release
+///     asset, extracting it, verifying the new version and launching the batch
+///     script that swaps the running executable.
+///     Problems are reported by throwing <see cref="UpdateInstallException" /> so the
+///     caller decides how to present them; this class never touches the UI.
 /// </summary>
 internal sealed class UpdateInstaller
 {
@@ -29,9 +29,9 @@ internal sealed class UpdateInstaller
     }
 
     /// <summary>
-    /// Downloads and installs the given release. On success starts the
-    /// replacement script and returns true.
-    /// Throws <see cref="UpdateInstallException"/> when the update cannot be applied.
+    ///     Downloads and installs the given release. On success starts the
+    ///     replacement script and returns true.
+    ///     Throws <see cref="UpdateInstallException" /> when the update cannot be applied.
     /// </summary>
     public async Task<bool> InstallAsync(
         ReleaseInfo release,
@@ -63,14 +63,14 @@ internal sealed class UpdateInstaller
             if (newExeVersion != null && newExeVersion <= VersionInfo.Current)
                 throw new UpdateInstallException(
                     Localization.Format("UpdNotNewer", newExeVersion, VersionInfo.Current),
-                    isWarning: true);
+                    true);
 
             string batchPath = Path.Combine(tempDir, "update.bat");
             File.WriteAllText(batchPath, BatchScriptGenerator.Generate(
-                processId: Environment.ProcessId,
-                newExePath: newExePath,
-                currentExePath: currentExePath,
-                tempDir: tempDir));
+                Environment.ProcessId,
+                newExePath,
+                currentExePath,
+                tempDir));
 
             progress?.Report((95, Localization.Get("UpdInstalling")));
 
@@ -98,7 +98,7 @@ internal sealed class UpdateInstaller
         // it removes the directory itself after the application restarts.
     }
 
-    /// <summary>Downloads the asset to <paramref name="destFile"/> with progress reporting.</summary>
+    /// <summary>Downloads the asset to <paramref name="destFile" /> with progress reporting.</summary>
     private async Task DownloadAssetAsync(
         string downloadUrl,
         string destFile,
@@ -124,7 +124,7 @@ internal sealed class UpdateInstaller
 
                 if (totalBytes > 0)
                 {
-                    int percent = (int)(20 + (totalRead * 70.0 / totalBytes));
+                    int percent = (int)(20 + totalRead * 70.0 / totalBytes);
                     progress?.Report((Math.Min(percent, 90), Localization.Format("UpdDownloadPercent", percent)));
                 }
             }
@@ -135,7 +135,7 @@ internal sealed class UpdateInstaller
         }
     }
 
-    /// <summary>Extracts a zip into <paramref name="tempDir"/>/extracted and locates the exe inside.</summary>
+    /// <summary>Extracts a zip into <paramref name="tempDir" />/extracted and locates the exe inside.</summary>
     private static async Task<string?> ExtractZipAsync(string zipPath, string tempDir)
     {
         string extractDir = Path.Combine(tempDir, "extracted");

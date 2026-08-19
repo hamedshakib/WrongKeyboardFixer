@@ -6,15 +6,14 @@ using WrongKeyboardFixer.Core.Helpers;
 namespace WrongKeyboardFixer.UI.Components;
 
 /// <summary>
-/// A small non-interactive progress dialog used while checking / downloading updates.
-/// Owns its window and an <see cref="IProgress{T}"/> reporter that updates it safely.
+///     A small non-interactive progress dialog used while checking / downloading updates.
+///     Owns its window and an <see cref="IProgress{T}" /> reporter that updates it safely.
 /// </summary>
 public sealed class UpdateProgressDialog : IDisposable
 {
     private readonly Form _form;
     private readonly Label _label;
     private readonly ProgressBar _progressBar;
-    private readonly IProgress<(int percent, string message)> _progress;
 
     public UpdateProgressDialog(IWin32Window? owner = null)
     {
@@ -54,7 +53,7 @@ public sealed class UpdateProgressDialog : IDisposable
         _form.Controls.Add(_label);
         _form.Controls.Add(_progressBar);
 
-        _progress = new Progress<(int percent, string message)>(update =>
+        Progress = new Progress<(int percent, string message)>(update =>
         {
             _progressBar.Value = Math.Min(update.percent, 100);
             _label.Text = update.message;
@@ -67,10 +66,16 @@ public sealed class UpdateProgressDialog : IDisposable
     }
 
     /// <summary>Reporter that updates the progress bar and message text.</summary>
-    public IProgress<(int percent, string message)> Progress => _progress;
+    public IProgress<(int percent, string message)> Progress { get; }
+
+    public void Dispose()
+    {
+        _form.Dispose();
+    }
 
     /// <summary>Closes the dialog window.</summary>
-    public void Close() => _form.Close();
-
-    public void Dispose() => _form.Dispose();
+    public void Close()
+    {
+        _form.Close();
+    }
 }

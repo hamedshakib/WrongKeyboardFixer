@@ -9,9 +9,9 @@ using WrongKeyboardFixer.Core.Helpers;
 namespace WrongKeyboardFixer.UI.Components;
 
 /// <summary>
-/// Editable two-column mapping table (Persian ↔ English) with Delete/Reset
-/// pill buttons. Owns all grid mechanics — column layout, custom cell painting,
-/// hover states and input validation — and reports user actions through events.
+///     Editable two-column mapping table (Persian ↔ English) with Delete/Reset
+///     pill buttons. Owns all grid mechanics — column layout, custom cell painting,
+///     hover states and input validation — and reports user actions through events.
 /// </summary>
 public sealed class MappingGrid : ModernDataGridView
 {
@@ -19,6 +19,16 @@ public sealed class MappingGrid : ModernDataGridView
     {
         PersianToEnglish,
         EnglishToPersian
+    }
+
+    private readonly HoverState _hover = new();
+
+    private readonly bool _isPersianToEnglish;
+
+    public MappingGrid(Direction direction)
+    {
+        _isPersianToEnglish = direction == Direction.PersianToEnglish;
+        Build();
     }
 
     /// <summary>Raised when the editable cell of a row is committed with a valid value.</summary>
@@ -29,15 +39,6 @@ public sealed class MappingGrid : ModernDataGridView
 
     /// <summary>Raised when the Reset pill of a row is clicked.</summary>
     public event Action<char>? ResetRequested;
-
-    private readonly bool _isPersianToEnglish;
-    private readonly HoverState _hover = new();
-
-    public MappingGrid(Direction direction)
-    {
-        _isPersianToEnglish = direction == Direction.PersianToEnglish;
-        Build();
-    }
 
     private void Build()
     {
@@ -107,12 +108,15 @@ public sealed class MappingGrid : ModernDataGridView
         });
 
         CellPainting += OnCellPainting;
-        CellValidated += (_, e) => { if (e.RowIndex >= 0) Rows[e.RowIndex].ErrorText = string.Empty; };
+        CellValidated += (_, e) =>
+        {
+            if (e.RowIndex >= 0) Rows[e.RowIndex].ErrorText = string.Empty;
+        };
         CellValidating += OnCellValidating;
         CellValueChanged += OnCellValueChanged;
         CellContentClick += OnCellContentClick;
 
-        ShowCellToolTips = false;      // حذف یک invalidate اضافی روی هاور
+        ShowCellToolTips = false; // حذف یک invalidate اضافی روی هاور
         MouseMove += OnGridMouseMove;
         MouseLeave += OnGridMouseLeave;
         MouseDown += OnGridMouseDown;
@@ -120,7 +124,7 @@ public sealed class MappingGrid : ModernDataGridView
     }
 
     /// <summary>
-    /// Replaces the grid content with the given mapping entries, sorted by key.
+    ///     Replaces the grid content with the given mapping entries, sorted by key.
     /// </summary>
     public void Load(IEnumerable<KeyValuePair<char, char>> entries)
     {
@@ -138,7 +142,7 @@ public sealed class MappingGrid : ModernDataGridView
 
     private void OnCellValidating(object? sender, DataGridViewCellValidatingEventArgs e)
     {
-        if (e.RowIndex < 0 || e.ColumnIndex != 1) return;   // ستون صفر فقط‌خواندنی است
+        if (e.RowIndex < 0 || e.ColumnIndex != 1) return; // ستون صفر فقط‌خواندنی است
         var row = Rows[e.RowIndex];
 
         string? value = e.FormattedValue?.ToString();
@@ -160,9 +164,7 @@ public sealed class MappingGrid : ModernDataGridView
         row.ErrorText = string.Empty;
         if (row.Cells[0].Value is string key && key.Length == 1 &&
             row.Cells[1].Value is string value && value.Length == 1)
-        {
             ValueCommitted?.Invoke(key[0], value[0]);
-        }
     }
 
     private void OnCellContentClick(object? sender, DataGridViewCellEventArgs e)
@@ -178,15 +180,18 @@ public sealed class MappingGrid : ModernDataGridView
 
     // ── حالت هاور ──
 
-    private static bool IsButtonColumn(DataGridView grid, int col) =>
-        col >= 0 && col < grid.Columns.Count && grid.Columns[col] is DataGridViewButtonColumn;
+    private static bool IsButtonColumn(DataGridView grid, int col)
+    {
+        return col >= 0 && col < grid.Columns.Count && grid.Columns[col] is DataGridViewButtonColumn;
+    }
 
     private void OnGridMouseMove(object? sender, MouseEventArgs e)
     {
         var hit = HitTest(e.X, e.Y);
 
         Cursor = hit.RowIndex >= 0 && IsButtonColumn(this, hit.ColumnIndex)
-            ? Cursors.Hand : Cursors.Default;
+            ? Cursors.Hand
+            : Cursors.Default;
 
         if (hit.RowIndex != _hover.Row || hit.ColumnIndex != _hover.Column)
         {
@@ -230,7 +235,7 @@ public sealed class MappingGrid : ModernDataGridView
 
     private void OnCellPainting(object? sender, DataGridViewCellPaintingEventArgs e)
     {
-        if (e.RowIndex < 0 || e.ColumnIndex < 0) return;   // هدر: رسم پیش‌فرض
+        if (e.RowIndex < 0 || e.ColumnIndex < 0) return; // هدر: رسم پیش‌فرض
 
         var bounds = e.CellBounds;
         var colStyle = Columns[e.ColumnIndex].DefaultCellStyle;
@@ -249,7 +254,9 @@ public sealed class MappingGrid : ModernDataGridView
         // کاهش ۱ پیکسلی ارتفاع باعث می‌شود پس‌زمینه هرگز روی خط حاشیه رسم نشود
         var bgBounds = new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height - 1);
         using (var bgBrush = new SolidBrush(bg))
+        {
             e.Graphics!.FillRectangle(bgBrush, bgBounds);
+        }
 
         // ── ۲. رسم محتوای داخلی سلول ──
         if (isButton)
@@ -276,7 +283,9 @@ public sealed class MappingGrid : ModernDataGridView
                     new Rectangle(rect.X, rect.Y, rect.Width - 1, rect.Height - 1),
                     Theme.DpiScale(7, DeviceDpi));
                 using (var pill = new SolidBrush(pillBg))
+                {
                     e.Graphics.FillPath(pill, path);
+                }
 
                 // برگرداندن وضعیت به حالت قبل
                 e.Graphics.SmoothingMode = prevSmoothing;
@@ -311,6 +320,7 @@ public sealed class MappingGrid : ModernDataGridView
             // استفاده از bounds.Right (بدون منفی یک) برای اتصال کامل خطوط ستون‌ها به هم
             e.Graphics.DrawLine(linePen, bounds.Left, bounds.Bottom - 1, bounds.Right, bounds.Bottom - 1);
         }
+
         e.Graphics.SmoothingMode = oldSmoothingForLine;
 
         // ── ۴. حلقهٔ فوکوس کیبورد ──

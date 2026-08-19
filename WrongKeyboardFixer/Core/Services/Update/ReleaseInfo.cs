@@ -1,7 +1,7 @@
 namespace WrongKeyboardFixer.Core.Services.Update;
 
 /// <summary>
-/// Describes a downloadable release fetched from the GitHub Releases API.
+///     Describes a downloadable release fetched from the GitHub Releases API.
 /// </summary>
 internal sealed class ReleaseInfo
 {

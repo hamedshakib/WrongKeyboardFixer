@@ -8,33 +8,19 @@ using System.Windows.Forms;
 namespace WrongKeyboardFixer.UI.Components;
 
 /// <summary>
-/// A custom title bar with drag support and the standard minimize / close buttons.
-/// The bar is flush with the top edge of the form (no gap, no floating rounded
-/// card), so the window buttons hang from the very top like a native title bar.
+///     A custom title bar with drag support and the standard minimize / close buttons.
+///     The bar is flush with the top edge of the form (no gap, no floating rounded
+///     card), so the window buttons hang from the very top like a native title bar.
 /// </summary>
 public partial class ModernTitleBar : Control
 {
-    private bool _hoveredMin;
-    private bool _hoveredClose;
-    private bool _pressedMin;
-    private bool _pressedClose;
-
     public const int TitleBarHeight = 56;
     public const int ControlAreaWidth = 96;
     private const int ButtonWidth = 46;
-
-    private int Scaled(int value) => Theme.DpiScale(value, DeviceDpi);
-    private int BtnW => Scaled(ButtonWidth);
-    private int CtrlW => Scaled(ControlAreaWidth);
-
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public string Subtitle { get; set; } = string.Empty;
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public Color SubtitleColor { get; set; } = Theme.TextSecondary;
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public Color TitleColor { get; set; } = Theme.TextPrimary;
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public Color IconColor { get; set; } = Theme.Accent;
+    private bool _hoveredClose;
+    private bool _hoveredMin;
+    private bool _pressedClose;
+    private bool _pressedMin;
 
     public ModernTitleBar()
     {
@@ -45,10 +31,32 @@ public partial class ModernTitleBar : Control
         Cursor = Cursors.Default;
     }
 
-    private static TextFormatFlags Flags(string text) =>
-        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
-        TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix |
-        (Theme.IsRtlText(text) ? TextFormatFlags.RightToLeft : (TextFormatFlags)0);
+    private int BtnW => Scaled(ButtonWidth);
+    private int CtrlW => Scaled(ControlAreaWidth);
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public string Subtitle { get; set; } = string.Empty;
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public Color SubtitleColor { get; set; } = Theme.TextSecondary;
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public Color TitleColor { get; set; } = Theme.TextPrimary;
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public Color IconColor { get; set; } = Theme.Accent;
+
+    private int Scaled(int value)
+    {
+        return Theme.DpiScale(value, DeviceDpi);
+    }
+
+    private static TextFormatFlags Flags(string text)
+    {
+        return TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
+               TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix |
+               (Theme.IsRtlText(text) ? TextFormatFlags.RightToLeft : 0);
+    }
 
     protected override void OnMouseDown(MouseEventArgs e)
     {
@@ -61,6 +69,7 @@ public partial class ModernTitleBar : Control
             Invalidate();
             return;
         }
+
         if (FindForm() is { } form)
         {
             if (form.WindowState == FormWindowState.Maximized)
@@ -69,6 +78,7 @@ public partial class ModernTitleBar : Control
                 form.WindowState = FormWindowState.Normal;
                 form.Location = new Point(pt.X - form.Width / 2, pt.Y - 8);
             }
+
             form.BeginInvoke(() => Capture = false);
             form.BeginInvoke(() =>
             {
@@ -92,6 +102,7 @@ public partial class ModernTitleBar : Control
             {
                 f.WindowState = FormWindowState.Minimized;
             }
+
             _pressedMin = _pressedClose = false;
             Invalidate();
         }
@@ -108,6 +119,7 @@ public partial class ModernTitleBar : Control
             _hoveredClose = overClose;
             Invalidate();
         }
+
         Cursor = overMin || overClose ? Cursors.Hand : Cursors.Default;
     }
 
@@ -128,7 +140,9 @@ public partial class ModernTitleBar : Control
         // ── نوار سفید، چسبیده به لبهٔ بالای فرم؛ بدون فاصلهٔ ۸پیکسلی و بدون
         //    گوشه‌های گردِ کارت‌مانند → دیگر هیچ «کادر» اضافه‌ای دیده نمی‌شود ──
         using (var bg = new SolidBrush(Theme.Surface))
+        {
             g.FillRectangle(bg, 0, 0, Width, Height);
+        }
 
         int textStart = Scaled(34);
         int availW = Width - CtrlW - textStart;
@@ -160,12 +174,14 @@ public partial class ModernTitleBar : Control
         int dotSize = Scaled(10);
         g.SmoothingMode = SmoothingMode.AntiAlias;
         using (var dot = new SolidBrush(IconColor))
+        {
             g.FillEllipse(dot, Scaled(16), startY + titleH / 2 - dotSize / 2, dotSize, dotSize);
+        }
 
         // ── دکمه‌ها از y=0 شروع می‌شوند و تا انتهای نوار ادامه دارند؛
         //    hover قرمز دقیقاً گوشهٔ بالای پنجره را پر می‌کند (بدون منحنی جدا) ──
-        DrawWindowButton(g, Width - (BtnW * 2), _hoveredMin, _pressedMin, isClose: false);
-        DrawWindowButton(g, Width - BtnW, _hoveredClose, _pressedClose, isClose: true);
+        DrawWindowButton(g, Width - BtnW * 2, _hoveredMin, _pressedMin, false);
+        DrawWindowButton(g, Width - BtnW, _hoveredClose, _pressedClose, true);
     }
 
     private void DrawWindowButton(Graphics g, int x, bool hover, bool pressed, bool isClose)

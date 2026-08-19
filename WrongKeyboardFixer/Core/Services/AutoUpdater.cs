@@ -8,9 +8,9 @@ using WrongKeyboardFixer.Core.Services.Update;
 namespace WrongKeyboardFixer.Core.Services;
 
 /// <summary>
-/// Orchestrates the update workflow: fetch the latest release, compare versions,
-/// ask the user, and hand the download/install work to the update services.
-/// Owns all user-facing messaging for the flow.
+///     Orchestrates the update workflow: fetch the latest release, compare versions,
+///     ask the user, and hand the download/install work to the update services.
+///     Owns all user-facing messaging for the flow.
 /// </summary>
 public static class AutoUpdater
 {
@@ -27,7 +27,7 @@ public static class AutoUpdater
     private static readonly GitHubReleaseClient Client = new();
 
     /// <summary>
-    /// Checks for updates from GitHub releases.
+    ///     Checks for updates from GitHub releases.
     /// </summary>
     /// <param name="progress">Optional progress reporter for download status.</param>
     /// <param name="silent">If true, suppresses the "no update" and "error" messages (startup mode).</param>
@@ -103,6 +103,8 @@ public static class AutoUpdater
         }
     }
 
-    private static void ShowMessage(string text, string caption, MessageBoxIcon icon) =>
+    private static void ShowMessage(string text, string caption, MessageBoxIcon icon)
+    {
         MessageBox.Show(text, caption, MessageBoxButtons.OK, icon);
+    }
 }

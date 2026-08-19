@@ -6,7 +6,7 @@ using WrongKeyboardFixer.Core.Models;
 namespace WrongKeyboardFixer.Core.Persistence;
 
 /// <summary>
-/// Source-generated JSON serialization context for Native AOT compatibility.
+///     Source-generated JSON serialization context for Native AOT compatibility.
 /// </summary>
 [JsonSourceGenerationOptions(
     WriteIndented = true,

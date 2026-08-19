@@ -1,10 +1,9 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.UI.Components;
-
-using WrongKeyboardFixer.Core.Helpers;
 
 internal static partial class RedrawLock
 {
@@ -14,8 +13,11 @@ internal static partial class RedrawLock
     [LibraryImport("user32.dll", EntryPoint = "SendMessageW")]
     private static partial int SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
-    public static void Suspend(Control c) =>
-        SendMessage(c.Handle, WmSetRedraw, IntPtr.Zero, IntPtr.Zero);   // WM_SETREDRAW off
+    public static void Suspend(Control c)
+    {
+        SendMessage(c.Handle, WmSetRedraw, IntPtr.Zero, IntPtr.Zero);
+        // WM_SETREDRAW off
+    }
 
     public static void Resume(Control c)
     {
@@ -23,4 +25,3 @@ internal static partial class RedrawLock
         c.Refresh();
     }
 }
-

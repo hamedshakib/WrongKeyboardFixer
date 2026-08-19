@@ -146,19 +146,19 @@ public static partial class Localization
             ["WordCorrections"] = "Word Corrections (آ / ژ)",
             ["WordCorrectionsHint"] = "Words that must begin with «آ» or «ژ»; corrected if converted wrongly",
             ["WordCount"] = "Words: {0}",
-             ["AddWord"] = "Add Word",
-             ["RemoveWord"] = "Remove Word",
-             ["Search"] = "Search",
+            ["AddWord"] = "Add Word",
+            ["RemoveWord"] = "Remove Word",
+            ["Search"] = "Search",
             ["ResetWords"] = "Reset",
             ["EnterWord"] = "New word:",
             ["InvalidWord"] = "Please enter a valid word (must start with «آ» or «ژ»).",
-             ["WordAlreadyExists"] = "This word is already in the list.",
-             ["WordContainsSpace"] = "The word cannot contain spaces.",
-             ["WordContainsNonBreakingSpace"] = "The word cannot contain non-breaking space (نیم فاصله).",
-             ["ResetWordsConfirm"] = "Reset the word list to defaults?",
+            ["WordAlreadyExists"] = "This word is already in the list.",
+            ["WordContainsSpace"] = "The word cannot contain spaces.",
+            ["WordContainsNonBreakingSpace"] = "The word cannot contain non-breaking space (نیم فاصله).",
+            ["ResetWordsConfirm"] = "Reset the word list to defaults?",
 
             // Clipboard
-            ["ClipboardSetTextError"] = "Failed to set clipboard text",
+            ["ClipboardSetTextError"] = "Failed to set clipboard text"
         };
     }
 }

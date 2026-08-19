@@ -12,66 +12,68 @@ namespace WrongKeyboardFixer.UI.Forms;
 
 public class SettingsForm : ModernForm, ICloseRequestHandler
 {
-    private uint _lastHotkeyModifier;
-    private Keys _lastHotkeyKey;
+    private const int StdHeight = 36;
+    private const int RowGap = 14;
+    private const int SectionGap = 22;
+    private readonly HotkeyManager _hotkeyManager;
 
     private readonly AppSettings _settings;
-    private readonly HotkeyManager _hotkeyManager;
+    private ModernButton _cancelButton = null!;
+    private ModernButton _checkUpdateButton = null!;
+    private ComboBox _hotkeyKeyComboBox = null!;
+    private ComboBox _hotkeyModifierComboBox = null!;
     private bool _isHotkeyRegistered;
+    private ModernButton _keyboardMappingsButton = null!;
+    private ComboBox _languageComboBox = null!;
+    private Keys _lastHotkeyKey;
+    private uint _lastHotkeyModifier;
+    private TableLayoutPanel _layout = null!;
+    private RoundedPanel _panel = null!;
+    private ModernButton _registerHotkeyButton = null!;
 
     // Controls
     private ToggleSwitch _runOnStartupToggle = null!;
-    private ComboBox _languageComboBox = null!;
-    private ComboBox _hotkeyModifierComboBox = null!;
-    private ComboBox _hotkeyKeyComboBox = null!;
-    private ModernButton _registerHotkeyButton = null!;
-    private StatusChip _statusChip = null!;
-    private Label _versionLabel = null!;
-    private ModernButton _checkUpdateButton = null!;
     private ModernButton _saveButton = null!;
-    private ModernButton _cancelButton = null!;
-    private ModernButton _keyboardMappingsButton = null!;
-
-    private enum StatusState { Checking, Registered, NotRegistered, RegisterSuccess, RegisterFailed }
+    private StatusChip _statusChip = null!;
     private StatusState _statusState = StatusState.Checking;
+    private Label _versionLabel = null!;
 
     public SettingsForm(AppSettings settings, HotkeyManager hotkeyManager)
     {
         _settings = settings ?? new AppSettings();
         _hotkeyManager = hotkeyManager;
         Localization.SetLanguage(_settings.Language);
-        this.RightToLeftLayout = Localization.IsRtl;
+        RightToLeftLayout = Localization.IsRtl;
 
-        this.SuspendLayout();
+        SuspendLayout();
         InitializeForm();
         InitializeControls();
-        this.ResumeLayout(false);
+        ResumeLayout(false);
 
         LoadSettings();
     }
 
+    public void RequestClose()
+    {
+        CancelButton_Click(this, EventArgs.Empty);
+    }
+
     private void InitializeForm()
     {
-        this.Text = Localization.Get("Settings");
-        this.FormBorderStyle = FormBorderStyle.None;
-        this.AutoScaleDimensions = new SizeF(96F, 96F);
-        this.AutoScaleMode = AutoScaleMode.Dpi;
-        this.ClientSize = new Size(560, 600);
-        this.MinimumSize = new Size(560, 600);
-        this.StartPosition = FormStartPosition.CenterScreen;
-        this.BackColor = Theme.Background;
-        this.Font = Theme.BodyFont;
-        this.Icon = IconLoader.GetIcon();
-        this.RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No;
+        Text = Localization.Get("Settings");
+        FormBorderStyle = FormBorderStyle.None;
+        AutoScaleDimensions = new SizeF(96F, 96F);
+        AutoScaleMode = AutoScaleMode.Dpi;
+        ClientSize = new Size(560, 600);
+        MinimumSize = new Size(560, 600);
+        StartPosition = FormStartPosition.CenterScreen;
+        BackColor = Theme.Background;
+        Font = Theme.BodyFont;
+        Icon = IconLoader.GetIcon();
+        RightToLeft = Localization.IsRtl ? RightToLeft.Yes : RightToLeft.No;
 
         AddTitleBar("SettingsTitle", "SettingsSubtitle");
     }
-
-    private const int StdHeight = 36;
-    private const int RowGap = 14;
-    private const int SectionGap = 22;
-    private TableLayoutPanel _layout = null!;
-    private RoundedPanel _panel = null!;
 
     private void InitializeControls()
     {
@@ -84,9 +86,9 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
             AutoScroll = true
         };
-        _panel.Size = new Size(this.ClientSize.Width - 28,
-            this.ClientSize.Height - ModernTitleBar.TitleBarHeight - 24);
-        this.Controls.Add(_panel);
+        _panel.Size = new Size(ClientSize.Width - 28,
+            ClientSize.Height - ModernTitleBar.TitleBarHeight - 24);
+        Controls.Add(_panel);
 
         // Single vertical TableLayoutPanel that owns the whole layout.
         // No absolute coordinates anywhere below: rows auto-size, spacing is
@@ -106,7 +108,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         _panel.Controls.Add(_layout);
 
         // ── Language section ──────────────────────────────
-        AddHeaderRow(Localization.Get("Language"), topGap: 0);
+        AddHeaderRow(Localization.Get("Language"), 0);
 
         _languageComboBox = Theme.CreateCombo(
             Localization.Get("LanguageEnglish"),
@@ -119,7 +121,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
             Text = Localization.Get("RunOnStartup"),
             Height = 30,
             AutoSize = false,
-            Width = 220,
+            Width = 220
         };
 
         AddControlRow(_runOnStartupToggle, fillWidth: false, topGap: RowGap);
@@ -148,7 +150,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         _hotkeyKeyComboBox.Width = 130;
         _hotkeyKeyComboBox.SelectedIndex = 0;
         _hotkeyKeyComboBox.SelectedIndexChanged += HotkeyKeyComboBox_SelectedIndexChanged;
-        AddColumnsRow(topGap: 10, (_hotkeyModifierComboBox, 160), (lblPlus, 24), (_hotkeyKeyComboBox, 130));
+        AddColumnsRow(10, (_hotkeyModifierComboBox, 160), (lblPlus, 24), (_hotkeyKeyComboBox, 130));
 
         _registerHotkeyButton = new ModernButton
         {
@@ -160,7 +162,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         _registerHotkeyButton.Enabled = false;
 
         _statusChip = new StatusChip(Localization.Get("StatusChecking"), Theme.Info, Theme.InfoSoft);
-        AddColumnsRow(topGap: RowGap, (_registerHotkeyButton, 150), (_statusChip, null));
+        AddColumnsRow(RowGap, (_registerHotkeyButton, 150), (_statusChip, null));
 
         AddDividerRow();
 
@@ -190,7 +192,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
             Width = 170
         };
         _checkUpdateButton.Click += async (_, _) => await CheckUpdateButton_Click();
-        AddColumnsRow(topGap: 10, (_versionLabel, 140), (_checkUpdateButton, 170));
+        AddColumnsRow(10, (_versionLabel, 140), (_checkUpdateButton, 170));
 
         AddDividerRow();
 
@@ -201,8 +203,8 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         var prefSize = _layout.GetPreferredSize(new Size(_panel.ClientSize.Width, 0));
         int panelHeight = _panel.Padding.Top + prefSize.Height + _panel.Padding.Bottom;
         _panel.Height = panelHeight;
-        this.ClientSize = new Size(this.ClientSize.Width, _panel.Location.Y + panelHeight + 14);
-        this.MinimumSize = this.ClientSize;
+        ClientSize = new Size(ClientSize.Width, _panel.Location.Y + panelHeight + 14);
+        MinimumSize = ClientSize;
     }
 
     protected override void OnShown(EventArgs e)
@@ -258,6 +260,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
             control.Anchor = AnchorStyles.None;
             row.Controls.Add(control);
         }
+
         AddRow(row);
     }
 
@@ -345,8 +348,15 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         };
     }
 
-    private void HotkeyModifierComboBox_SelectedIndexChanged(object? sender, EventArgs e) => UpdateStatus();
-    private void HotkeyKeyComboBox_SelectedIndexChanged(object? sender, EventArgs e) => UpdateStatus();
+    private void HotkeyModifierComboBox_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        UpdateStatus();
+    }
+
+    private void HotkeyKeyComboBox_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        UpdateStatus();
+    }
 
     private void LoadSettings()
     {
@@ -415,7 +425,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
     private void UpdateStatus()
     {
         var hotkey = GetSelectedHotkey();
-        var hasChanged = (_lastHotkeyKey != hotkey.key || _lastHotkeyModifier != hotkey.modifier);
+        var hasChanged = _lastHotkeyKey != hotkey.key || _lastHotkeyModifier != hotkey.modifier;
 
         _isHotkeyRegistered = !hasChanged;
         _statusState = _isHotkeyRegistered ? StatusState.Registered : StatusState.NotRegistered;
@@ -438,8 +448,8 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         // The chip reads its background from Tag when painting (BackColor is unused).
         (_statusChip.ForeColor, _statusChip.Tag) = _statusState switch
         {
-            StatusState.Registered or StatusState.RegisterSuccess => (Theme.Success, (object)Theme.SuccessSoft),
-            StatusState.NotRegistered => (Theme.Warning, (object)Theme.WarningSoft),
+            StatusState.Registered or StatusState.RegisterSuccess => (Theme.Success, Theme.SuccessSoft),
+            StatusState.NotRegistered => (Theme.Warning, Theme.WarningSoft),
             StatusState.RegisterFailed => (Theme.Danger, (object)Theme.DangerSoft),
             _ => (Theme.Info, (object)Theme.InfoSoft)
         };
@@ -462,7 +472,7 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         using var progress = new UpdateProgressDialog(this);
         try
         {
-            var status = await AutoUpdater.CheckForUpdatesAsync(progress.Progress, silent: true);
+            var status = await AutoUpdater.CheckForUpdatesAsync(progress.Progress, true);
             if (status == AutoUpdater.UpdateStatus.NoUpdate)
                 MessageBox.Show(Localization.Format("UpdNoUpdate", VersionInfo.CurrentString),
                     Localization.Get("Update"), MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -515,10 +525,12 @@ public class SettingsForm : ModernForm, ICloseRequestHandler
         FormSingleton.ShowDialog(() => new KeyboardMappingsForm(_settings), this);
     }
 
-    public void RequestClose()
+    private enum StatusState
     {
-        CancelButton_Click(this, EventArgs.Empty);
+        Checking,
+        Registered,
+        NotRegistered,
+        RegisterSuccess,
+        RegisterFailed
     }
 }
-
-

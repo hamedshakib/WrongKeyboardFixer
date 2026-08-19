@@ -3,14 +3,14 @@ using System.IO;
 namespace WrongKeyboardFixer.Core.Services.Update;
 
 /// <summary>
-/// Generates the batch script that waits for the running process to exit,
-/// replaces the executable with retry logic, verifies the copy and restarts
-/// the application.
+///     Generates the batch script that waits for the running process to exit,
+///     replaces the executable with retry logic, verifies the copy and restarts
+///     the application.
 /// </summary>
 internal static class BatchScriptGenerator
 {
     /// <summary>
-    /// Builds the full batch script text for replacing the running executable.
+    ///     Builds the full batch script text for replacing the running executable.
     /// </summary>
     public static string Generate(int processId, string newExePath, string currentExePath, string tempDir)
     {

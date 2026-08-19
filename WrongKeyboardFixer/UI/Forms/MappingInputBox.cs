@@ -6,8 +6,8 @@ using WrongKeyboardFixer.UI.Components;
 namespace WrongKeyboardFixer.UI.Forms;
 
 /// <summary>
-/// Single dialog for capturing two characters (replaces the previous
-/// two sequential InputBox calls).
+///     Single dialog for capturing two characters (replaces the previous
+///     two sequential InputBox calls).
 /// </summary>
 public static class MappingInputBox
 {
@@ -94,7 +94,11 @@ public static class MappingInputBox
         form.Controls.Add(cancelButton);
 
         form.Icon = IconLoader.GetIcon();
-        form.Shown += (_, _) => { firstTextBox.Focus(); firstTextBox.SelectAll(); };
+        form.Shown += (_, _) =>
+        {
+            firstTextBox.Focus();
+            firstTextBox.SelectAll();
+        };
         form.AcceptButton = okButton;
         form.CancelButton = cancelButton;
 

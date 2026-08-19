@@ -1,16 +1,13 @@
-using System.IO;
-using System.Windows.Forms;
-
 namespace WrongKeyboardFixer.Core.Helpers;
 
 /// <summary>
-/// Centralized constants for the application.
-/// All hardcoded values have been moved here for easy maintenance.
+///     Centralized constants for the application.
+///     All hardcoded values have been moved here for easy maintenance.
 /// </summary>
 public static class Constants
 {
     /// <summary>
-    /// UI constants for controls
+    ///     UI constants for controls
     /// </summary>
     public static class UI
     {
@@ -28,7 +25,7 @@ public static class Constants
     }
 
     /// <summary>
-    /// Windows messages
+    ///     Windows messages
     /// </summary>
     public static class WindowsMessages
     {

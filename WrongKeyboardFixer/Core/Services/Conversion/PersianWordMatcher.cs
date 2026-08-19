@@ -5,13 +5,14 @@ using System.Linq;
 namespace WrongKeyboardFixer.Core.Services.Conversion;
 
 /// <summary>
-/// Provides functionality to match and normalize Persian words, including
-/// handling of enclitic pronouns, plural suffixes, and other word variations.
-/// Used to determine if a converted word matches a known correct word.
+///     Provides functionality to match and normalize Persian words, including
+///     handling of enclitic pronouns, plural suffixes, and other word variations.
+///     Used to determine if a converted word matches a known correct word.
 /// </summary>
 public sealed class PersianWordMatcher : IPersianWordMatcher
 {
     private const int MaxDepth = 4;
+
     private static readonly string[] EncliticPronouns =
     {
         "شان", "تان", "مان", "ش", "ت", "م"
@@ -23,8 +24,8 @@ public sealed class PersianWordMatcher : IPersianWordMatcher
     };
 
     /// <summary>
-    /// Checks if the candidate word (or any of its inflected/combined forms)
-    /// exists in the corrections set.
+    ///     Checks if the candidate word (or any of its inflected/combined forms)
+    ///     exists in the corrections set.
     /// </summary>
     /// <param name="candidate">The word to check.</param>
     /// <param name="corrections">The set of known correct words.</param>
@@ -62,7 +63,7 @@ public sealed class PersianWordMatcher : IPersianWordMatcher
         // Avoid infinite loops
         var visited = new HashSet<string>(StringComparer.Ordinal);
 
-        return TryReduce(word, corrections, visited, maxDepth: MaxDepth);
+        return TryReduce(word, corrections, visited, MaxDepth);
     }
 
     private bool TryReduce(string word, IReadOnlySet<string> corrections, HashSet<string> visited, int maxDepth)
@@ -92,7 +93,7 @@ public sealed class PersianWordMatcher : IPersianWordMatcher
     }
 
     /// <summary>
-    /// Generates all possible reduced forms by removing allowed suffixes.
+    ///     Generates all possible reduced forms by removing allowed suffixes.
     /// </summary>
     /// <returns>Collection of possible base word forms.</returns>
     private IEnumerable<string> GenerateReductions(string word)
@@ -179,11 +180,11 @@ public sealed class PersianWordMatcher : IPersianWordMatcher
     }
 
     /// <summary>
-    /// Normalizes Unicode and spacing in a Persian string.
-    /// - Trims whitespace
-    /// - Replaces Arabic 'yeh' with Persian 'yeh'
-    /// - Replaces Arabic 'kaf' with Persian 'kaf'
-    /// - Normalizes ZWNJ (Zero Width Non-Joiner)
+    ///     Normalizes Unicode and spacing in a Persian string.
+    ///     - Trims whitespace
+    ///     - Replaces Arabic 'yeh' with Persian 'yeh'
+    ///     - Replaces Arabic 'kaf' with Persian 'kaf'
+    ///     - Normalizes ZWNJ (Zero Width Non-Joiner)
     /// </summary>
     private string Normalize(string value)
     {
@@ -202,8 +203,8 @@ public sealed class PersianWordMatcher : IPersianWordMatcher
     }
 
     /// <summary>
-    /// Splits a word on spaces, tabs, carriage returns, newlines, and ZWNJ.
-    /// Returns normalized parts.
+    ///     Splits a word on spaces, tabs, carriage returns, newlines, and ZWNJ.
+    ///     Returns normalized parts.
     /// </summary>
     private IEnumerable<string> SplitParts(string value)
     {

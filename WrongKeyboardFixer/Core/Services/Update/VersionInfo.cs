@@ -5,8 +5,8 @@ using System.Reflection;
 namespace WrongKeyboardFixer.Core.Services.Update;
 
 /// <summary>
-/// Reads the running assembly's version and parses release tag names.
-/// The current version is resolved once via reflection and cached afterwards.
+///     Reads the running assembly's version and parses release tag names.
+///     The current version is resolved once via reflection and cached afterwards.
 /// </summary>
 internal static class VersionInfo
 {
@@ -17,8 +17,8 @@ internal static class VersionInfo
     public static string CurrentString => Current.ToString();
 
     /// <summary>
-    /// Parses a GitHub tag name (e.g. "v1.3.0") into a <see cref="Version"/>.
-    /// Falls back to 1.0.0 when the tag is not a valid version.
+    ///     Parses a GitHub tag name (e.g. "v1.3.0") into a <see cref="Version" />.
+    ///     Falls back to 1.0.0 when the tag is not a valid version.
     /// </summary>
     public static Version ParseTag(string tagName)
     {
@@ -29,7 +29,7 @@ internal static class VersionInfo
     }
 
     /// <summary>
-    /// Reads the file version of an executable, falling back to its product version.
+    ///     Reads the file version of an executable, falling back to its product version.
     /// </summary>
     public static Version? FromFile(string filePath)
     {
@@ -45,6 +45,7 @@ internal static class VersionInfo
         {
             Debug.WriteLine($"❌ Failed to read file version: {ex.Message}");
         }
+
         return null;
     }
 

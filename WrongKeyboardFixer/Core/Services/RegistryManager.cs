@@ -1,14 +1,14 @@
-using Microsoft.Win32;
 using System;
 using System.Diagnostics;
 using System.Windows.Forms;
+using Microsoft.Win32;
 using WrongKeyboardFixer.Core.Helpers;
 
 namespace WrongKeyboardFixer.Core.Services;
 
 /// <summary>
-/// Thin wrapper around the Windows registry <c>Run</c> key that controls
-/// whether the application starts when Windows boots.
+///     Thin wrapper around the Windows registry <c>Run</c> key that controls
+///     whether the application starts when Windows boots.
 /// </summary>
 internal sealed class RegistryManager
 {

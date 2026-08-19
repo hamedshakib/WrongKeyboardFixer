@@ -33,7 +33,7 @@ public class ToggleSwitch : CheckBox
         var trackRect = new Rectangle(x, (Height - switchH) / 2, switchW, switchH);
 
         // ── Track ──
-        Color trackColor = Enabled ? (Checked ? Theme.Accent : Theme.BorderStrong) : Theme.SurfaceMuted;
+        Color trackColor = Enabled ? Checked ? Theme.Accent : Theme.BorderStrong : Theme.SurfaceMuted;
         using (var trackPath = Theme.RoundRect(trackRect, switchH / 2))
         {
             using var brush = new SolidBrush(trackColor);
@@ -48,16 +48,18 @@ public class ToggleSwitch : CheckBox
         // ── Knob (در RTL آینه می‌شود) ──
         int knobSize = switchH - Theme.DpiScale(6, DeviceDpi);
         int knobY = trackRect.Y + (switchH - knobSize) / 2;
-        int onX = rtl ? trackRect.X + Theme.DpiScale(3, DeviceDpi)
-                       : trackRect.Right - knobSize - Theme.DpiScale(3, DeviceDpi);
-        int offX = rtl ? trackRect.Right - knobSize - Theme.DpiScale(3, DeviceDpi)
-                       : trackRect.X + Theme.DpiScale(3, DeviceDpi);
+        int onX = rtl
+            ? trackRect.X + Theme.DpiScale(3, DeviceDpi)
+            : trackRect.Right - knobSize - Theme.DpiScale(3, DeviceDpi);
+        int offX = rtl
+            ? trackRect.Right - knobSize - Theme.DpiScale(3, DeviceDpi)
+            : trackRect.X + Theme.DpiScale(3, DeviceDpi);
         int knobX = Checked ? onX : offX;
 
         using (var knobPath = Theme.RoundRect(new Rectangle(knobX, knobY, knobSize, knobSize), knobSize / 2))
         {
             using var brush = new SolidBrush(Enabled
-                ? (Checked ? Theme.TextOnAccent : Theme.Surface)
+                ? Checked ? Theme.TextOnAccent : Theme.Surface
                 : Theme.TextDisabled);
             g.FillPath(brush, knobPath);
         }
@@ -89,6 +91,15 @@ public class ToggleSwitch : CheckBox
         }
     }
 
-    protected override void OnCheckedChanged(EventArgs e) { base.OnCheckedChanged(e); Invalidate(); }
-    protected override void OnTextChanged(EventArgs e) { base.OnTextChanged(e); Invalidate(); }
+    protected override void OnCheckedChanged(EventArgs e)
+    {
+        base.OnCheckedChanged(e);
+        Invalidate();
+    }
+
+    protected override void OnTextChanged(EventArgs e)
+    {
+        base.OnTextChanged(e);
+        Invalidate();
+    }
 }

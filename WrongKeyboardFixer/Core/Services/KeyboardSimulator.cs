@@ -6,9 +6,9 @@ using WrongKeyboardFixer.Core.Helpers;
 namespace WrongKeyboardFixer.Core.Services;
 
 /// <summary>
-/// Simulates keyboard input (Ctrl+C / Ctrl+V) via the modern <c>SendInput</c>
-/// API instead of the deprecated <c>keybd_event</c>.
-/// Static class - use KeyboardSimulatorAdapter for interface-based access.
+///     Simulates keyboard input (Ctrl+C / Ctrl+V) via the modern <c>SendInput</c>
+///     API instead of the deprecated <c>keybd_event</c>.
+///     Static class - use KeyboardSimulatorAdapter for interface-based access.
 /// </summary>
 public static partial class KeyboardSimulator
 {
@@ -20,11 +20,16 @@ public static partial class KeyboardSimulator
     private const byte VkV = 0x56;
     private const byte VkMenu = 0x12; // Alt
 
+    /// <summary>
+    ///     Cached size of <see cref="Input" /> for the <c>SendInput</c> cbSize parameter.
+    /// </summary>
+    private static readonly int InputSize = Marshal.SizeOf<Input>();
+
     [LibraryImport("user32.dll")]
     private static partial uint SendInput(uint nInputs, ReadOnlySpan<Input> pInputs, int cbSize);
 
     /// <summary>
-    /// Sends a Ctrl+C keyboard combination to copy the current selection.
+    ///     Sends a Ctrl+C keyboard combination to copy the current selection.
     /// </summary>
     public static void SendCtrlC()
     {
@@ -34,7 +39,7 @@ public static partial class KeyboardSimulator
     }
 
     /// <summary>
-    /// Sends a Ctrl+V keyboard combination to paste clipboard contents.
+    ///     Sends a Ctrl+V keyboard combination to paste clipboard contents.
     /// </summary>
     public static void SendCtrlV()
     {
@@ -44,8 +49,8 @@ public static partial class KeyboardSimulator
     }
 
     /// <summary>
-    /// Releases any held Alt/Ctrl modifier keys before sending our combination,
-    /// preventing stuck modifiers.
+    ///     Releases any held Alt/Ctrl modifier keys before sending our combination,
+    ///     preventing stuck modifiers.
     /// </summary>
     private static void ReleaseModifierKeys()
     {
@@ -57,16 +62,16 @@ public static partial class KeyboardSimulator
     }
 
     /// <summary>
-    /// Sends a modifier + key press/release sequence via SendInput.
+    ///     Sends a modifier + key press/release sequence via SendInput.
     /// </summary>
     private static void SendKeyCombination(byte modifier, byte key)
     {
         Span<Input> inputs = stackalloc Input[4];
 
-        inputs[0] = KeyboardInput(modifier, 0);               // Press modifier
-        inputs[1] = KeyboardInput(key, 0);                    // Press key
-        inputs[2] = KeyboardInput(key, KeyEventFKeyUp);       // Release key
-        inputs[3] = KeyboardInput(modifier, KeyEventFKeyUp);  // Release modifier
+        inputs[0] = KeyboardInput(modifier, 0); // Press modifier
+        inputs[1] = KeyboardInput(key, 0); // Press key
+        inputs[2] = KeyboardInput(key, KeyEventFKeyUp); // Release key
+        inputs[3] = KeyboardInput(modifier, KeyEventFKeyUp); // Release modifier
 
         SendInput(4, inputs, InputSize);
     }
@@ -84,15 +89,10 @@ public static partial class KeyboardSimulator
     }
 
     /// <summary>
-    /// Cached size of <see cref="Input"/> for the <c>SendInput</c> cbSize parameter.
-    /// </summary>
-    private static readonly int InputSize = Marshal.SizeOf<Input>();
-
-    /// <summary>
-    /// Mirrors the native Win32 <c>INPUT</c> structure (type + union).
-    /// The union must be declared explicitly so the struct is laid out exactly
-    /// like the native type; otherwise <c>SendInput</c> fails because <c>cbSize</c>
-    /// (verified via <see cref="Marshal.SizeOf{T}"/>) does not match.
+    ///     Mirrors the native Win32 <c>INPUT</c> structure (type + union).
+    ///     The union must be declared explicitly so the struct is laid out exactly
+    ///     like the native type; otherwise <c>SendInput</c> fails because <c>cbSize</c>
+    ///     (verified via <see cref="Marshal.SizeOf{T}" />) does not match.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     private struct Input
@@ -104,9 +104,14 @@ public static partial class KeyboardSimulator
     [StructLayout(LayoutKind.Explicit)]
     private struct InputUnion
     {
-        [FieldOffset(0)] public MouseInput Mi;
-        [FieldOffset(0)] public KeybdInput Ki;
-        [FieldOffset(0)] public HardwareInput Hi;
+        [FieldOffset(0)]
+        public MouseInput Mi;
+
+        [FieldOffset(0)]
+        public KeybdInput Ki;
+
+        [FieldOffset(0)]
+        public HardwareInput Hi;
     }
 
     [StructLayout(LayoutKind.Sequential)]

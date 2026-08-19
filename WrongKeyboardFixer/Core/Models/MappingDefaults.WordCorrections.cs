@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 
 namespace WrongKeyboardFixer.Core.Models;
 
@@ -10,11 +9,11 @@ public static partial class MappingDefaults
     private static readonly string[] _defaultWordCorrections = LoadDefaultWordCorrections();
 
     /// <summary>
-    /// Returns a fresh copy of the default words whose Persian spelling must begin
-    /// with «آ» or «ژ». When keyboard conversion produces a word whose corrected
-    /// form appears here (e.g. «اسان» → «آسان», «زله» → «ژله»), it is fixed.
-    /// The list is loaded once from the embedded resource
-    /// "WrongKeyboardFixer.Core.Models.word-corrections.txt".
+    ///     Returns a fresh copy of the default words whose Persian spelling must begin
+    ///     with «آ» or «ژ». When keyboard conversion produces a word whose corrected
+    ///     form appears here (e.g. «اسان» → «آسان», «زله» → «ژله»), it is fixed.
+    ///     The list is loaded once from the embedded resource
+    ///     "WrongKeyboardFixer.Core.Models.word-corrections.txt".
     /// </summary>
     public static List<string> GetDefaultWordCorrections()
     {
@@ -27,7 +26,7 @@ public static partial class MappingDefaults
 
         var assembly = typeof(MappingDefaults).Assembly;
         using var stream = assembly.GetManifestResourceStream(resourceName)
-            ?? throw new InvalidOperationException($"Embedded resource '{resourceName}' was not found.");
+                           ?? throw new InvalidOperationException($"Embedded resource '{resourceName}' was not found.");
 
         using var reader = new StreamReader(stream);
         var text = reader.ReadToEnd();

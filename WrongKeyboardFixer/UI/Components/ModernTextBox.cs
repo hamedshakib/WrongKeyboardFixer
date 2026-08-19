@@ -8,19 +8,65 @@ namespace WrongKeyboardFixer.UI.Components;
 
 public class ModernTextBox : UserControl
 {
+    private readonly Color _borderColor = Theme.Border;
+    private readonly int _cornerRadius = 8;
+    private readonly Color _focusBorderColor = Color.FromArgb(99, 102, 241); // رنگ فوتر/آکست مدرن
     private readonly TextBox _textBox;
-    private Color _borderColor = Theme.Border;
-    private Color _focusBorderColor = Color.FromArgb(99, 102, 241); // رنگ فوتر/آکست مدرن
-    private bool _isFocused = false;
-    private int _cornerRadius = 8;
-    private string _placeholderText = string.Empty;
+    private bool _isFocused;
     private bool _isPlaceholderActive = true;
+    private string _placeholderText = string.Empty;
 
-    public new event EventHandler? TextChanged;
-
-    public void Clear()
+    public ModernTextBox()
     {
-        _textBox.Clear();
+        SetStyle(ControlStyles.AllPaintingInWmPaint |
+                 ControlStyles.UserPaint |
+                 ControlStyles.OptimizedDoubleBuffer |
+                 ControlStyles.ResizeRedraw, true);
+
+        Size = new Size(220, 36);
+        BackColor = Theme.Surface;
+
+        _textBox = new TextBox
+        {
+            BorderStyle = BorderStyle.None,
+            BackColor = Theme.Surface,
+            ForeColor = Theme.TextPrimary,
+            Font = Theme.BodyFont
+        };
+
+        _textBox.Enter += (s, e) =>
+        {
+            _isFocused = true;
+            if (_isPlaceholderActive)
+            {
+                _textBox.Text = string.Empty;
+                _textBox.ForeColor = Theme.TextPrimary;
+                _isPlaceholderActive = false;
+            }
+
+            Invalidate();
+        };
+
+        _textBox.Leave += (s, e) =>
+        {
+            _isFocused = false;
+            if (string.IsNullOrEmpty(_textBox.Text))
+                SetPlaceholderState();
+            Invalidate();
+        };
+
+        _textBox.TextChanged += (s, e) =>
+        {
+            if (!_isPlaceholderActive)
+                TextChanged?.Invoke(this, e);
+        };
+
+        _textBox.KeyDown += (s, e) => { OnKeyDown(e); };
+        _textBox.KeyPress += (s, e) => { OnKeyPress(e); };
+
+        Controls.Add(_textBox);
+        UpdateTextBoxBounds();
+        SetPlaceholderState();
     }
 
     [Browsable(true)]
@@ -71,9 +117,7 @@ public class ModernTextBox : UserControl
         {
             _placeholderText = value;
             if (_isPlaceholderActive)
-            {
                 _textBox.Text = _placeholderText;
-            }
         }
     }
 
@@ -87,60 +131,11 @@ public class ModernTextBox : UserControl
         }
     }
 
-    public ModernTextBox()
+    public new event EventHandler? TextChanged;
+
+    public void Clear()
     {
-        SetStyle(ControlStyles.AllPaintingInWmPaint |
-                 ControlStyles.UserPaint |
-                 ControlStyles.OptimizedDoubleBuffer |
-                 ControlStyles.ResizeRedraw, true);
-
-        Size = new Size(220, 36);
-        BackColor = Theme.Surface;
-
-        _textBox = new TextBox
-        {
-            BorderStyle = BorderStyle.None,
-            BackColor = Theme.Surface,
-            ForeColor = Theme.TextPrimary,
-            Font = Theme.BodyFont,
-        };
-
-        _textBox.Enter += (s, e) =>
-        {
-            _isFocused = true;
-            if (_isPlaceholderActive)
-            {
-                _textBox.Text = string.Empty;
-                _textBox.ForeColor = Theme.TextPrimary;
-                _isPlaceholderActive = false;
-            }
-            Invalidate();
-        };
-
-        _textBox.Leave += (s, e) =>
-        {
-            _isFocused = false;
-            if (string.IsNullOrEmpty(_textBox.Text))
-            {
-                SetPlaceholderState();
-            }
-            Invalidate();
-        };
-
-        _textBox.TextChanged += (s, e) =>
-        {
-            if (!_isPlaceholderActive)
-            {
-                TextChanged?.Invoke(this, e);
-            }
-        };
-
-        _textBox.KeyDown += (s, e) => { OnKeyDown(e); };
-        _textBox.KeyPress += (s, e) => { OnKeyPress(e); };
-
-        Controls.Add(_textBox);
-        UpdateTextBoxBounds();
-        SetPlaceholderState();
+        _textBox.Clear();
     }
 
     private void SetPlaceholderState()

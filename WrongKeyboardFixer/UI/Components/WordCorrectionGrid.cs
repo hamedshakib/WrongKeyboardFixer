@@ -9,20 +9,20 @@ using WrongKeyboardFixer.Core.Helpers;
 namespace WrongKeyboardFixer.UI.Components;
 
 /// <summary>
-/// Editable table for word corrections (آ / ژ) with Delete pill button.
-/// Matches the styling of MappingGrid with pill-style buttons.
+///     Editable table for word corrections (آ / ژ) with Delete pill button.
+///     Matches the styling of MappingGrid with pill-style buttons.
 /// </summary>
 public sealed class WordCorrectionGrid : ModernDataGridView
 {
-    /// <summary>Raised when the Delete pill of a row is clicked.</summary>
-    public event Action<string>? DeleteRequested;
-
     private readonly HoverState _hover = new();
 
     public WordCorrectionGrid()
     {
         Build();
     }
+
+    /// <summary>Raised when the Delete pill of a row is clicked.</summary>
+    public event Action<string>? DeleteRequested;
 
     private void Build()
     {
@@ -59,7 +59,10 @@ public sealed class WordCorrectionGrid : ModernDataGridView
             SortMode = DataGridViewColumnSortMode.NotSortable
         });
 
-        CellValidated += (_, e) => { if (e.RowIndex >= 0) Rows[e.RowIndex].ErrorText = string.Empty; };
+        CellValidated += (_, e) =>
+        {
+            if (e.RowIndex >= 0) Rows[e.RowIndex].ErrorText = string.Empty;
+        };
         CellValueChanged += OnCellValueChanged;
         CellContentClick += OnCellContentClick;
         CellPainting += OnCellPainting;
@@ -72,7 +75,7 @@ public sealed class WordCorrectionGrid : ModernDataGridView
     }
 
     /// <summary>
-    /// Replaces the grid content with the given words, sorted alphabetically.
+    ///     Replaces the grid content with the given words, sorted alphabetically.
     /// </summary>
     public void Load(IEnumerable<string> words)
     {
@@ -102,15 +105,18 @@ public sealed class WordCorrectionGrid : ModernDataGridView
 
     // ── حالت هاور ──
 
-    private static bool IsButtonColumn(DataGridView grid, int col) =>
-        col >= 0 && col < grid.Columns.Count && grid.Columns[col] is DataGridViewButtonColumn;
+    private static bool IsButtonColumn(DataGridView grid, int col)
+    {
+        return col >= 0 && col < grid.Columns.Count && grid.Columns[col] is DataGridViewButtonColumn;
+    }
 
     private void OnGridMouseMove(object? sender, MouseEventArgs e)
     {
         var hit = HitTest(e.X, e.Y);
 
         Cursor = hit.RowIndex >= 0 && IsButtonColumn(this, hit.ColumnIndex)
-            ? Cursors.Hand : Cursors.Default;
+            ? Cursors.Hand
+            : Cursors.Default;
 
         if (hit.RowIndex != _hover.Row || hit.ColumnIndex != _hover.Column)
         {
@@ -154,7 +160,7 @@ public sealed class WordCorrectionGrid : ModernDataGridView
 
     private void OnCellPainting(object? sender, DataGridViewCellPaintingEventArgs e)
     {
-        if (e.RowIndex < 0 || e.ColumnIndex < 0) return;   // هدر: رسم پیش‌فرض
+        if (e.RowIndex < 0 || e.ColumnIndex < 0) return; // هدر: رسم پیش‌فرض
 
         var bounds = e.CellBounds;
         var colStyle = Columns[e.ColumnIndex].DefaultCellStyle;
@@ -173,7 +179,9 @@ public sealed class WordCorrectionGrid : ModernDataGridView
         // کاهش ۱ پیکسلی ارتفاع باعث می‌شود پس‌زمینه هرگز روی خط حاشیه رسم نشود
         var bgBounds = new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height - 1);
         using (var bgBrush = new SolidBrush(bg))
+        {
             e.Graphics!.FillRectangle(bgBrush, bgBounds);
+        }
 
         // ── ۲. رسم محتوای داخلی سلول ──
         if (isButton)
@@ -199,7 +207,9 @@ public sealed class WordCorrectionGrid : ModernDataGridView
                     new Rectangle(rect.X, rect.Y, rect.Width - 1, rect.Height - 1),
                     Theme.DpiScale(7, DeviceDpi));
                 using (var pill = new SolidBrush(pillBg))
+                {
                     e.Graphics.FillPath(pill, path);
+                }
 
                 // برگرداندن وضعیت به حالت قبل
                 e.Graphics.SmoothingMode = prevSmoothing;
@@ -234,6 +244,7 @@ public sealed class WordCorrectionGrid : ModernDataGridView
             // استفاده از bounds.Right (بدون منفی یک) برای اتصال کامل خطوط ستون‌ها به هم
             e.Graphics.DrawLine(linePen, bounds.Left, bounds.Bottom - 1, bounds.Right, bounds.Bottom - 1);
         }
+
         e.Graphics.SmoothingMode = oldSmoothingForLine;
 
         // ── ۴. حلقهٔ فوکوس کیبورد ──

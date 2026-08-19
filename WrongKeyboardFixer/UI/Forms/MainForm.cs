@@ -12,18 +12,18 @@ using WrongKeyboardFixer.UI.Components;
 namespace WrongKeyboardFixer.UI.Forms;
 
 /// <summary>
-/// Main application form (tray-only application).
-/// Manages hotkey registration, clipboard monitoring, and update checking.
+///     Main application form (tray-only application).
+///     Manages hotkey registration, clipboard monitoring, and update checking.
 /// </summary>
 public class MainForm : Form
 {
-    private HotkeyManager? _hotkeyManager;
+    private readonly bool _isInitialized;
+    private readonly ILogger _logger = null!;
     private ClipboardManager _clipboardManager = null!;
-    private TextConversionService? _textConversionService;
+    private HotkeyManager? _hotkeyManager;
     private AppSettings _settings = null!;
+    private TextConversionService? _textConversionService;
     private TrayIconManager? _trayIcon;
-    private ILogger _logger = null!;
-    private bool _isInitialized;
 
     public MainForm(ILogger? logger = null)
     {
@@ -58,7 +58,7 @@ public class MainForm : Form
     {
         _clipboardManager = new ClipboardManager(_logger);
         _textConversionService = new TextConversionService(_clipboardManager, _settings, null, _logger);
-        _hotkeyManager = new HotkeyManager(this.Handle);
+        _hotkeyManager = new HotkeyManager(Handle);
 
         // ثبت کلید ترکیبی از تنظیمات
         RegisterHotkeyFromSettings();
@@ -76,17 +76,13 @@ public class MainForm : Form
         Keys key = _settings.HotkeyKey;
 
         if (!_hotkeyManager.Register(modifier, key))
-        {
             // اگر ثبت ناموفق بود، با کلید پیش‌فرض امتحان کن
             if (!_hotkeyManager.Register((uint)(HotkeyModifiers.Control | HotkeyModifiers.Alt), Keys.Add))
-            {
                 MessageBox.Show(
                     Localization.Get("HotkeyRegisterFailed"),
                     Localization.Get("Warning"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
-            }
-        }
     }
 
     private void InitializeForm()
@@ -132,9 +128,7 @@ public class MainForm : Form
     protected override void WndProc(ref Message message)
     {
         if (_hotkeyManager != null && _hotkeyManager.HandleHotkeyMessage(ref message))
-        {
             _ = ConvertSelectedTextAsync();
-        }
 
         base.WndProc(ref message);
     }
@@ -156,7 +150,7 @@ public class MainForm : Form
     }
 
     /// <summary>
-    /// بررسی خودکار بروزرسانی در استارتاپ (silent - بدون نمایش پیام "بروزرسانی موجود نیست")
+    ///     بررسی خودکار بروزرسانی در استارتاپ (silent - بدون نمایش پیام "بروزرسانی موجود نیست")
     /// </summary>
     private async Task CheckForUpdatesAsync()
     {

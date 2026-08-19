@@ -4,9 +4,9 @@ using WrongKeyboardFixer.Core.Helpers;
 namespace WrongKeyboardFixer.Core.Models;
 
 /// <summary>
-/// Single source of truth for the hotkey combinations offered in the settings UI.
-/// Keeps the display order and the underlying values together so the form no
-/// longer needs duplicated switch/if chains.
+///     Single source of truth for the hotkey combinations offered in the settings UI.
+///     Keeps the display order and the underlying values together so the form no
+///     longer needs duplicated switch/if chains.
 /// </summary>
 public static class HotkeyOptions
 {
@@ -49,17 +49,32 @@ public static class HotkeyOptions
     public static int ModifierCount => ModifierOptions.Length;
     public static int KeyCount => KeyOptions.Length;
 
-    public static string ModifierText(int index) => Localization.Get(ModifierOptions[index].LocalizationKey);
-    public static uint ModifierValue(int index) => ModifierOptions[index].Modifier;
+    public static string ModifierText(int index)
+    {
+        return Localization.Get(ModifierOptions[index].LocalizationKey);
+    }
 
-    public static string KeyText(int index) => Localization.Get(KeyOptions[index].LocalizationKey);
-    public static Keys KeyValue(int index) => KeyOptions[index].Key;
+    public static uint ModifierValue(int index)
+    {
+        return ModifierOptions[index].Modifier;
+    }
+
+    public static string KeyText(int index)
+    {
+        return Localization.Get(KeyOptions[index].LocalizationKey);
+    }
+
+    public static Keys KeyValue(int index)
+    {
+        return KeyOptions[index].Key;
+    }
 
     /// <summary>Returns the combo index matching a modifier value (defaults to 0 = Ctrl+Alt).</summary>
     public static int IndexOfModifier(uint modifier)
     {
         for (int i = 0; i < ModifierOptions.Length; i++)
-            if (ModifierOptions[i].Modifier == modifier) return i;
+            if (ModifierOptions[i].Modifier == modifier)
+                return i;
         return 0;
     }
 
@@ -67,7 +82,8 @@ public static class HotkeyOptions
     public static int IndexOfKey(Keys key)
     {
         for (int i = 0; i < KeyOptions.Length; i++)
-            if (KeyOptions[i].Key == key) return i;
+            if (KeyOptions[i].Key == key)
+                return i;
         return 0;
     }
 }

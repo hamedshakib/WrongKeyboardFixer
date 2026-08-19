@@ -10,15 +10,16 @@ using WrongKeyboardFixer.UI.Forms;
 namespace WrongKeyboardFixer;
 
 /// <summary>
-/// Application entry point with dependency injection setup.
-/// All services are registered and resolved through static factories.
+///     Application entry point with dependency injection setup.
+///     All services are registered and resolved through static factories.
 /// </summary>
 internal static class Program
 {
     /// <summary>
-    /// The main entry point for the application.
+    ///     The main entry point for the application.
     /// </summary>
     private const string MutexName = "Global\\WrongKeyboardFixer_Mutex";
+
     private static Mutex? _mutex;
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -34,13 +35,17 @@ internal static class Program
 
     private static IKeyboardConverter Converter => _converter ??= new KeyboardConverter();
 
-    private static ClipboardManager CreateClipboardManager() =>
-        new ClipboardManager(Logger);
-
     private static IClipboardManager ClipboardManager => CreateClipboardManager();
 
-    private static TextConversionService CreateTextConversionService() =>
-        new TextConversionService(CreateClipboardManager(), AppSettings, Converter, Logger);
+    private static ClipboardManager CreateClipboardManager()
+    {
+        return new ClipboardManager(Logger);
+    }
+
+    private static TextConversionService CreateTextConversionService()
+    {
+        return new TextConversionService(CreateClipboardManager(), AppSettings, Converter, Logger);
+    }
 
     [STAThread]
     private static void Main()
